@@ -4,7 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <optional>
 #include <vector>
+#include <map>
 
 class HelloTriangle {
     public:
@@ -20,7 +22,17 @@ class HelloTriangle {
         const uint32_t WIDTH = 800;
         const uint32_t HEIGHT = 600;
         VkInstance instance;
+
+        struct QueueFamilyIndices {
+            std::optional<uint32_t> gfxFamily;
+
+            bool isComplete () {
+                return gfxFamily.has_value();
+            }
+        };
         
+        // Window instantiation
+
         void initWindow () {
             glfwInit();
             
@@ -34,10 +46,17 @@ class HelloTriangle {
             window = glfwCreateWindow(WIDTH, HEIGHT, "Testing", nullptr, nullptr);
         }
 
+        std::vector<const char*> getRequiredExtensions () {
+            uint32_t glfwExtensionCt = 0;
+            const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCt);
+            std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCt);
+
+            return extensions;
+        }
+
+        // Application instantiation
+
         void createInstance () {
-            uint32_t glfwExtensionCount = 0;
-            uint32_t extensionCount = 0;
-            const char** glfwExtensions;
             VkApplicationInfo appInfo{};
             VkInstanceCreateInfo createInfo{};
             
@@ -50,41 +69,87 @@ class HelloTriangle {
  
             createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
             createInfo.pApplicationInfo = &appInfo;
-
-            glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-            createInfo.enabledExtensionCount = glfwExtensionCount;
-            createInfo.ppEnabledExtensionNames = glfwExtensions;
-
             createInfo.enabledLayerCount = 0;
 
-            if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-                throw std::runtime_error("Vulkan Runtime Instance Failed!");
-            }
-
-            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-            std::vector<VkExtensionProperties> extensions(extensionCount);
-            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-
+            auto extensions = getRequiredExtensions();
             createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
             createInfo.ppEnabledExtensionNames = extensions.data();
 
-            std::cout << "Available extensions:\n";
+        }
 
-            for (const auto& ext : extensions) {
-                std::cout << '\t' << ext.extensionName << '\n';
+        // physical device instantiation
+
+        bool deviceSuitability (VkPhysicalDevice device) {
+            int score = 0;
+            VkPhysicalDeviceProperties devP;
+            VkPhysicalDeviceFeatures devF;
+            vkGetPhysicalDeviceProperties(device, &devP);
+            vkGetPhysicalDeviceFeatures(device, &devF);
+
+            if (devP.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+                score += 1000;
+            }
+
+            score += devP.limits.maxImageDimension2D;
+
+            if (!devF.geometryShader) {
+                return 0;
+            }
+
+            return score;
+        }
+
+        void initPhysicalDevice () {
+            std::multimap<int, VkPhysicalDevice> candidates;
+            VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+            uint32_t deviceCount = 0;
+
+            vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+            if (deviceCount == 0) {
+                throw std::runtime_error("Failed to find GPU with Vulkan support!");
+            }
+
+            std::vector<VkPhysicalDevice> devices(deviceCount);
+            vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+            for (const auto& device : devices) {
+                int score = deviceSuitability(device);
+                candidates.insert(std::make_pair(score, device));
+            }
+
+            if (candidates.rbegin()->first > 0) {
+                physicalDevice = candidates.rbegin()->second;
+            } else {
+                throw std::runtime_error("Failed to find suitable GPU");
             }
         }
 
+        // find queue families
+
+        QueueFamilyIndices findQueueFamilies (VkPhysicalDevice device) {
+            QueueFamilyIndices indices;
+
+            return indices;
+        }
+
+
+        // vulkan initialization steps
+
         void initVulkan () {
             createInstance();
+            initPhysicalDevice();
         }
+
+        // main vulkan api loop
 
         void mainLoop () {
             while (!glfwWindowShouldClose(window)) {
                 glfwPollEvents();
             }
         }
+
+        // exit
 
         void cleanup () {
             vkDestroyInstance(instance, nullptr);
