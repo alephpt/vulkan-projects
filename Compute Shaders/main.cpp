@@ -16,7 +16,15 @@
  * =====================================================================================
  */
 #include <iostream>
+#include "modules/manifest.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     std::cout << "Creating Vulkan Renderer." << std::endl;
+
+    Existence essence;
+    essence.manifest();
+    essence.actualize();
+    essence.cease();
+    
+    return 0;
 }

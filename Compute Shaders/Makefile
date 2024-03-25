@@ -4,19 +4,20 @@ TINYOBJ_PATH = /usr/include/
 VK_EXP_PATH = /etc/vulkan/explicit_layer.d
 
 CFLAGS = -std=c++17 -I $(VULKAN_SDK_PATH) -I $(STB_PATH) -I $(TINYOBJ_PATH)
-LDFLAGS = -L $(VULKAN_SDK_PATH) -lglfw -lvulkan -ldl -pthread 
+LDFLAGS = -L $(VULKAN_SDK_PATH) -lSDL2 -lvulkan -ldl -pthread 
 DBFLAGS = -fsanitize=address,undefined --debug
+INCLUDES = ./modules/*.cpp
 
 compute: main.cpp
-	g++ $(CFLAGS) -o compute main.cpp $(LDFLAGS)
+	g++ $(CFLAGS) -o ~/compute main.cpp $(LDFLAGS) $(INCLUDES)
 
 .PHONY: test clean
 
 debug:
-	g++ $(CFLAGS) -o compute main.cpp $(LDFLAGS) $(DBFLAGS)
+	g++ $(CFLAGS) -o ~/compute main.cpp $(LDFLAGS) $(INCLUDES) $(DBFLAGS)
 
 test: compute
 	LD_LIBRARY_PATH=$(VULKAN_SDK_PATH) VK_LAYER_PATH=$(VK_EXP_PATH) ./compute
 
 clean:
-	rm -f compute
+	rm -f ~/compute
