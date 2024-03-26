@@ -1,5 +1,5 @@
 #pragma once
-#include "../components/generics.h"
+#include "../components/lexicon.h"
 
 namespace genesis {
 

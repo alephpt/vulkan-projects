@@ -1,11 +1,13 @@
-#include "./manifest.h"
+#include "manifest.h"
+#include "genesis.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
-
-#include "./genesis.h"
+#include "../components/logger.h"
 
 void Existence::manifest() {
+    report(LOGGER::INFO, "Manifesting..");
+
     SDL_Init(SDL_INIT_VIDEO);
     SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
 
@@ -23,10 +25,14 @@ void Existence::manifest() {
 }
 
 void Existence::materialize() {
+    report(LOGGER::INFO, "Materializing..");
+
     return;
 }
 
 void Existence::actualize() {
+    report(LOGGER::INFO, "Actualizing..");
+
     SDL_Event _e;
     bool _quit = false;
 
@@ -40,6 +46,8 @@ void Existence::actualize() {
 }
 
 void Existence::cease() {
+    report(LOGGER::INFO, "Ceasing..");
+
     if (_initialized) {
         SDL_DestroyWindow(_window);
     }

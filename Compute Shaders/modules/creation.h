@@ -1,5 +1,5 @@
 #pragma once
-#include "../components/generics.h"
+#include "../components/lexicon.h"
 
 class Existence {
     public:
@@ -8,8 +8,8 @@ class Existence {
         VkExtent2D _window_extent { 1660, 1440 };
         struct SDL_Window* _window = nullptr;
 
-        void manifest();    // Init
-        void materialize();      // Draw
-        void actualize();   // Run
-        void cease();       // Cleanup
+        void manifest();        // Init
+        void materialize();     // Draw
+        void actualize();       // Run
+        void cease();           // Cleanup
 };

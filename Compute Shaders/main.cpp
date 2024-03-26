@@ -5,8 +5,8 @@
  *
  *    Description: Trying to Triangulate in Vulkan
  *
- *        Version:  1.0
- *        Created:  07/29/20 20:30:24
+ *        Version:  0.1.0
+ *        Created:  2024-03-25
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -16,15 +16,16 @@
  * =====================================================================================
  */
 #include <iostream>
-#include "modules/manifest.h"
+#include "modules/creation.h"
+#include "components/logger.h"
 
 int main(int argc, char* argv[]) {
-    std::cout << "Creating Vulkan Renderer." << std::endl;
+    report(LOGGER::INFO, "Creating Vulkan Renderer.");
 
-    Existence essence;
-    essence.manifest();
-    essence.actualize();
-    essence.cease();
+    Existence creation;
+    creation.manifest();
+    creation.actualize();
+    creation.cease();
     
     return 0;
 }
