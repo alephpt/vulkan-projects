@@ -1,12 +1,12 @@
 #pragma once
 #include <vulkan/vulkan.h>
-#include <fmt/core.h>
+#include "./logger.h"
 
 #define VK_TRY(x)                                                       \
     do {                                                                \
         VkResult err = x;                                               \
         if (err) {                                                      \
-            fmt::print(" [ERROR] Vulkan: {}", err);    \
+            printf(" [ERROR] Vulkan: {}", err);    \
             abort();                                                    \
         }                                                               \
     } while (0)

@@ -1,5 +1,6 @@
 #include "../components/lexicon.h"
 
+#include <string>
 
 class Reality {
     public:

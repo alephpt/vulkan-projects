@@ -1,13 +1,16 @@
 #pragma once
-#include <iostream>
-#include <string>
 
 enum LOGGER {
     OFF,
     ERROR,
+    ILINE,
     INFO,
+    DLINE,
     DEBUG,
+    VLINE,
     VERBOSE
 };
 
-void report(LOGGER log_level, std::string message);
+static const LOGGER LOG_LEVEL = LOGGER::DEBUG;
+
+void report(LOGGER log_level, const char* message, ...);

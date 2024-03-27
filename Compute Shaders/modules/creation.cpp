@@ -50,7 +50,7 @@ Existence* Existence::create()
 
 void Existence::materialize() 
     {
-        report(LOGGER::DEBUG, "Materializing..");
+        report(LOGGER::VERBOSE, "Materializing..");
 
         return;
     }
