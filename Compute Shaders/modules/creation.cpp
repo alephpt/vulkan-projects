@@ -14,7 +14,8 @@ Existence* _essence = nullptr;
 // Singleton to ensure only one instance of Existence is created.
 Existence& Existence::manifest()
     {
-        report(LOGGER::INFO, "Existence - Manifesting Creation ..");
+        report(LOGGER::INFO, "Existence - Conjuring Manifestation ..");
+        
         if (_essence == nullptr) {
             Existence essence;
             return *essence.create();
@@ -42,9 +43,13 @@ Existence* Existence::create()
             window_flags
         );
 
-        report(LOGGER::INFO, "Existence - Creating Reality ..");
+        report(LOGGER::INFO, "Existence - Constructing Reality ..");
+        // Handles Vulkan Rendering Engine and Compute Buffers
         _actuality = new Reality(_application_name);
-        report(LOGGER::INFO, "Existence - Reality Created ..");
+
+        // Initialize the Reality with Genesis 
+
+        report(LOGGER::INFO, "Existence - Reality Complete ..");
 
         _initialized = true;
 

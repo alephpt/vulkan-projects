@@ -57,14 +57,15 @@ bool checkValidationLayerSupport() {
     // INSTANTIATION //
     ///////////////////
 
-Reality::Reality(std::string name) 
-    {
-        report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
-        init_framework(name);
-        init_swapchain();
-        init_commands();
-        init_sync_structures();
-        report(LOGGER::INFO, "Reality - Matrix Initialized. Reality is ready. ..");
+
+Reality::Reality(std::string name)
+{
+    report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
+    init_framework(name);
+    init_swapchain();
+    init_commands();
+    init_sync_structures();
+    report(LOGGER::INFO, "Reality - Matrix Initialized ..");
     }
 
 Reality::~Reality() 
@@ -211,10 +212,16 @@ void Reality::init_swapchain()
 
 void Reality::init_commands() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Commands..");
+        report(LOGGER::INFO, "Matrix - Initializing Commands ..");
     }
 
 void Reality::init_sync_structures()
     {
-        report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures..");
+        report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
     }
+
+    ////////////////////
+    // CORE FUNCTIONS //
+    ////////////////////
+
+FrameData &Reality::_current_frame() { { return _frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }

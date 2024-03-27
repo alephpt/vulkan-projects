@@ -4,7 +4,6 @@
 
 class Existence {
     public:
-        int _frame_ct = 0;
         VkExtent2D _window_extent { 1660, 1440 };
         Reality* _actuality;
         struct SDL_Window* _window = nullptr;
