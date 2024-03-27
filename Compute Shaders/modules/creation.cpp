@@ -15,7 +15,7 @@ Existence* _essence = nullptr;
 Existence& Existence::manifest()
     {
         report(LOGGER::INFO, "Existence - Conjuring Manifestation ..");
-        
+
         if (_essence == nullptr) {
             Existence essence;
             return *essence.create();
@@ -45,7 +45,7 @@ Existence* Existence::create()
 
         report(LOGGER::INFO, "Existence - Constructing Reality ..");
         // Handles Vulkan Rendering Engine and Compute Buffers
-        _actuality = new Reality(_application_name);
+        _actuality = new Reality(_application_name, _window);
 
         // Initialize the Reality with Genesis 
 
