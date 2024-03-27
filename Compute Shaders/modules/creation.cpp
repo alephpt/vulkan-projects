@@ -14,6 +14,7 @@ Existence* _essence = nullptr;
 // Singleton to ensure only one instance of Existence is created.
 Existence& Existence::manifest()
     {
+        report(LOGGER::INFO, "Existence - Manifesting Creation ..");
         if (_essence == nullptr) {
             Existence essence;
             return *essence.create();
@@ -27,7 +28,7 @@ Existence* Existence::create()
         assert(_essence == nullptr);    // We don't ever want to re-initialize or our singleton did not work.
         _essence = this;
 
-        report(LOGGER::INFO, "Manifesting..");
+        report(LOGGER::INFO, "Existence - Creating Manifestation ..");
 
         SDL_Init(SDL_INIT_VIDEO);
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
@@ -41,7 +42,9 @@ Existence* Existence::create()
             window_flags
         );
 
+        report(LOGGER::INFO, "Existence - Creating Reality ..");
         _actuality = new Reality(_application_name);
+        report(LOGGER::INFO, "Existence - Reality Created ..");
 
         _initialized = true;
 
@@ -50,14 +53,14 @@ Existence* Existence::create()
 
 void Existence::materialize() 
     {
-        report(LOGGER::VERBOSE, "Materializing..");
+        report(LOGGER::VERBOSE, "Existence - Materializing ..");
 
         return;
     }
 
 void Existence::actualize() 
     {
-        report(LOGGER::INFO, "Actualizing..");
+        report(LOGGER::INFO, "Existence - Actualizing ..");
 
         SDL_Event _e;
         bool _quit = false;
@@ -80,7 +83,7 @@ void Existence::actualize()
 
 void Existence::cease() 
     {
-        report(LOGGER::INFO, "Ceasing..");
+        report(LOGGER::INFO, "Existence - Ceasing ..");
 
         if (_initialized) {
             SDL_DestroyWindow(_window);

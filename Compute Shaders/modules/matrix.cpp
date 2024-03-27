@@ -44,7 +44,7 @@ bool checkValidationLayerSupport() {
 
     std::vector<VkLayerProperties> availableLayers(layerCount);
     vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-    report(LOGGER::VERBOSE, "Checking for validation layers..");
+    report(LOGGER::VERBOSE, "Checking for validation layers ..");
     report(LOGGER::VLINE, "Vulkan: %d layers supported:", layerCount);
     for (const auto& layer : availableLayers) 
         { report(LOGGER::VLINE, "\t%s", layer.layerName); }
@@ -59,10 +59,12 @@ bool checkValidationLayerSupport() {
 
 Reality::Reality(std::string name) 
     {
+        report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
         init_framework(name);
         init_swapchain();
         init_commands();
         init_sync_structures();
+        report(LOGGER::INFO, "Reality - Matrix Initialized. Reality is ready. ..");
     }
 
 Reality::~Reality() 
@@ -80,6 +82,7 @@ Reality::~Reality()
 
 static void createVulkanInstance(VkInstance *instance) 
     {
+        report(LOGGER::INFO, "Matrix - Instantiating Engine ..");
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         app_info.pApplicationName = "Compute Shaders";
@@ -93,7 +96,7 @@ static void createVulkanInstance(VkInstance *instance)
         create_info.pApplicationInfo = &app_info;
 
         // Handle Extensions
-        report(LOGGER::DEBUG, "Checking for extensions..");
+        report(LOGGER::DEBUG, "Vulkan: Checking for extensions ..");
         
         uint32_t extension_count = 0;
         
@@ -169,6 +172,7 @@ static void createVulkanInstance(VkInstance *instance)
 static void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
     {
         if (!USE_VALIDATION_LAYERS) return;
+        report(LOGGER::INFO, "Matrix - Creating Listening Agent ..");
 
         VkDebugUtilsMessengerCreateInfoEXT create_info = {
             sType:              VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -193,18 +197,24 @@ static void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT 
     // INITIALIZERS //
     //////////////////
 
-void Reality::init_framework(std::string name) {
-    // Initialize Vulkan
-    createVulkanInstance(&_instance);
-    createDebugMessenger(&_instance, &_debug_messenger);
-}
+void Reality::init_framework(std::string name) 
+    {
+        report(LOGGER::INFO, "Matrix - Initializing Frameworks ..");
+        createVulkanInstance(&_instance);
+        createDebugMessenger(&_instance, &_debug_messenger);
+    }
 
-void Reality::init_swapchain() {
-}
+void Reality::init_swapchain() 
+    {
+        report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
+    }
 
-void Reality::init_commands() {
-}
+void Reality::init_commands() 
+    {
+        report(LOGGER::INFO, "Matrix - Initializing Commands..");
+    }
 
 void Reality::init_sync_structures()
-{
-}
+    {
+        report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures..");
+    }

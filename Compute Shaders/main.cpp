@@ -20,7 +20,7 @@
 #include "components/logger.h"
 
 int main(int argc, char* argv[]) {
-    report(LOGGER::INFO, "Creating Vulkan Renderer.");
+    report(LOGGER::VLINE, "Manifestation Exists.");
 
     Existence creation = Existence::manifest();
     creation.actualize();
