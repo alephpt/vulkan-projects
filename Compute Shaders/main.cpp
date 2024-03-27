@@ -22,8 +22,7 @@
 int main(int argc, char* argv[]) {
     report(LOGGER::INFO, "Creating Vulkan Renderer.");
 
-    Existence creation;
-    creation.manifest();
+    Existence creation = Existence::manifest();
     creation.actualize();
     creation.cease();
     

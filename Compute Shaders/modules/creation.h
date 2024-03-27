@@ -8,8 +8,12 @@ class Existence {
         VkExtent2D _window_extent { 1660, 1440 };
         struct SDL_Window* _window = nullptr;
 
-        void manifest();        // Init
-        void materialize();     // Draw
-        void actualize();       // Run
-        void cease();           // Cleanup
+        static Existence &manifest();   // Singleton
+
+        void materialize();             // Draw
+        void actualize();               // Run
+        void cease();                   // Cleanup
+    
+    private:
+        Existence* create();            // Init
 };
