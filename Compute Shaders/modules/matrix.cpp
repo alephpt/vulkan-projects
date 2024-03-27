@@ -289,7 +289,7 @@ static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice& logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
+static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
     {
         report(LOGGER::INFO, "Matrix - Creating Logical Device ..");
         QueueFamilyIndices indices = findQueueFamilies(physical_gpu, *_surface);
