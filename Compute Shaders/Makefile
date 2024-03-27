@@ -14,7 +14,7 @@ compute: main.cpp
 .PHONY: test clean
 
 debug:
-	g++ $(CFLAGS) -o ~/compute main.cpp $(LDFLAGS) $(INCLUDES) $(DBFLAGS)
+	g++ $(CFLAGS) -o ~/compute main.cpp $(LDFLAGS) $(INCLUDES) $(DBFLAGS) -fsanitize=address -g
 
 test: compute
 	LD_LIBRARY_PATH=$(VULKAN_SDK_PATH) VK_LAYER_PATH=$(VK_EXP_PATH) ./compute

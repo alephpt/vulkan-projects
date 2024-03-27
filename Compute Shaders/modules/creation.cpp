@@ -12,16 +12,16 @@
 Existence* _essence = nullptr;
 
 // Singleton to ensure only one instance of Existence is created.
-Existence& Existence::manifest()
+Existence* Existence::manifest()
     {
         report(LOGGER::INFO, "Existence - Conjuring Manifestation ..");
 
         if (_essence == nullptr) {
             Existence essence;
-            return *essence.create();
+            return essence.create();
         }
 
-        return *_essence;
+        return _essence;
     }
 
 Existence* Existence::create() 

@@ -13,41 +13,45 @@
     /////////////////////
 
 const bool USE_VALIDATION_LAYERS = true;
-const std::vector<const char*> VALIDATION_LAYERS = {
-    "VK_LAYER_KHRONOS_validation"
-};
+
+const std::vector<const char*> VALIDATION_LAYERS = 
+    {
+        "VK_LAYER_KHRONOS_validation"
+    };
+
 const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
-    QueueFamilyIndices indices;
-    uint32_t queueFamilyCount = 0;
-    int i = 0;
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) 
+    {
+        QueueFamilyIndices indices;
+        uint32_t queueFamilyCount = 0;
+        int i = 0;
 
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
 
-    for (const auto& queueFamily : queueFamilies) {
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+        for (const auto& queueFamily : queueFamilies) {
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
 
-        if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-            indices._graphics_family = i;
+            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                indices._graphics_family = i;
+            }
+
+            if (queueFamily.queueCount > 0 && presentSupport) {
+                indices._present_family = i;
+            }
+
+            if (indices.isComplete()) {
+                break;
+            }
+
+            i++;
         }
 
-        if (queueFamily.queueCount > 0 && presentSupport) {
-            indices._present_family = i;
-        }
-
-        if (indices.isComplete()) {
-            break;
-        }
-
-        i++;
+        return indices;
     }
-
-    return indices;
-}
 
 
     /////////////////////////
@@ -60,7 +64,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
                                                     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                                     void* pUserData) 
     {
-        report(LOGGER::DEBUG, "[VALIDATION] - %s", pCallbackData->pMessage);
+        report(LOGGER::VERBOSE, "[VALIDATION] - %s", pCallbackData->pMessage);
 
         return VK_FALSE;
     }
@@ -75,19 +79,20 @@ static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
             { report(LOGGER::ERROR, "Vulkan: vkDestroyDebugUtilsMessengerEXT not available"); }
     }
 
-bool checkValidationLayerSupport() {
-    uint32_t layerCount;
-    vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+bool checkValidationLayerSupport() 
+    {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-    std::vector<VkLayerProperties> availableLayers(layerCount);
-    vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-    report(LOGGER::VERBOSE, "Checking for validation layers ..");
-    report(LOGGER::VLINE, "Vulkan: %d layers supported:", layerCount);
-    for (const auto& layer : availableLayers) 
-        { report(LOGGER::VLINE, "\t%s", layer.layerName); }
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        report(LOGGER::VERBOSE, "Checking for validation layers ..");
+        report(LOGGER::VLINE, "Vulkan: %d layers supported:", layerCount);
+        for (const auto& layer : availableLayers) 
+            { report(LOGGER::VLINE, "\t%s", layer.layerName); }
 
-    return false;
-}
+        return false;
+    }
 
 
     ///////////////////
@@ -96,13 +101,13 @@ bool checkValidationLayerSupport() {
 
 
 Reality::Reality(std::string name, struct SDL_Window* window)
-{
-    report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
-    init_framework(name, window);
-    init_swapchain();
-    init_commands();
-    init_sync_structures();
-    report(LOGGER::INFO, "Reality - Matrix Initialized ..");
+    {
+        report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
+        init_framework(name, window);
+        init_swapchain();
+        init_commands();
+        init_sync_structures();
+        report(LOGGER::INFO, "Reality - Matrix Initialized ..");
     }
 
 Reality::~Reality() 
@@ -120,7 +125,7 @@ Reality::~Reality()
 
 static void createVulkanInstance(VkInstance *instance) 
     {
-        report(LOGGER::INFO, "Matrix - Instantiating Engine ..");
+        report(LOGGER::ILINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         app_info.pApplicationName = "Compute Shaders";
@@ -134,7 +139,7 @@ static void createVulkanInstance(VkInstance *instance)
         create_info.pApplicationInfo = &app_info;
 
         // Handle Extensions
-        report(LOGGER::DEBUG, "Vulkan: Checking for extensions ..");
+        report(LOGGER::VERBOSE, "Vulkan: Checking for extensions ..");
         
         uint32_t extension_count = 0;
         
@@ -210,7 +215,7 @@ static void createVulkanInstance(VkInstance *instance)
 static void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
     {
         if (!USE_VALIDATION_LAYERS) return;
-        report(LOGGER::INFO, "Matrix - Creating Listening Agent ..");
+        report(LOGGER::ILINE, "\t .. Creating Listening Agent ..");
 
         VkDebugUtilsMessengerCreateInfoEXT create_info = {
             sType:              VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -248,7 +253,7 @@ static bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_sur
 
 static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, VkSurfaceKHR *_surface) 
     {
-        report(LOGGER::INFO, "Matrix - Scanning for Physical Devices ..");
+        report(LOGGER::ILINE, "\t .. Scanning for Physical Devices ..");
 
         uint32_t device_count = 0;
         VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
@@ -272,7 +277,7 @@ static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical
                         VkPhysicalDeviceProperties device_properties;
                         vkGetPhysicalDeviceProperties(device, &device_properties);
 
-                        report(LOGGER::INFO, "Vulkan: Found GPU - %s", device_properties.deviceName);
+                        report(LOGGER::VERBOSE, "Vulkan: Found GPU - %s", device_properties.deviceName);
 
                         *physical_gpu = device;
                         break; 
@@ -291,7 +296,7 @@ static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical
 
 static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
     {
-        report(LOGGER::INFO, "Matrix - Creating Logical Device ..");
+        report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
         QueueFamilyIndices indices = findQueueFamilies(physical_gpu, *_surface);
         VkPhysicalDeviceFeatures device_features = {};
         float queue_priority = 1.0f;
@@ -316,17 +321,16 @@ static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_
         create_info.pEnabledFeatures = &device_features;
         create_info.enabledExtensionCount = 0;
 
-        if (USE_VALIDATION_LAYERS) 
-            { create_info.enabledLayerCount = VALIDATION_LAYER_COUNT; }
-        else 
-            { create_info.enabledLayerCount = 0; }
-
         VK_TRY(vkCreateDevice(physical_gpu, &create_info, nullptr, &logical_gpu));
-        printf("Queue Family: %d\n", indices._graphics_family.value());
 
         vkGetDeviceQueue(logical_gpu, indices._graphics_family.value(), 0, &_queues._graphics);
         vkGetDeviceQueue(logical_gpu, indices._present_family.value(), 0, &_queues._present);
 
+        report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
+        report(LOGGER::VLINE, "Graphics Family: %d", indices._graphics_family.value());
+        report(LOGGER::VLINE, "Present Family: %d", indices._present_family.value());
+        report(LOGGER::VLINE, "Logical GPU: %p", logical_gpu);
+        report(LOGGER::VLINE, "Physical GPU: %p", physical_gpu);
     }
 
 
@@ -337,7 +341,7 @@ static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_
 
 void Reality::init_framework(std::string name, struct SDL_Window* window) 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Frameworks ..");
+        report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
         createVulkanInstance(&_instance);
         SDL_Vulkan_CreateSurface(window, _instance, &_surface);
         createDebugMessenger(&_instance, &_debug_messenger);

@@ -8,7 +8,7 @@ class Existence {
         Reality* _actuality;
         struct SDL_Window* _window = nullptr;
 
-        static Existence &manifest();   // Singleton
+        static Existence* manifest();   // Singleton
 
         void materialize();             // Draw
         void actualize();               // Run
