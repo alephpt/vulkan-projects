@@ -1,15 +1,17 @@
 #include "creation.h"
 #include "genesis.h"
+#include "../components/logger.h"
 
+#include <cassert>
+#include <thread>
+#include <chrono>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
-#include "../components/logger.h"
-#include "creation.h"
-#include <cassert>
 
 
 Existence* _essence = nullptr;
 
+// Singleton to ensure only one instance of Existence is created.
 Existence& Existence::manifest()
     {
         if (_essence == nullptr) {
@@ -31,13 +33,15 @@ Existence* Existence::create()
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
 
         _window = SDL_CreateWindow(
-            "Compute Shaders",
+            _application_name.c_str(),
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
             _window_extent.width,
             _window_extent.height,
             window_flags
         );
+
+        _actuality = new Reality(_application_name);
 
         _initialized = true;
 
@@ -61,6 +65,13 @@ void Existence::actualize()
         while (!_quit) {
             while (SDL_PollEvent(&_e) != 0) {
                 if (_e.type == SDL_QUIT) { _quit = !_quit; }
+                if (_e.window.event == SDL_WINDOWEVENT_MINIMIZED) { _suspended = true; }
+                if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
+            }
+
+            if (_suspended) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                continue;
             }
 
             materialize();
@@ -74,4 +85,6 @@ void Existence::cease()
         if (_initialized) {
             SDL_DestroyWindow(_window);
         }
+
+        _essence = nullptr;
     }

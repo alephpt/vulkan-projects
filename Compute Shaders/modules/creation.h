@@ -1,11 +1,12 @@
 #pragma once
 #include "../components/lexicon.h"
+#include "./matrix.h"
 
 class Existence {
     public:
-        bool _initialized = false;
         int _frame_ct = 0;
         VkExtent2D _window_extent { 1660, 1440 };
+        Reality* _actuality;
         struct SDL_Window* _window = nullptr;
 
         static Existence &manifest();   // Singleton
@@ -15,5 +16,9 @@ class Existence {
         void cease();                   // Cleanup
     
     private:
+        std::string _application_name = "Compute Shaders";
+        bool _initialized = false;
+        bool _suspended = false;
+
         Existence* create();            // Init
 };
