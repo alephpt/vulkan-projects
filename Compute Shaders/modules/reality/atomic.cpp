@@ -53,9 +53,6 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceK
             if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
                 { indices.graphics_family = i; }
 
-            if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT) 
-                { indices.transfer_family = i; }
-
             if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) 
                 { indices.compute_family = i; }
 

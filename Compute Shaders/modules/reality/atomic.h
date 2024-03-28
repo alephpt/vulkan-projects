@@ -37,11 +37,10 @@ struct FrameData {
 struct QueueFamilyIndices {
     std::optional<unsigned int> graphics_family = -1;
     std::optional<unsigned int> present_family = -1;
-    std::optional<unsigned int> transfer_family = -1;
     std::optional<unsigned int> compute_family = -1;
 
     bool isComplete() {
-        return graphics_family >= 0 && present_family >= 0 && transfer_family >= 0 && compute_family >= 0;
+        return graphics_family >= 0 && present_family >= 0 && compute_family >= 0;
     }
 };
 
