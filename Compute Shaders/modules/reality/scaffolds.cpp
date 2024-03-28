@@ -217,7 +217,8 @@ void createLogicalDevice(EngineContext *context)
         create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
         create_info.pQueueCreateInfos = queue_create_infos.data();
         create_info.pEnabledFeatures = &device_features;
-        create_info.enabledExtensionCount = 0;
+        create_info.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
+        create_info.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
         VK_TRY(vkCreateDevice(context->physical_device, &create_info, nullptr, &context->logical_device));
 

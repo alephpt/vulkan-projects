@@ -89,9 +89,50 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
         if (swap_chain_support.capabilities.maxImageCount > 0 && _image_count > swap_chain_support.capabilities.maxImageCount) 
             { _image_count = swap_chain_support.capabilities.maxImageCount; }
 
-        VkSwapchainCreateInfoKHR _create_info = {};
-        _create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        _create_info.surface = context->surface;
-        _create_info.minImageCount = _image_count;
-        _create_info.imageFormat = swap_chain_details.surface_format.format;
+        VkSwapchainCreateInfoKHR _create_info = {
+            .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .surface = context->surface,
+            .minImageCount = _image_count,
+            .imageFormat = swap_chain_details.surface_format.format,
+            .imageColorSpace = swap_chain_details.surface_format.colorSpace,
+            .imageExtent = swap_chain_details.extent,
+            .imageArrayLayers = 1,
+            .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .preTransform = swap_chain_support.capabilities.currentTransform,
+            .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            .presentMode = swap_chain_details.present_mode,
+            .clipped = VK_TRUE,
+            .oldSwapchain = VK_NULL_HANDLE
+        };
+
+        QueueFamilyIndices _indices = findQueueFamilies(context->physical_device, context->surface);
+        uint32_t _queue_family_indices[] = { _indices.graphics_family.value(), _indices.present_family.value(), _indices.transfer_family.value(), _indices.compute_family.value() };
+
+        if (_indices.graphics_family != _indices.present_family)
+            {
+                report(LOGGER::DLINE, "\t.. Concurrent Queue Families Achieved ..");
+                _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+                _create_info.queueFamilyIndexCount = 2;
+                _create_info.pQueueFamilyIndices = _queue_family_indices;
+            }
+        else
+            {
+                report(LOGGER::ERROR, "\t.. Single Queue Family Achieved ..");
+                _create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+                _create_info.queueFamilyIndexCount = 0;
+                _create_info.pQueueFamilyIndices = nullptr;
+            }
+
+        VK_TRY(vkCreateSwapchainKHR(context->logical_device, &_create_info, nullptr, &context->swapchain.instance));
+
+        vkGetSwapchainImagesKHR(context->logical_device, context->swapchain.instance, &_image_count, nullptr);
+        context->swapchain.images.resize(_image_count);
+        vkGetSwapchainImagesKHR(context->logical_device, context->swapchain.instance, &_image_count, context->swapchain.images.data());
+
+        context->swapchain.format = swap_chain_details.surface_format.format;
+        context->swapchain.extent = swap_chain_details.extent;
+
+        report(LOGGER::INFO, "\t.. SwapChain Constructed ..");
+        return; 
     }
