@@ -4,6 +4,7 @@
 #include <SDL2/SDL_vulkan.h>
 #include <set>
 
+
     /////////////////////
     // VALIDATION LAYER //
     /////////////////////
@@ -22,6 +23,7 @@ bool checkValidationLayerSupport()
 
         return false;
     }
+
 
     /////////////////////
     // VULKAN INSTANCE //
@@ -112,6 +114,7 @@ void createVulkanInstance(VkInstance *instance)
         VK_TRY(vkCreateInstance(&create_info, nullptr, instance));
     }
 
+
     /////////////////////
     // DEBUG MESSENGER //
     /////////////////////
@@ -139,6 +142,7 @@ void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug
         else 
             { report(LOGGER::ERROR, "Vulkan: vkCreateDebugUtilsMessengerEXT not available\n"); }
     }
+
 
     //////////////////////////
     // PHYSICAL DEVICE INFO //
@@ -172,6 +176,34 @@ void createPhysicalDevice(EngineContext *context)
                     { 
                         report(LOGGER::VLINE, "\tUsing Device: %s", device_properties.deviceName);
 
+                        std::vector<VkQueueFamilyProperties> queue_families;
+                        uint32_t queue_family_count = 0;
+                        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
+                        queue_families.resize(queue_family_count);
+                        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
+
+                        report(LOGGER::INFO, "\tQueue Families: %d", queue_family_count);
+                        for (const auto& queue_family : queue_families) 
+                            {
+                                report(LOGGER::INFO, "\t\tQueue Count: %d", queue_family.queueCount);
+
+                                    std::string queue_name = "";
+
+                                    if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
+                                        { queue_name += "{ Graphics } "; }
+                                    if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) 
+                                        { queue_name += "{ Compute } "; }
+                                    if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT) 
+                                        { queue_name += "{ Transfer } "; }
+                                    if (queue_family.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
+                                        { queue_name += "{ Sparse Binding } "; }
+
+                                    if (queue_name.empty()) 
+                                        { queue_name = "~ Unknown ~"; }
+
+                                    report(LOGGER::ILINE, "\t\t\t %s", queue_name.c_str());
+                            }
+
                         context->physical_device = device;
                         break; 
                     }
@@ -198,7 +230,6 @@ void createLogicalDevice(EngineContext *context)
         std::set<uint32_t> unique_queue_families = {
             indices.graphics_family.value(), 
             indices.present_family.value(), 
-            indices.transfer_family.value(),
             indices.compute_family.value()
         };
         
@@ -224,16 +255,12 @@ void createLogicalDevice(EngineContext *context)
 
         vkGetDeviceQueue(context->logical_device, indices.graphics_family.value(), 0, &context->queues.graphics);
         vkGetDeviceQueue(context->logical_device, indices.present_family.value(), 0, &context->queues.present);
-        vkGetDeviceQueue(context->logical_device, indices.transfer_family.value(), 0, &context->queues.transfer);
         vkGetDeviceQueue(context->logical_device, indices.compute_family.value(), 0, &context->queues.compute);
 
         report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
         report(LOGGER::VLINE, "\tGraphics Family: %d", indices.graphics_family.value());
         report(LOGGER::VLINE, "\tPresent Family: %d", indices.present_family.value());
-        report(LOGGER::VLINE, "\tTransfer Family: %d", indices.transfer_family.value());
         report(LOGGER::VLINE, "\tCompute Family: %d", indices.compute_family.value());
         report(LOGGER::VLINE, "\tLogical GPU: %p", context->logical_device);
         report(LOGGER::VLINE, "\tPhysical GPU: %p", context->physical_device);
     }
-
-

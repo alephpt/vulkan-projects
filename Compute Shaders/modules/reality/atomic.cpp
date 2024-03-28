@@ -2,6 +2,7 @@
 
 #include <set>
 #include <string>
+#include "./virtual.h"
 
     //////////////////
     //  Debug Utils //
@@ -67,6 +68,39 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceK
         return indices;
     }
 
+
+    ///////////////////////////////
+    //  Virtual Swapchain Layers //
+    ///////////////////////////////
+
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface) 
+    {
+        report(LOGGER::DLINE, "\t.. Querying SwapChain Support ..");
+        SwapChainSupportDetails details;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
+
+        uint32_t _format_count;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, nullptr);
+
+        if (_format_count != 0) 
+            {
+                details.formats.resize(_format_count);
+                vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, details.formats.data());
+            }
+
+        uint32_t _present_mode_count;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, nullptr);
+
+        if (_present_mode_count != 0) 
+            {
+                details.present_modes.resize(_present_mode_count);
+                vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, details.present_modes.data());
+            }
+
+        return details;
+    }
+
+
     /////////////////////////////////
     // DEVICE MANAGEMENT UTILITIES //
     /////////////////////////////////
@@ -88,17 +122,17 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
         return requiredExtensions.empty();
     }
 
-
-
 bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface)
     {
         QueueFamilyIndices queue_indices = findQueueFamilies(scanned_device, existing_surface);
         bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
 
-        return queue_indices.isComplete() && extensions_supported;
+        bool swap_chain_adequate = false;
+        if (extensions_supported) 
+            {
+                SwapChainSupportDetails swap_chain_support = querySwapChainSupport(scanned_device, existing_surface);
+                swap_chain_adequate = !swap_chain_support.formats.empty() && !swap_chain_support.present_modes.empty();
+            }
+
+        return queue_indices.isComplete() && extensions_supported && swap_chain_adequate;
     }
-
-
-    ///////////////////////////////
-    //  Virtual Swapchain Layers //
-    ///////////////////////////////

@@ -48,7 +48,6 @@ struct QueueFamilyIndices {
 struct Queues {
     VkQueue graphics;
     VkQueue present;
-    VkQueue transfer;
     VkQueue compute;
 };
 
@@ -97,3 +96,4 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
 
 // Swapchain Buffer Functions
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface);

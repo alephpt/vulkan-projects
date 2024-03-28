@@ -1,33 +1,6 @@
 #include "./virtual.h"
 
 
-SwapChainSupportDetails querySwapChainSupport(EngineContext context) 
-    {
-        report(LOGGER::DLINE, "\t.. Querying SwapChain Support ..");
-        SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.physical_device, context.surface, &details.capabilities);
-
-        uint32_t _format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(context.physical_device, context.surface, &_format_count, nullptr);
-
-        if (_format_count != 0) 
-            {
-                details.formats.resize(_format_count);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(context.physical_device, context.surface, &_format_count, details.formats.data());
-            }
-
-        uint32_t _present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(context.physical_device, context.surface, &_present_mode_count, nullptr);
-
-        if (_present_mode_count != 0) 
-            {
-                details.present_modes.resize(_present_mode_count);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(context.physical_device, context.surface, &_present_mode_count, details.present_modes.data());
-            }
-
-        return details;
-    }
-
 static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) 
     {
         report(LOGGER::DLINE, "\t.. Selecting Swap Surface Format ..");
@@ -40,6 +13,7 @@ static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFor
         return available_formats[0];
     }
 
+
 static VkPresentModeKHR selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes) 
     {
         report(LOGGER::DLINE, "\t.. Selecting Swap Present Mode ..");
@@ -51,6 +25,7 @@ static VkPresentModeKHR selectSwapPresentMode(const std::vector<VkPresentModeKHR
 
         return VK_PRESENT_MODE_FIFO_KHR;
     }
+
 
 static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D window_extent) 
     {
@@ -66,6 +41,7 @@ static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
             }
     }
 
+
 SwapChainDetails querySwapChainDetails(SwapChainSupportDetails swap_chain_support, VkExtent2D window_extent)
     {
         report(LOGGER::DLINE, "\t.. Querying SwapChain Details ..");
@@ -80,6 +56,7 @@ SwapChainDetails querySwapChainDetails(SwapChainSupportDetails swap_chain_suppor
 
         return details;
     }
+
 
 void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDetails swap_chain_support, EngineContext *context) 
     {
@@ -107,13 +84,13 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
         };
 
         QueueFamilyIndices _indices = findQueueFamilies(context->physical_device, context->surface);
-        uint32_t _queue_family_indices[] = { _indices.graphics_family.value(), _indices.present_family.value(), _indices.transfer_family.value(), _indices.compute_family.value() };
+        uint32_t _queue_family_indices[] = { _indices.graphics_family.value(), _indices.present_family.value() };
 
         if (_indices.graphics_family != _indices.present_family)
             {
                 report(LOGGER::DLINE, "\t.. Concurrent Queue Families Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                _create_info.queueFamilyIndexCount = 2;
+                _create_info.queueFamilyIndexCount = 1;
                 _create_info.pQueueFamilyIndices = _queue_family_indices;
             }
         else

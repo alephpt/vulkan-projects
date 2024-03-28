@@ -109,7 +109,7 @@ void Reality::init_framework()
 void Reality::init_swapchain() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
-        SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_context);
+        SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_context.physical_device, _context.surface);
         SwapChainDetails _swapchain_details = querySwapChainDetails(_swapchain_support, _context.window_extent);
 
         constructSwapChain(_swapchain_details, _swapchain_support, &_context);
