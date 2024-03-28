@@ -1,4 +1,6 @@
 #include "matrix.h"
+#include "./scaffolds.h"
+#include "./virtual.h"
 #include <SDL2/SDL_vulkan.h>
 
 
@@ -19,10 +21,14 @@ Reality::Reality(std::string name, struct SDL_Window* window)
 
 Reality::~Reality() 
     {
+        vkDestroyDevice(_logical_gpu, nullptr);
+
         if (USE_VALIDATION_LAYERS) 
             { destroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr); }
 
+        vkDestroySurfaceKHR(_instance, _surface, nullptr);
         vkDestroyInstance(_instance, nullptr);
+
     }
 
     //////////////////

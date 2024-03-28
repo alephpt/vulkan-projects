@@ -1,6 +1,6 @@
 #pragma once
 #include "../../components/lexicon.h"
-#include "./framework.h"
+#include "./atomic.h"
 #include <string>
 
 class Reality {

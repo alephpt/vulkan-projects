@@ -43,15 +43,24 @@ const std::vector<const char*> VALIDATION_LAYERS =
         "VK_LAYER_KHRONOS_validation"
     };
 
+const std::vector<const char*> DEVICE_EXTENSIONS = 
+    {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+
 const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
 
     ////////////////////
     // CORE FUNCTIONS //
     ////////////////////
 
+// Framework Scaffolding Functions
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
                                                     VkDebugUtilsMessageTypeFlagsEXT messageType, 
                                                     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                                     void* pUserData);
 void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface);
+
+// Swapchain Buffer Functions

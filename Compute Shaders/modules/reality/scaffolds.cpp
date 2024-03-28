@@ -1,4 +1,4 @@
-#include "./framework.h"
+#include "./scaffolds.h"
 #include "./matrix.h"
 #include "../../components/lexicon.h"
 #include <SDL2/SDL_vulkan.h>
@@ -139,17 +139,6 @@ void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug
         else 
             { report(LOGGER::ERROR, "Vulkan: vkCreateDebugUtilsMessengerEXT not available\n"); }
     }
-
-
-    /////////////////////////
-    // DEVICE QUEUE FAMILY //
-    /////////////////////////
-
-bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface) 
-    {
-        return findQueueFamilies(physical_gpu, *_surface).isComplete();
-    }
-
 
     //////////////////////////
     // PHYSICAL DEVICE INFO //

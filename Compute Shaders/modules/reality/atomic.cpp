@@ -1,5 +1,9 @@
 #include "atomic.h"
 
+    ////////////////////
+    //  Device Layers //
+    ////////////////////
+
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) 
     {
         QueueFamilyIndices indices;
@@ -54,3 +58,12 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
         else 
             { report(LOGGER::ERROR, "Vulkan: vkDestroyDebugUtilsMessengerEXT not available"); }
     }
+
+bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface) 
+    {
+        return findQueueFamilies(physical_gpu, *_surface).isComplete();
+    }
+
+    ///////////////////////////////
+    //  Virtual Swapchain Layers //
+    ///////////////////////////////

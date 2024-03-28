@@ -85,13 +85,17 @@ void Existence::actualize()
         }
     }
 
+// Why aren't we using the destructor to clean up?
 void Existence::cease() 
     {
         report(LOGGER::INFO, "Existence - Ceasing ..");
+
+        delete _actuality;
 
         if (_initialized) {
             SDL_DestroyWindow(_window);
         }
 
+        SDL_Quit();
         _essence = nullptr;
     }
