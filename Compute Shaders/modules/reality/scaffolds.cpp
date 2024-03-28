@@ -221,7 +221,7 @@ void createPhysicalDevice(EngineContext *context)
 
 void createLogicalDevice(EngineContext *context)
     {
-        report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
+        report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
         QueueFamilyIndices indices = findQueueFamilies(context->physical_device, context->surface);
         VkPhysicalDeviceFeatures device_features = {};
         float queue_priority = 1.0f;
@@ -235,19 +235,22 @@ void createLogicalDevice(EngineContext *context)
         
         for (uint32_t queue_family : unique_queue_families) 
             {
-                report(LOGGER::ILINE, "\tQueue Family: %d", queue_family);
+                report(LOGGER::DLINE, "\t\tQueue Family: %d", queue_family);
+                
                 VkDeviceQueueCreateInfo queue_create_info = {
                     sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                     queueFamilyIndex: queue_family,
                     queueCount: 1,
                     pQueuePriorities: &queue_priority
                 };
+
+                queue_create_infos.push_back(queue_create_info);
             }
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
         create_info.pQueueCreateInfos = queue_create_infos.data();
+        create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
         create_info.pEnabledFeatures = &device_features;
         create_info.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
         create_info.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();

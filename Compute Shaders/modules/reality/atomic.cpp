@@ -34,6 +34,7 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface) 
     {
+        report(LOGGER::DLINE, "\t .. Querying Queue Families ..");
         QueueFamilyIndices indices;
         uint32_t _queue_family_count = 0;
         int i = 0;
@@ -41,13 +42,13 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceK
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
         std::vector<VkQueueFamilyProperties> _queue_families(_queue_family_count);
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, _queue_families.data());
-        report(LOGGER::VLINE, "\t\tQueue Families: %d", _queue_family_count);
+        report(LOGGER::DLINE, "\t\tQueue Family Count: %d", _queue_family_count);
 
         for (const auto& _queue_family : _queue_families) {
             VkBool32 presentSupport = false;
             vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, existing_surface, &presentSupport);
 
-            if (_queue_family.queueCount > 0 && presentSupport) 
+            if (presentSupport) 
                 { indices.present_family = i; }
 
             if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
