@@ -50,6 +50,7 @@ void Existence::actualize()
     {
         report(LOGGER::INFO, "Existence - Actualizing ..");
 
+        _actuality->illuminate();
         //_actuality->illuminate((fnManifest)this->materialize);
     }
 
