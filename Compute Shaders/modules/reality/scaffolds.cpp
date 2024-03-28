@@ -164,15 +164,13 @@ void createPhysicalDevice(EngineContext *context)
             {
                 VkPhysicalDeviceProperties device_properties;
                 vkGetPhysicalDeviceProperties(device, &device_properties);
-                report(LOGGER::DEBUG, "\tScanning Device: %p - %s", device, device_properties.deviceName);
+                report(LOGGER::VLINE, "\tScanning Device: %p - %s", device, device_properties.deviceName);
                 if (device == VK_NULL_HANDLE) 
                     { continue; }
 
                 if (deviceProvisioned(device, context->surface))
                     { 
-                        printf("Device Provisioned\n");
-
-                        report(LOGGER::DEBUG, "Using Device: %s", device_properties.deviceName);
+                        report(LOGGER::VLINE, "\tUsing Device: %s", device_properties.deviceName);
 
                         context->physical_device = device;
                         break; 
@@ -229,12 +227,12 @@ void createLogicalDevice(EngineContext *context)
         vkGetDeviceQueue(context->logical_device, indices.compute_family.value(), 0, &context->queues.compute);
 
         report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
-        report(LOGGER::VLINE, "Graphics Family: %d", indices.graphics_family.value());
-        report(LOGGER::VLINE, "Present Family: %d", indices.present_family.value());
-        report(LOGGER::VLINE, "Transfer Family: %d", indices.transfer_family.value());
-        report(LOGGER::VLINE, "Compute Family: %d", indices.compute_family.value());
-        report(LOGGER::VLINE, "Logical GPU: %p", context->logical_device);
-        report(LOGGER::VLINE, "Physical GPU: %p", context->physical_device);
+        report(LOGGER::VLINE, "\tGraphics Family: %d", indices.graphics_family.value());
+        report(LOGGER::VLINE, "\tPresent Family: %d", indices.present_family.value());
+        report(LOGGER::VLINE, "\tTransfer Family: %d", indices.transfer_family.value());
+        report(LOGGER::VLINE, "\tCompute Family: %d", indices.compute_family.value());
+        report(LOGGER::VLINE, "\tLogical GPU: %p", context->logical_device);
+        report(LOGGER::VLINE, "\tPhysical GPU: %p", context->physical_device);
     }
 
 

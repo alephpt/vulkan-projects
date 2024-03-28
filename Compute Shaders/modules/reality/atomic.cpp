@@ -40,7 +40,7 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceK
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
         std::vector<VkQueueFamilyProperties> _queue_families(_queue_family_count);
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, _queue_families.data());
-        report(LOGGER::DLINE, "Queue Families: %d\n", _queue_family_count);
+        report(LOGGER::VLINE, "\t\tQueue Families: %d", _queue_family_count);
 
         for (const auto& _queue_family : _queue_families) {
             VkBool32 presentSupport = false;
