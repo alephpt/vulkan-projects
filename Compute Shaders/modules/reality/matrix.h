@@ -1,31 +1,7 @@
-#include "../components/lexicon.h"
-
+#pragma once
+#include "../../components/lexicon.h"
+#include "./framework.h"
 #include <string>
-#include <optional>
-
-constexpr unsigned int MAX_FRAMES_IN_FLIGHT = 2;
-
-struct FrameData {
-    VkSemaphore _image_available;
-    VkSemaphore _render_finished;
-    VkFence _in_flight;
-    VkCommandBuffer _command_buffer;
-    VkCommandPool _command_pool;
-};
-
-struct QueueFamilyIndices {
-    std::optional<unsigned int> _graphics_family = -1;
-    std::optional<unsigned int> _present_family = -1;
-
-    bool isComplete() {
-        return _graphics_family >= 0 && _present_family >= 0;
-    }
-};
-
-struct Queues {
-    VkQueue _graphics;
-    VkQueue _present;
-};
 
 class Reality {
     public:

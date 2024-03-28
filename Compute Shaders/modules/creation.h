@@ -1,6 +1,5 @@
 #pragma once
-#include "../components/lexicon.h"
-#include "./matrix.h"
+#include "./reality/matrix.h"
 
 class Existence {
     public:

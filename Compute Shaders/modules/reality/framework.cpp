@@ -1,83 +1,12 @@
-#include "matrix.h"
-
-#include <vector>
-#include <string>
+#include "./framework.h"
+#include "./matrix.h"
+#include "../../components/lexicon.h"
+#include <SDL2/SDL_vulkan.h>
 #include <set>
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
-
-
     /////////////////////
-    // LOCAL VARIABLES //
+    // VALIDATION LAYER //
     /////////////////////
-
-const bool USE_VALIDATION_LAYERS = true;
-
-const std::vector<const char*> VALIDATION_LAYERS = 
-    {
-        "VK_LAYER_KHRONOS_validation"
-    };
-
-const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
-
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) 
-    {
-        QueueFamilyIndices indices;
-        uint32_t queueFamilyCount = 0;
-        int i = 0;
-
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-        for (const auto& queueFamily : queueFamilies) {
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
-            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                indices._graphics_family = i;
-            }
-
-            if (queueFamily.queueCount > 0 && presentSupport) {
-                indices._present_family = i;
-            }
-
-            if (indices.isComplete()) {
-                break;
-            }
-
-            i++;
-        }
-
-        return indices;
-    }
-
-
-    /////////////////////////
-    // DEBUGGING CALLBACKS //
-    /////////////////////////
-
-
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-                                                    VkDebugUtilsMessageTypeFlagsEXT messageType, 
-                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
-                                                    void* pUserData) 
-    {
-        report(LOGGER::VERBOSE, "[VALIDATION] - %s", pCallbackData->pMessage);
-
-        return VK_FALSE;
-    }
-
-static void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) 
-    {
-        auto destroyDebugUtilsExt = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-
-        if (destroyDebugUtilsExt != nullptr) 
-            { destroyDebugUtilsExt(instance, debugMessenger, pAllocator); } 
-        else 
-            { report(LOGGER::ERROR, "Vulkan: vkDestroyDebugUtilsMessengerEXT not available"); }
-    }
 
 bool checkValidationLayerSupport() 
     {
@@ -94,36 +23,11 @@ bool checkValidationLayerSupport()
         return false;
     }
 
-
-    ///////////////////
-    // INSTANTIATION //
-    ///////////////////
-
-
-Reality::Reality(std::string name, struct SDL_Window* window)
-    {
-        report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
-        init_framework(name, window);
-        init_swapchain();
-        init_commands();
-        init_sync_structures();
-        report(LOGGER::INFO, "Reality - Matrix Initialized ..");
-    }
-
-Reality::~Reality() 
-    {
-        if (USE_VALIDATION_LAYERS) 
-            { destroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr); }
-
-        vkDestroyInstance(_instance, nullptr);
-    }
-
-
     /////////////////////
     // VULKAN INSTANCE //
     /////////////////////
 
-static void createVulkanInstance(VkInstance *instance) 
+void createVulkanInstance(VkInstance *instance) 
     {
         report(LOGGER::ILINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {};
@@ -212,7 +116,7 @@ static void createVulkanInstance(VkInstance *instance)
     // DEBUG MESSENGER //
     /////////////////////
 
-static void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
+void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
     {
         if (!USE_VALIDATION_LAYERS) return;
         report(LOGGER::ILINE, "\t .. Creating Listening Agent ..");
@@ -241,7 +145,7 @@ static void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT 
     // DEVICE QUEUE FAMILY //
     /////////////////////////
 
-static bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface) 
+bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface) 
     {
         return findQueueFamilies(physical_gpu, *_surface).isComplete();
     }
@@ -251,7 +155,7 @@ static bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_sur
     // PHYSICAL DEVICE INFO //
     //////////////////////////
 
-static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, VkSurfaceKHR *_surface) 
+void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, VkSurfaceKHR *_surface) 
     {
         report(LOGGER::ILINE, "\t .. Scanning for Physical Devices ..");
 
@@ -294,7 +198,7 @@ static void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
+void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
     {
         report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
         QueueFamilyIndices indices = findQueueFamilies(physical_gpu, *_surface);
@@ -302,7 +206,12 @@ static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_
         float queue_priority = 1.0f;
 
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        std::set<uint32_t> unique_queue_families = {indices._graphics_family.value(), indices._present_family.value()};
+        std::set<uint32_t> unique_queue_families = {
+            indices._graphics_family.value(), 
+            indices._present_family.value(), 
+            indices._transfer_family.value(),
+            indices._compute_family.value()
+        };
         
         for (uint32_t queue_family : unique_queue_families) 
             {
@@ -325,6 +234,8 @@ static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_
 
         vkGetDeviceQueue(logical_gpu, indices._graphics_family.value(), 0, &_queues._graphics);
         vkGetDeviceQueue(logical_gpu, indices._present_family.value(), 0, &_queues._present);
+        vkGetDeviceQueue(logical_gpu, indices._transfer_family.value(), 0, &_queues._transfer);
+        vkGetDeviceQueue(logical_gpu, indices._compute_family.value(), 0, &_queues._compute);
 
         report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
         report(LOGGER::VLINE, "Graphics Family: %d", indices._graphics_family.value());
@@ -334,38 +245,3 @@ static void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_
     }
 
 
-
-    //////////////////
-    // INITIALIZERS //
-    //////////////////
-
-void Reality::init_framework(std::string name, struct SDL_Window* window) 
-    {
-        report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
-        createVulkanInstance(&_instance);
-        SDL_Vulkan_CreateSurface(window, _instance, &_surface);
-        createDebugMessenger(&_instance, &_debug_messenger);
-        createPhysicalDevice(_instance, &_physical_gpu, &_surface);
-        createLogicalDevice(_physical_gpu, _logical_gpu, _queues, &_surface);
-    }
-
-void Reality::init_swapchain() 
-    {
-        report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
-    }
-
-void Reality::init_commands() 
-    {
-        report(LOGGER::INFO, "Matrix - Initializing Commands ..");
-    }
-
-void Reality::init_sync_structures()
-    {
-        report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
-    }
-
-    ////////////////////
-    // CORE FUNCTIONS //
-    ////////////////////
-
-FrameData &Reality::_current_frame() { { return _frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }

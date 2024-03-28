@@ -1,6 +1,5 @@
 #include "creation.h"
 #include "genesis.h"
-#include "../components/logger.h"
 
 #include <cassert>
 #include <thread>
