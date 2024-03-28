@@ -41,7 +41,7 @@ Existence* Existence::create()
 
 void Existence::materialize() 
     {
-        report(LOGGER::VERBOSE, "Existence - Materializing ..");
+       // report(LOGGER::INFO, "Existence - Materializing ..");
 
         return;
     }
@@ -50,8 +50,8 @@ void Existence::actualize()
     {
         report(LOGGER::INFO, "Existence - Actualizing ..");
 
-        _actuality->illuminate();
-        //_actuality->illuminate((fnManifest)this->materialize);
+        //_actuality->illuminate();
+        _actuality->illuminate(Existence::materialize);
     }
 
 // Why aren't we using the destructor to clean up?

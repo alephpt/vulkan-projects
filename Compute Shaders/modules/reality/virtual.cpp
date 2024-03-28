@@ -1,28 +1,28 @@
 #include "./virtual.h"
 
 
-SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) 
+SwapChainSupportDetails querySwapChainSupport(EngineContext context) 
     {
         report(LOGGER::DLINE, "\t.. Querying SwapChain Support ..");
         SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details._capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(context.physical_device, context.surface, &details.capabilities);
 
         uint32_t _format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(context.physical_device, context.surface, &_format_count, nullptr);
 
         if (_format_count != 0) 
             {
-                details._formats.resize(_format_count);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, details._formats.data());
+                details.formats.resize(_format_count);
+                vkGetPhysicalDeviceSurfaceFormatsKHR(context.physical_device, context.surface, &_format_count, details.formats.data());
             }
 
         uint32_t _present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(context.physical_device, context.surface, &_present_mode_count, nullptr);
 
         if (_present_mode_count != 0) 
             {
-                details._present_modes.resize(_present_mode_count);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details._present_modes.data());
+                details.present_modes.resize(_present_mode_count);
+                vkGetPhysicalDeviceSurfacePresentModesKHR(context.physical_device, context.surface, &_present_mode_count, details.present_modes.data());
             }
 
         return details;
@@ -68,15 +68,30 @@ static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
 
 SwapChainDetails querySwapChainDetails(SwapChainSupportDetails swap_chain_support, VkExtent2D window_extent)
     {
-        report(LOGGER::ILINE, "\t.. Querying SwapChain Details ..");
+        report(LOGGER::DLINE, "\t.. Querying SwapChain Details ..");
         SwapChainDetails details;
 
-        if (swap_chain_support._formats.empty() || swap_chain_support._present_modes.empty()) 
+        if (swap_chain_support.formats.empty() || swap_chain_support.present_modes.empty()) 
             { report(LOGGER::ERROR, "Vulkan: Swap chain support not available"); }
 
-        details._surface_format = selectSwapSurfaceFormat(swap_chain_support._formats);
-        details._present_mode = selectSwapPresentMode(swap_chain_support._present_modes);
-        details._extent = selectSwapExtent(swap_chain_support._capabilities, window_extent);
+        details.surface_format = selectSwapSurfaceFormat(swap_chain_support.formats);
+        details.present_mode = selectSwapPresentMode(swap_chain_support.present_modes);
+        details.extent = selectSwapExtent(swap_chain_support.capabilities, window_extent);
 
         return details;
+    }
+
+void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDetails swap_chain_support, EngineContext *context) 
+    {
+        report(LOGGER::DLINE, "\t.. Constructing SwapChain ..");
+        uint32_t _image_count = swap_chain_support.capabilities.minImageCount + 1;
+
+        if (swap_chain_support.capabilities.maxImageCount > 0 && _image_count > swap_chain_support.capabilities.maxImageCount) 
+            { _image_count = swap_chain_support.capabilities.maxImageCount; }
+
+        VkSwapchainCreateInfoKHR _create_info = {};
+        _create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        _create_info.surface = context->surface;
+        _create_info.minImageCount = _image_count;
+        _create_info.imageFormat = swap_chain_details.surface_format.format;
     }

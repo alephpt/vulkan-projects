@@ -7,10 +7,11 @@ class Reality {
     public:
         bool initialized = false;
 
-        Reality(std::string name, VkExtent2D window_extent);
+        Reality(std::string, VkExtent2D);
         ~Reality();
 
-        void illuminate();//fnManifest manifest);
+        //void illuminate();
+        void illuminate(fnManifest);
 
     private:
         std::string _application_name;
@@ -18,18 +19,10 @@ class Reality {
         int _frame_ct = 0;
 
         struct SDL_Window* _window = nullptr;
-        VkExtent2D _window_extent { 800, 600 };
 
-        VkInstance _instance;
+        EngineContext _context;
         VkDebugUtilsMessengerEXT _debug_messenger;
-        VkPhysicalDevice _physical_gpu;
-        VkDevice _logical_gpu;
-        VkQueue _graphics_queue;
-        VkQueue _present_queue;
-        VkSurfaceKHR _surface;
-        VkSwapchainKHR _swapchain;
 
-        Queues _queues;
         FrameData _frames[MAX_FRAMES_IN_FLIGHT];
         FrameData& _current_frame();
 

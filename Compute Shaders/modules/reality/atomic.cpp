@@ -31,31 +31,32 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     //  Device Queues //
     ////////////////////
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) 
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface) 
     {
         QueueFamilyIndices indices;
-        uint32_t queueFamilyCount = 0;
+        uint32_t _queue_family_count = 0;
         int i = 0;
 
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
+        std::vector<VkQueueFamilyProperties> _queue_families(_queue_family_count);
+        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, _queue_families.data());
+        report(LOGGER::DLINE, "Queue Families: %d\n", _queue_family_count);
 
-        for (const auto& queueFamily : queueFamilies) {
+        for (const auto& _queue_family : _queue_families) {
             VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+            vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, existing_surface, &presentSupport);
 
-            if (queueFamily.queueCount > 0 && presentSupport) 
-                { indices._present_family = i; }
+            if (_queue_family.queueCount > 0 && presentSupport) 
+                { indices.present_family = i; }
 
-            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
-                { indices._graphics_family = i; }
+            if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
+                { indices.graphics_family = i; }
 
-            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_TRANSFER_BIT) 
-                { indices._transfer_family = i; }
+            if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT) 
+                { indices.transfer_family = i; }
 
-            if (queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_COMPUTE_BIT) 
-                { indices._compute_family = i; }
+            if (_queue_family.queueCount > 0 && _queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) 
+                { indices.compute_family = i; }
 
             if (indices.isComplete()) 
                 { break; }
@@ -65,11 +66,6 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surfa
 
         return indices;
     }
-
-
-    ///////////////////////////////
-    //  Virtual Swapchain Layers //
-    ///////////////////////////////
 
     /////////////////////////////////
     // DEVICE MANAGEMENT UTILITIES //
@@ -94,10 +90,15 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
 
 
 
-bool deviceProvisioned(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface) 
+bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface)
     {
-        QueueFamilyIndices queue_indices = findQueueFamilies(physical_gpu, *_surface);
-        bool extensions_supported = checkDeviceExtensionSupport(physical_gpu);
+        QueueFamilyIndices queue_indices = findQueueFamilies(scanned_device, existing_surface);
+        bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
 
         return queue_indices.isComplete() && extensions_supported;
     }
+
+
+    ///////////////////////////////
+    //  Virtual Swapchain Layers //
+    ///////////////////////////////

@@ -27,54 +27,73 @@ const std::vector<const char*> DEVICE_EXTENSIONS =
 const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
 
 struct FrameData {
-    VkSemaphore _image_available;
-    VkSemaphore _render_finished;
-    VkFence _in_flight;
-    VkCommandBuffer _command_buffer;
-    VkCommandPool _command_pool;
+    VkSemaphore image_available;
+    VkSemaphore render_finished;
+    VkFence in_flight;
+    VkCommandBuffer command_buffer;
+    VkCommandPool command_pool;
 };
 
 struct QueueFamilyIndices {
-    std::optional<unsigned int> _graphics_family = -1;
-    std::optional<unsigned int> _present_family = -1;
-    std::optional<unsigned int> _transfer_family = -1;
-    std::optional<unsigned int> _compute_family = -1;
+    std::optional<unsigned int> graphics_family = -1;
+    std::optional<unsigned int> present_family = -1;
+    std::optional<unsigned int> transfer_family = -1;
+    std::optional<unsigned int> compute_family = -1;
 
     bool isComplete() {
-        return _graphics_family >= 0 && _present_family >= 0;
+        return graphics_family >= 0 && present_family >= 0;
     }
 };
 
 struct Queues {
-    VkQueue _graphics;
-    VkQueue _present;
-    VkQueue _transfer;
-    VkQueue _compute;
+    VkQueue graphics;
+    VkQueue present;
+    VkQueue transfer;
+    VkQueue compute;
 };
 
 struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR _capabilities;
-    std::vector<VkSurfaceFormatKHR> _formats;
-    std::vector<VkPresentModeKHR> _present_modes;
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> present_modes;
 };
 
 struct SwapChainDetails {
-    VkSurfaceFormatKHR  _surface_format;
-    VkPresentModeKHR    _present_mode;
-    VkExtent2D          _extent;
+    VkSurfaceFormatKHR  surface_format;
+    VkPresentModeKHR    present_mode;
+    VkExtent2D          extent;
 };
+
+struct SwapChainContext {
+    VkSwapchainKHR instance;
+    std::vector<VkImage> images;
+//    std::vector<VkImageView> _image_views;
+    VkFormat format;
+    VkExtent2D extent;
+};
+
+struct EngineContext {
+    VkInstance instance;
+    VkPhysicalDevice physical_device;
+    VkDevice logical_device;
+    VkSurfaceKHR surface;
+    VkExtent2D window_extent { 800, 600 };
+    Queues queues;
+    SwapChainContext swapchain;
+};
+
 
     ////////////////////
     // CORE FUNCTIONS //
     ////////////////////
 
 // Framework Scaffolding Functions
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-                                                    VkDebugUtilsMessageTypeFlagsEXT messageType, 
-                                                    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
-                                                    void* pUserData);
+                                             VkDebugUtilsMessageTypeFlagsEXT messageType, 
+                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
+                                             void* pUserData);
 void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-bool deviceProvisioned(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface);
+bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
 
 // Swapchain Buffer Functions

@@ -19,7 +19,7 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
         // Set the application name and window extent
         _application_name = name;
-        _window_extent = window_extent;
+        _context.window_extent = window_extent;
 
         // Initialize SDL and create a window
         SDL_Init(SDL_INIT_VIDEO);
@@ -29,8 +29,8 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
             name.c_str(),
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            _window_extent.width,
-            _window_extent.height,
+            _context.window_extent.width,
+            _context.window_extent.height,
             window_flags
         );
 
@@ -51,14 +51,14 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 Reality::~Reality() 
     {
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
-        vkDestroySwapchainKHR(_logical_gpu, _swapchain, nullptr);
-        vkDestroyDevice(_logical_gpu, nullptr);
+        vkDestroySwapchainKHR(_context.logical_device, _context.swapchain.instance, nullptr);
+        vkDestroyDevice(_context.logical_device, nullptr);
 
         if (USE_VALIDATION_LAYERS) 
-            { destroyDebugUtilsMessengerEXT(_instance, _debug_messenger, nullptr); }
+            { destroyDebugUtilsMessengerEXT(_context.instance, _debug_messenger, nullptr); }
 
-        vkDestroySurfaceKHR(_instance, _surface, nullptr);
-        vkDestroyInstance(_instance, nullptr);
+        vkDestroySurfaceKHR(_context.instance, _context.surface, nullptr);
+        vkDestroyInstance(_context.instance, nullptr);
 
 
         if (initialized) {
@@ -68,10 +68,13 @@ Reality::~Reality()
         SDL_Quit();
     }
 
-void Reality::illuminate()//fnManifest manifest)
+//void Reality::illuminate()
+void Reality::illuminate(fnManifest fnManifest)
     {
         SDL_Event _e;
         bool _quit = false;
+
+        printf("Illuminating ..\n");
 
         while (!_quit) {
             while (SDL_PollEvent(&_e) != 0) {
@@ -85,7 +88,7 @@ void Reality::illuminate()//fnManifest manifest)
                 continue;
             }
 
-            //manifest();
+            fnManifest();
         }
     }
 
@@ -96,18 +99,20 @@ void Reality::illuminate()//fnManifest manifest)
 void Reality::init_framework() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
-        createVulkanInstance(&_instance);
-        SDL_Vulkan_CreateSurface(_window, _instance, &_surface);
-        createDebugMessenger(&_instance, &_debug_messenger);
-        createPhysicalDevice(_instance, &_physical_gpu, &_surface);
-        createLogicalDevice(_physical_gpu, _logical_gpu, _queues, &_surface);
+        createVulkanInstance(&_context.instance);
+        SDL_Vulkan_CreateSurface(_window, _context.instance, &_context.surface);
+        createDebugMessenger(&_context.instance, &_debug_messenger);
+        createPhysicalDevice(&_context);
+        createLogicalDevice(&_context);
     }
 
 void Reality::init_swapchain() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
-        SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_physical_gpu, _surface);
-        SwapChainDetails _swapchain_details = querySwapChainDetails(_swapchain_support, _window_extent);
+        SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_context);
+        SwapChainDetails _swapchain_details = querySwapChainDetails(_swapchain_support, _context.window_extent);
+
+        constructSwapChain(_swapchain_details, _swapchain_support, &_context);
     }
 
 void Reality::init_commands() 

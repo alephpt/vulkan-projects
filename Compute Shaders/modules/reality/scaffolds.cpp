@@ -144,12 +144,12 @@ void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug
     // PHYSICAL DEVICE INFO //
     //////////////////////////
 
-void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, VkSurfaceKHR *_surface) 
+void createPhysicalDevice(EngineContext *context) 
     {
         report(LOGGER::DLINE, "\t .. Scanning for Physical Devices ..");
 
         uint32_t device_count = 0;
-        VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
+        VK_TRY(vkEnumeratePhysicalDevices(context->instance, &device_count, nullptr));
 
         if (device_count == 0) 
             { 
@@ -158,27 +158,29 @@ void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, V
             }
 
         std::vector<VkPhysicalDevice> devices(device_count);
-        VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, devices.data()));
+        VK_TRY(vkEnumeratePhysicalDevices(context->instance, &device_count, devices.data()));
 
         for (const auto& device : devices) 
             {
+                VkPhysicalDeviceProperties device_properties;
+                vkGetPhysicalDeviceProperties(device, &device_properties);
+                report(LOGGER::DEBUG, "\tScanning Device: %p - %s", device, device_properties.deviceName);
                 if (device == VK_NULL_HANDLE) 
                     { continue; }
 
-                if (deviceProvisioned(device, _surface))
+                if (deviceProvisioned(device, context->surface))
                     { 
-                        VkPhysicalDeviceProperties device_properties;
-                        vkGetPhysicalDeviceProperties(device, &device_properties);
+                        printf("Device Provisioned\n");
 
-                        report(LOGGER::VERBOSE, "Vulkan: Found GPU - %s", device_properties.deviceName);
+                        report(LOGGER::DEBUG, "Using Device: %s", device_properties.deviceName);
 
-                        *physical_gpu = device;
+                        context->physical_device = device;
                         break; 
                     }
             }
 
 
-        if (physical_gpu == VK_NULL_HANDLE) 
+        if (context->physical_device == VK_NULL_HANDLE) 
             { report(LOGGER::ERROR, "Vulkan: Failed to find a suitable GPU"); }
     }
 
@@ -187,19 +189,19 @@ void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, V
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
+void createLogicalDevice(EngineContext *context)
     {
         report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
-        QueueFamilyIndices indices = findQueueFamilies(physical_gpu, *_surface);
+        QueueFamilyIndices indices = findQueueFamilies(context->physical_device, context->surface);
         VkPhysicalDeviceFeatures device_features = {};
         float queue_priority = 1.0f;
 
         std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
         std::set<uint32_t> unique_queue_families = {
-            indices._graphics_family.value(), 
-            indices._present_family.value(), 
-            indices._transfer_family.value(),
-            indices._compute_family.value()
+            indices.graphics_family.value(), 
+            indices.present_family.value(), 
+            indices.transfer_family.value(),
+            indices.compute_family.value()
         };
         
         for (uint32_t queue_family : unique_queue_families) 
@@ -219,18 +221,20 @@ void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, st
         create_info.pEnabledFeatures = &device_features;
         create_info.enabledExtensionCount = 0;
 
-        VK_TRY(vkCreateDevice(physical_gpu, &create_info, nullptr, &logical_gpu));
+        VK_TRY(vkCreateDevice(context->physical_device, &create_info, nullptr, &context->logical_device));
 
-        vkGetDeviceQueue(logical_gpu, indices._graphics_family.value(), 0, &_queues._graphics);
-        vkGetDeviceQueue(logical_gpu, indices._present_family.value(), 0, &_queues._present);
-        vkGetDeviceQueue(logical_gpu, indices._transfer_family.value(), 0, &_queues._transfer);
-        vkGetDeviceQueue(logical_gpu, indices._compute_family.value(), 0, &_queues._compute);
+        vkGetDeviceQueue(context->logical_device, indices.graphics_family.value(), 0, &context->queues.graphics);
+        vkGetDeviceQueue(context->logical_device, indices.present_family.value(), 0, &context->queues.present);
+        vkGetDeviceQueue(context->logical_device, indices.transfer_family.value(), 0, &context->queues.transfer);
+        vkGetDeviceQueue(context->logical_device, indices.compute_family.value(), 0, &context->queues.compute);
 
         report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
-        report(LOGGER::VLINE, "Graphics Family: %d", indices._graphics_family.value());
-        report(LOGGER::VLINE, "Present Family: %d", indices._present_family.value());
-        report(LOGGER::VLINE, "Logical GPU: %p", logical_gpu);
-        report(LOGGER::VLINE, "Physical GPU: %p", physical_gpu);
+        report(LOGGER::VLINE, "Graphics Family: %d", indices.graphics_family.value());
+        report(LOGGER::VLINE, "Present Family: %d", indices.present_family.value());
+        report(LOGGER::VLINE, "Transfer Family: %d", indices.transfer_family.value());
+        report(LOGGER::VLINE, "Compute Family: %d", indices.compute_family.value());
+        report(LOGGER::VLINE, "Logical GPU: %p", context->logical_device);
+        report(LOGGER::VLINE, "Physical GPU: %p", context->physical_device);
     }
 
 
