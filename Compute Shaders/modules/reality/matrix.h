@@ -5,6 +5,21 @@
 
 class Reality {
     public:
+        bool initialized = false;
+
+        Reality(std::string name, VkExtent2D window_extent);
+        ~Reality();
+
+        void illuminate();//fnManifest manifest);
+
+    private:
+        std::string _application_name;
+        bool _suspended = false;
+        int _frame_ct = 0;
+
+        struct SDL_Window* _window = nullptr;
+        VkExtent2D _window_extent { 800, 600 };
+
         VkInstance _instance;
         VkDebugUtilsMessengerEXT _debug_messenger;
         VkPhysicalDevice _physical_gpu;
@@ -13,18 +28,12 @@ class Reality {
         VkQueue _present_queue;
         VkSurfaceKHR _surface;
         VkSwapchainKHR _swapchain;
-        Queues _queues;
 
+        Queues _queues;
         FrameData _frames[MAX_FRAMES_IN_FLIGHT];
         FrameData& _current_frame();
 
-        Reality(std::string name, struct SDL_Window* window);
-        ~Reality();
-
-    private:
-        int _frame_ct = 0;
-
-        void init_framework(std::string name, struct SDL_Window* window);
+        void init_framework();
         void init_swapchain();
         void init_commands();
         void init_sync_structures();

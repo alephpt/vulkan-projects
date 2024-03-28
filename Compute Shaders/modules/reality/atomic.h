@@ -5,12 +5,26 @@
 #include <vector>
 
 
+typedef void (*fnManifest)();
+
     /////////////////////
     // LOCAL VARIABLES //
     /////////////////////
 
 const bool USE_VALIDATION_LAYERS = true;
 constexpr unsigned int MAX_FRAMES_IN_FLIGHT = 2;
+
+const std::vector<const char*> VALIDATION_LAYERS = 
+    {
+        "VK_LAYER_KHRONOS_validation"
+    };
+
+const std::vector<const char*> DEVICE_EXTENSIONS = 
+    {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+    };
+
+const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
 
 struct FrameData {
     VkSemaphore _image_available;
@@ -38,17 +52,17 @@ struct Queues {
     VkQueue _compute;
 };
 
-const std::vector<const char*> VALIDATION_LAYERS = 
-    {
-        "VK_LAYER_KHRONOS_validation"
-    };
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR _capabilities;
+    std::vector<VkSurfaceFormatKHR> _formats;
+    std::vector<VkPresentModeKHR> _present_modes;
+};
 
-const std::vector<const char*> DEVICE_EXTENSIONS = 
-    {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
-    };
-
-const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
+struct SwapChainDetails {
+    VkSurfaceFormatKHR  _surface_format;
+    VkPresentModeKHR    _present_mode;
+    VkExtent2D          _extent;
+};
 
     ////////////////////
     // CORE FUNCTIONS //
@@ -61,6 +75,6 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
                                                     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                                     void* pUserData);
 void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-bool createDeviceQueues(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface);
+bool deviceProvisioned(VkPhysicalDevice physical_gpu, VkSurfaceKHR *_surface);
 
 // Swapchain Buffer Functions

@@ -29,7 +29,7 @@ bool checkValidationLayerSupport()
 
 void createVulkanInstance(VkInstance *instance) 
     {
-        report(LOGGER::ILINE, "\t .. Instantiating Engine ..");
+        report(LOGGER::DLINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {};
         app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         app_info.pApplicationName = "Compute Shaders";
@@ -119,7 +119,7 @@ void createVulkanInstance(VkInstance *instance)
 void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
     {
         if (!USE_VALIDATION_LAYERS) return;
-        report(LOGGER::ILINE, "\t .. Creating Listening Agent ..");
+        report(LOGGER::DLINE, "\t .. Creating Listening Agent ..");
 
         VkDebugUtilsMessengerCreateInfoEXT create_info = {
             sType:              VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -146,7 +146,7 @@ void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug
 
 void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, VkSurfaceKHR *_surface) 
     {
-        report(LOGGER::ILINE, "\t .. Scanning for Physical Devices ..");
+        report(LOGGER::DLINE, "\t .. Scanning for Physical Devices ..");
 
         uint32_t device_count = 0;
         VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
@@ -165,7 +165,7 @@ void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, V
                 if (device == VK_NULL_HANDLE) 
                     { continue; }
 
-                if (createDeviceQueues(device, _surface))
+                if (deviceProvisioned(device, _surface))
                     { 
                         VkPhysicalDeviceProperties device_properties;
                         vkGetPhysicalDeviceProperties(device, &device_properties);
@@ -189,7 +189,7 @@ void createPhysicalDevice(VkInstance instance, VkPhysicalDevice *physical_gpu, V
 
 void createLogicalDevice(VkPhysicalDevice physical_gpu, VkDevice logical_gpu, struct Queues& _queues, VkSurfaceKHR *_surface)
     {
-        report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
+        report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
         QueueFamilyIndices indices = findQueueFamilies(physical_gpu, *_surface);
         VkPhysicalDeviceFeatures device_features = {};
         float queue_priority = 1.0f;
