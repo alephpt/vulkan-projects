@@ -172,7 +172,7 @@ void createPhysicalDevice(EngineContext *context)
                 if (device == VK_NULL_HANDLE) 
                     { continue; }
 
-                if (deviceProvisioned(device, context->surface))
+                if (deviceProvisioned(device, context))
                     { 
                         report(LOGGER::VLINE, "\tUsing Device: %s", device_properties.deviceName);
 
@@ -195,33 +195,29 @@ void createPhysicalDevice(EngineContext *context)
 void createLogicalDevice(EngineContext *context)
     {
         report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
-        std::vector<VkQueueFamilyProperties> _queue_families = getQueueFamilies(context->physical_device);
-        QueueFamilyIndices indices = findQueueFamilies(context->physical_device, context->surface, _queue_families);
         VkPhysicalDeviceFeatures _device_features = {};
-        float _queue_priority = 1.0f;
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
         std::set<uint32_t> _unique_queue_families = {
-            indices.graphics_family.value(), 
-            indices.present_family.value(), 
-            indices.compute_family.value()
+            context->queue_indices.graphics_family.value(), 
+            context->queue_indices.present_family.value(),
+            context->queue_indices.compute_family.value()
         };
 
         report(LOGGER::DLINE, "\t .. Creating Queue Family ..");
-        // create a queue for each unique queue family
         for (uint32_t _queue_family : _unique_queue_families) 
             {
                 report(LOGGER::VLINE, "\t\tQueue Family: %d", _queue_family);
+                report(LOGGER::VLINE, "\t\t\tQueue Count: %d", context->queue_families[_queue_family].queueCount);
                 if (_queue_family == -1) { continue; } // if the queue family is not supported
 
-                logQueueFamilyProperties(_queue_families[_queue_family]);
-                uint32_t _queue_count = _queue_families[_queue_family].queueCount;
+                const std::vector<float> _p_queue_priorities(context->queue_families[_queue_family].queueCount, 1.0f);
 
                 VkDeviceQueueCreateInfo queue_create_info = {
                     sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                     queueFamilyIndex: _queue_family,
-                    queueCount: _queue_count,
-                    pQueuePriorities: &_queue_priority
+                    queueCount: context->queue_families[_queue_family].queueCount,
+                    pQueuePriorities: _p_queue_priorities.data()
                 };
 
                 _queue_create_infos.push_back(queue_create_info);
@@ -237,14 +233,9 @@ void createLogicalDevice(EngineContext *context)
 
         VK_TRY(vkCreateDevice(context->physical_device, &create_info, nullptr, &context->logical_device));
 
-        vkGetDeviceQueue(context->logical_device, indices.graphics_family.value(), 0, &context->queues.graphics);
-        vkGetDeviceQueue(context->logical_device, indices.present_family.value(), 0, &context->queues.present);
-        vkGetDeviceQueue(context->logical_device, indices.compute_family.value(), 0, &context->queues.compute);
+        vkGetDeviceQueue(context->logical_device, context->queue_indices.graphics_family.value(), 0, &context->queues.graphics);
+        vkGetDeviceQueue(context->logical_device, context->queue_indices.present_family.value(), 0, &context->queues.present);
+        vkGetDeviceQueue(context->logical_device, context->queue_indices.compute_family.value(), 0, &context->queues.compute);
 
-        report(LOGGER::VERBOSE, "Matrix - Logical Device Created:");
-        report(LOGGER::VLINE, "\tGraphics Family: %d", indices.graphics_family.value());
-        report(LOGGER::VLINE, "\tPresent Family: %d", indices.present_family.value());
-        report(LOGGER::VLINE, "\tCompute Family: %d", indices.compute_family.value());
-        report(LOGGER::VLINE, "\tLogical GPU: %p", context->logical_device);
-        report(LOGGER::VLINE, "\tPhysical GPU: %p", context->physical_device);
+        logContext(context);
     }

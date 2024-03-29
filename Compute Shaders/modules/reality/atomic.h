@@ -74,6 +74,8 @@ struct EngineContext {
     VkInstance instance;
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
+    std::vector<VkQueueFamilyProperties> queue_families;
+    QueueFamilyIndices queue_indices;
     VkSurfaceKHR surface;
     VkExtent2D window_extent { 800, 600 };
     Queues queues;
@@ -85,16 +87,16 @@ struct EngineContext {
     // CORE FUNCTIONS //
     ////////////////////
 
-// Framework Scaffolding Functions
+// Vulkan Instance Functions
+void logContext(EngineContext *context);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
                                              VkDebugUtilsMessageTypeFlagsEXT messageType, 
                                              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                              void* pUserData);
 void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-std::vector<VkQueueFamilyProperties> getQueueFamilies(VkPhysicalDevice scanned_device);
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface, std::vector<VkQueueFamilyProperties>& _queue_families);
-bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
-void logQueueFamilyProperties(VkQueueFamilyProperties& _queue_families);
+
+// Framework Scaffolding Functions
+bool deviceProvisioned(VkPhysicalDevice scanned_device, EngineContext *context);
 
 // Swapchain Buffer Functions
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface);

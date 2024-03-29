@@ -82,23 +82,19 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
             .oldSwapchain = VK_NULL_HANDLE
         };
 
-        std::vector<VkQueueFamilyProperties> _queue_families = getQueueFamilies(context->physical_device); // THIS NEEDS TO BE CALLED ONCE WHEN WE CREATE THE PHYSICAL DEVICE
-        QueueFamilyIndices _indices = findQueueFamilies(context->physical_device, context->surface, _queue_families);
-        uint32_t _queue_family_indices[] = { _indices.graphics_family.value(), _indices.present_family.value() };
-
-        if (_indices.graphics_family != _indices.present_family)
+        if (context->queue_indices.graphics_family != context->queue_indices.present_family)
             {
                 report(LOGGER::DLINE, "\t.. Concurrent Queue Families Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                _create_info.queueFamilyIndexCount = 1;
-                _create_info.pQueueFamilyIndices = _queue_family_indices;
+                _create_info.queueFamilyIndexCount = context->queue_families.size();
+                _create_info.pQueueFamilyIndices = &context->queue_indices.graphics_family.value();
             }
         else
             {
                 report(LOGGER::ERROR, "\t.. Single Queue Family Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 _create_info.queueFamilyIndexCount = 0;
-                _create_info.pQueueFamilyIndices = nullptr;
+                _create_info.pQueueFamilyIndices =  nullptr;
             }
 
         VK_TRY(vkCreateSwapchainKHR(context->logical_device, &_create_info, nullptr, &context->swapchain.instance));

@@ -4,6 +4,18 @@
 #include <string>
 #include "./virtual.h"
 
+
+void logContext(EngineContext *context) 
+    {
+        report(LOGGER::DLINE, "\t .. Logging Context ..");
+        report(LOGGER::DLINE, "\t\tInstance: %p", context->instance);
+        report(LOGGER::DLINE, "\t\tPhysical Device: %p", context->physical_device);
+        report(LOGGER::DLINE, "\t\tLogical Device: %p", context->logical_device);
+        report(LOGGER::DLINE, "\t\tSurface: %p", context->surface);
+        report(LOGGER::DLINE, "\t\tQueue Families: %d", context->queue_families.size());
+        report(LOGGER::DLINE, "\t\tQueue Indices: %d", context->queue_indices.isComplete());
+    }
+
     //////////////////
     //  Debug Utils //
     //////////////////
@@ -32,75 +44,70 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     //  Device Queues //
     ////////////////////
 
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface, std::vector<VkQueueFamilyProperties>& _queue_families) 
-    {
-        report(LOGGER::DLINE, "\t .. Querying Queue Families ..");
-        QueueFamilyIndices indices;
-        int i = 0;
 
-        for (const auto& _queue_family : _queue_families) {
-            report(LOGGER::DLINE, "\t\tChecking Index %d", i);
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, existing_surface, &presentSupport);
-
-            if (presentSupport) 
-                { indices.present_family = i; }
-
-            if (_queue_family.queueCount && _queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
-                { indices.graphics_family = i; }
-
-            if (_queue_family.queueCount && _queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT && i != indices.graphics_family.value()) 
-                { indices.compute_family = i; }
-
-            if (indices.isComplete()) 
-                { break; }
-
-            i++;
-        }
-
-        report(LOGGER::DLINE, "\tQueue Families Found: %d", i);
-        report(LOGGER::DLINE, "\tGraphics Family: %d", indices.graphics_family.value());
-        report(LOGGER::DLINE, "\tPresent Family: %d", indices.present_family.value());
-        report(LOGGER::DLINE, "\tCompute Family: %d", indices.compute_family.value());
-
-        return indices;
-    }
-
-std::vector<VkQueueFamilyProperties> getQueueFamilies(VkPhysicalDevice scanned_device) 
-    {
-        report(LOGGER::DLINE, "\t .. Acquiring Queue Families ..");
-        uint32_t _queue_family_count = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
-        std::vector<VkQueueFamilyProperties> _queue_families(_queue_family_count);
-        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, _queue_families.data());
-
-        for (int i = 0; i < _queue_families.size(); i++) 
-            {
-                report(LOGGER::DLINE, "\tQueue Family %d", i);
-                logQueueFamilyProperties(_queue_families[i]);
-            }
-        return _queue_families;
-    }
-
-void logQueueFamilyProperties(VkQueueFamilyProperties& queue_family) {
-    report(LOGGER::DLINE, "\t\t\tQueue Count: %d", queue_family.queueCount);
-
+static inline void setQueueFamilyProperties(EngineContext* context, int i) {
+    VkQueueFamilyProperties* queue_family = &context->queue_families[i];
     std::string queue_name = "";
 
-    if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
-        { queue_name += "{ Graphics } "; }
-    if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) 
-        { queue_name += "{ Compute } "; }
-    if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT) 
-        { queue_name += "{ Transfer } "; }
-    if (queue_family.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
-        { queue_name += "{ Sparse Binding } "; }
+    if (queue_family->queueFlags & VK_QUEUE_GRAPHICS_BIT) 
+        { 
+            queue_name += "{ Graphics } "; 
+            context->queue_indices.graphics_family = i;
+            report(LOGGER::DLINE, "\t\tGraphics Family Set.");
+        }
+    if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
+        { 
+            queue_name += "{ Compute } "; 
+            if (context->queue_indices.graphics_family.value() != i) 
+                {
+                    context->queue_indices.compute_family = i;
+                    report(LOGGER::DLINE, "\t\tCompute Family Set.");
+                }
+        }
+    if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
+        { 
+            queue_name += "{ Transfer } "; 
+        }
+    if (queue_family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
+        { 
+            queue_name += "{ Sparse Binding } "; 
+        }
 
     if (queue_name.empty()) 
         { queue_name = "~ Unknown ~"; }
 
+    report(LOGGER::DLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
     report(LOGGER::DLINE, "\t\t\t %s", queue_name.c_str());
 }
+
+static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineContext *context) 
+    {
+        report(LOGGER::DLINE, "\t .. Acquiring Queue Families ..");
+        uint32_t _queue_family_count = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
+        context->queue_families.resize(_queue_family_count);
+        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, context->queue_families.data());
+
+        for (int i = 0; i < context->queue_families.size(); i++) 
+            {
+                report(LOGGER::DLINE, "\t\tQueue Family %d", i);
+
+                // If we haven't found a present family yet, we'll take the first one we find
+                if (context->queue_indices.present_family.value() == -1){
+                    VkBool32 _present_support = false;  
+                    vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, context->surface, &_present_support);
+
+                    if (_present_support) 
+                        { 
+                            context->queue_indices.present_family = i; 
+                            report(LOGGER::DLINE, "\t\tPresent Family Set.");    
+                        }
+                }
+
+                setQueueFamilyProperties(context, i);
+            }
+    }
+
 
     ///////////////////////////////
     //  Virtual Swapchain Layers //
@@ -155,18 +162,17 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
         return requiredExtensions.empty();
     }
 
-bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface)
+bool deviceProvisioned(VkPhysicalDevice scanned_device, EngineContext *context)
     {
-        std::vector<VkQueueFamilyProperties> _queue_families = getQueueFamilies(scanned_device);
-        QueueFamilyIndices queue_indices = findQueueFamilies(scanned_device, existing_surface, _queue_families);
+        getQueueFamilies(scanned_device, context);
         bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
 
         bool swap_chain_adequate = false;
         if (extensions_supported) 
             {
-                SwapChainSupportDetails swap_chain_support = querySwapChainSupport(scanned_device, existing_surface);
+                SwapChainSupportDetails swap_chain_support = querySwapChainSupport(scanned_device, context->surface);
                 swap_chain_adequate = !swap_chain_support.formats.empty() && !swap_chain_support.present_modes.empty();
             }
 
-        return queue_indices.isComplete() && extensions_supported && swap_chain_adequate;
+        return context->queue_indices.isComplete() && extensions_supported && swap_chain_adequate;
     }
