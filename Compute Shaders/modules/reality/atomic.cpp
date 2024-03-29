@@ -7,13 +7,13 @@
 
 void logContext(EngineContext *context) 
     {
-        report(LOGGER::DLINE, "\t .. Logging Context ..");
-        report(LOGGER::DLINE, "\t\tInstance: %p", context->instance);
-        report(LOGGER::DLINE, "\t\tPhysical Device: %p", context->physical_device);
-        report(LOGGER::DLINE, "\t\tLogical Device: %p", context->logical_device);
-        report(LOGGER::DLINE, "\t\tSurface: %p", context->surface);
-        report(LOGGER::DLINE, "\t\tQueue Families: %d", context->queue_families.size());
-        report(LOGGER::DLINE, "\t\tQueue Indices: %d", context->queue_priorities.size());
+        report(LOGGER::VLINE, "\t .. Logging Context ..");
+        report(LOGGER::VLINE, "\t\tInstance: %p", context->instance);
+        report(LOGGER::VLINE, "\t\tPhysical Device: %p", context->physical_device);
+        report(LOGGER::VLINE, "\t\tLogical Device: %p", context->logical_device);
+        report(LOGGER::VLINE, "\t\tSurface: %p", context->surface);
+        report(LOGGER::VLINE, "\t\tQueue Families: %d", context->queue_families.size());
+        report(LOGGER::VLINE, "\t\tQueue Indices: %d", context->queue_priorities.size());
     }
 
     //////////////////
@@ -54,7 +54,7 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
             queue_name += "{ Graphics } "; 
             context->queue_indices.graphics_family = i;
             context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
-            report(LOGGER::DLINE, "\t\tGraphics Family Set.");
+            report(LOGGER::VLINE, "\t\tGraphics Family Set.");
         }
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
         { 
@@ -63,7 +63,7 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
                 {
                     context->queue_indices.compute_family = i;
                     context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
-                    report(LOGGER::DLINE, "\t\tCompute Family Set.");
+                    report(LOGGER::VLINE, "\t\tCompute Family Set.");
                 }
         }
     if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
@@ -78,8 +78,8 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
     if (queue_name.empty()) 
         { queue_name = "~ Unknown ~"; }
 
-    report(LOGGER::DLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
-    report(LOGGER::DLINE, "\t\t\t %s", queue_name.c_str());
+    report(LOGGER::VLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
+    report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
 }
 
 static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineContext *context) 
@@ -92,7 +92,7 @@ static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineConte
 
         for (int i = 0; i < context->queue_families.size(); i++) 
             {
-                report(LOGGER::DLINE, "\t\tQueue Family %d", i);
+                report(LOGGER::VLINE, "\t\tQueue Family %d", i);
 
                 // If we haven't found a present family yet, we'll take the first one we find
                 if (context->queue_indices.present_family.value() == -1){
@@ -102,7 +102,7 @@ static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineConte
                     if (_present_support) 
                         { 
                             context->queue_indices.present_family = i; 
-                            report(LOGGER::DLINE, "\t\tPresent Family Set.");    
+                            report(LOGGER::VLINE, "\t\tPresent Family Set.");    
                         }
                 }
 
@@ -117,7 +117,7 @@ static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineConte
 
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface) 
     {
-        report(LOGGER::DLINE, "\t.. Querying SwapChain Support ..");
+        report(LOGGER::DLINE, "\t .. Querying SwapChain Support ..");
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
 

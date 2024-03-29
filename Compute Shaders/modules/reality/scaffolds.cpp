@@ -194,7 +194,7 @@ void createPhysicalDevice(EngineContext *context)
 
 void createLogicalDevice(EngineContext *context)
     {
-        report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
+        report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
