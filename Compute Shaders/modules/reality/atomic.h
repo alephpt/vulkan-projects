@@ -86,13 +86,15 @@ struct EngineContext {
     ////////////////////
 
 // Framework Scaffolding Functions
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
                                              VkDebugUtilsMessageTypeFlagsEXT messageType, 
                                              const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                              void* pUserData);
 void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+std::vector<VkQueueFamilyProperties> getQueueFamilies(VkPhysicalDevice scanned_device);
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface, std::vector<VkQueueFamilyProperties>& _queue_families);
 bool deviceProvisioned(VkPhysicalDevice scanned_device, VkSurfaceKHR existing_surface);
+void logQueueFamilyProperties(VkQueueFamilyProperties& _queue_families);
 
 // Swapchain Buffer Functions
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface);

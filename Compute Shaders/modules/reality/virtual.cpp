@@ -1,6 +1,5 @@
 #include "./virtual.h"
 
-
 static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) 
     {
         report(LOGGER::DLINE, "\t.. Selecting Swap Surface Format ..");
@@ -83,7 +82,8 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
             .oldSwapchain = VK_NULL_HANDLE
         };
 
-        QueueFamilyIndices _indices = findQueueFamilies(context->physical_device, context->surface);
+        std::vector<VkQueueFamilyProperties> _queue_families = getQueueFamilies(context->physical_device); // THIS NEEDS TO BE CALLED ONCE WHEN WE CREATE THE PHYSICAL DEVICE
+        QueueFamilyIndices _indices = findQueueFamilies(context->physical_device, context->surface, _queue_families);
         uint32_t _queue_family_indices[] = { _indices.graphics_family.value(), _indices.present_family.value() };
 
         if (_indices.graphics_family != _indices.present_family)

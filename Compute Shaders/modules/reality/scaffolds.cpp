@@ -176,34 +176,7 @@ void createPhysicalDevice(EngineContext *context)
                     { 
                         report(LOGGER::VLINE, "\tUsing Device: %s", device_properties.deviceName);
 
-                        std::vector<VkQueueFamilyProperties> queue_families;
-                        uint32_t queue_family_count = 0;
-                        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, nullptr);
-                        queue_families.resize(queue_family_count);
-                        vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count, queue_families.data());
-
-                        report(LOGGER::INFO, "\tQueue Families: %d", queue_family_count);
-                        for (const auto& queue_family : queue_families) 
-                            {
-                                report(LOGGER::INFO, "\t\tQueue Count: %d", queue_family.queueCount);
-
-                                    std::string queue_name = "";
-
-                                    if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
-                                        { queue_name += "{ Graphics } "; }
-                                    if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) 
-                                        { queue_name += "{ Compute } "; }
-                                    if (queue_family.queueFlags & VK_QUEUE_TRANSFER_BIT) 
-                                        { queue_name += "{ Transfer } "; }
-                                    if (queue_family.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
-                                        { queue_name += "{ Sparse Binding } "; }
-
-                                    if (queue_name.empty()) 
-                                        { queue_name = "~ Unknown ~"; }
-
-                                    report(LOGGER::ILINE, "\t\t\t %s", queue_name.c_str());
-                            }
-
+  
                         context->physical_device = device;
                         break; 
                     }
@@ -222,36 +195,43 @@ void createPhysicalDevice(EngineContext *context)
 void createLogicalDevice(EngineContext *context)
     {
         report(LOGGER::ILINE, "\t .. Creating Logical Device ..");
-        QueueFamilyIndices indices = findQueueFamilies(context->physical_device, context->surface);
-        VkPhysicalDeviceFeatures device_features = {};
-        float queue_priority = 1.0f;
+        std::vector<VkQueueFamilyProperties> _queue_families = getQueueFamilies(context->physical_device);
+        QueueFamilyIndices indices = findQueueFamilies(context->physical_device, context->surface, _queue_families);
+        VkPhysicalDeviceFeatures _device_features = {};
+        float _queue_priority = 1.0f;
 
-        std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-        std::set<uint32_t> unique_queue_families = {
+        std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
+        std::set<uint32_t> _unique_queue_families = {
             indices.graphics_family.value(), 
             indices.present_family.value(), 
             indices.compute_family.value()
         };
-        
-        for (uint32_t queue_family : unique_queue_families) 
+
+        report(LOGGER::DLINE, "\t .. Creating Queue Family ..");
+        // create a queue for each unique queue family
+        for (uint32_t _queue_family : _unique_queue_families) 
             {
-                report(LOGGER::DLINE, "\t\tQueue Family: %d", queue_family);
-                
+                report(LOGGER::VLINE, "\t\tQueue Family: %d", _queue_family);
+                if (_queue_family == -1) { continue; } // if the queue family is not supported
+
+                logQueueFamilyProperties(_queue_families[_queue_family]);
+                uint32_t _queue_count = _queue_families[_queue_family].queueCount;
+
                 VkDeviceQueueCreateInfo queue_create_info = {
                     sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                    queueFamilyIndex: queue_family,
-                    queueCount: 1,
-                    pQueuePriorities: &queue_priority
+                    queueFamilyIndex: _queue_family,
+                    queueCount: _queue_count,
+                    pQueuePriorities: &_queue_priority
                 };
 
-                queue_create_infos.push_back(queue_create_info);
+                _queue_create_infos.push_back(queue_create_info);
             }
 
         VkDeviceCreateInfo create_info = {};
         create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.pQueueCreateInfos = queue_create_infos.data();
-        create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
-        create_info.pEnabledFeatures = &device_features;
+        create_info.pQueueCreateInfos = _queue_create_infos.data();
+        create_info.queueCreateInfoCount = static_cast<uint32_t>(_queue_create_infos.size());
+        create_info.pEnabledFeatures = &_device_features;
         create_info.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
         create_info.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
