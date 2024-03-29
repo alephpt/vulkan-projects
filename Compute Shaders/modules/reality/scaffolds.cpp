@@ -211,13 +211,14 @@ void createLogicalDevice(EngineContext *context)
                 report(LOGGER::VLINE, "\t\t\tQueue Count: %d", context->queue_families[_queue_family].queueCount);
                 if (_queue_family == -1) { continue; } // if the queue family is not supported
 
-                const std::vector<float> _p_queue_priorities(context->queue_families[_queue_family].queueCount, 1.0f);
+                // resize the queue priorities to match the number of queues in the family
+                
 
                 VkDeviceQueueCreateInfo queue_create_info = {
                     sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                     queueFamilyIndex: _queue_family,
                     queueCount: context->queue_families[_queue_family].queueCount,
-                    pQueuePriorities: _p_queue_priorities.data()
+                    pQueuePriorities: context->queue_priorities[_queue_family].data()
                 };
 
                 _queue_create_infos.push_back(queue_create_info);

@@ -82,16 +82,17 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
             .oldSwapchain = VK_NULL_HANDLE
         };
 
+        // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (context->queue_indices.graphics_family != context->queue_indices.present_family)
             {
                 report(LOGGER::DLINE, "\t.. Concurrent Queue Families Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                _create_info.queueFamilyIndexCount = context->queue_families.size();
+                _create_info.queueFamilyIndexCount = context->queue_priorities.size();
                 _create_info.pQueueFamilyIndices = &context->queue_indices.graphics_family.value();
             }
         else
             {
-                report(LOGGER::ERROR, "\t.. Single Queue Family Achieved ..");
+                report(LOGGER::DLINE, "\t.. Single Queue Family Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 _create_info.queueFamilyIndexCount = 0;
                 _create_info.pQueueFamilyIndices =  nullptr;

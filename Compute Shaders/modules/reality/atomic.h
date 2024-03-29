@@ -75,6 +75,7 @@ struct EngineContext {
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
     std::vector<VkQueueFamilyProperties> queue_families;
+    std::vector<std::vector<float>> queue_priorities;
     QueueFamilyIndices queue_indices;
     VkSurfaceKHR surface;
     VkExtent2D window_extent { 800, 600 };

@@ -13,7 +13,7 @@ void logContext(EngineContext *context)
         report(LOGGER::DLINE, "\t\tLogical Device: %p", context->logical_device);
         report(LOGGER::DLINE, "\t\tSurface: %p", context->surface);
         report(LOGGER::DLINE, "\t\tQueue Families: %d", context->queue_families.size());
-        report(LOGGER::DLINE, "\t\tQueue Indices: %d", context->queue_indices.isComplete());
+        report(LOGGER::DLINE, "\t\tQueue Indices: %d", context->queue_priorities.size());
     }
 
     //////////////////
@@ -53,6 +53,7 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
         { 
             queue_name += "{ Graphics } "; 
             context->queue_indices.graphics_family = i;
+            context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
             report(LOGGER::DLINE, "\t\tGraphics Family Set.");
         }
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
@@ -61,6 +62,7 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
             if (context->queue_indices.graphics_family.value() != i) 
                 {
                     context->queue_indices.compute_family = i;
+                    context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
                     report(LOGGER::DLINE, "\t\tCompute Family Set.");
                 }
         }
