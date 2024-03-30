@@ -65,7 +65,7 @@ struct SwapChainDetails {
 struct SwapChainContext {
     VkSwapchainKHR instance;
     std::vector<VkImage> images;
-//    std::vector<VkImageView> _image_views;
+    std::vector<VkImageView> image_views;
     VkFormat format;
     VkExtent2D extent;
 };

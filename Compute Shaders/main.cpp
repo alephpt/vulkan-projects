@@ -3,7 +3,7 @@
  *
  *       Filename:  main.cpp
  *
- *    Description: Trying to Triangulate in Vulkan
+ *    Description: Trying to Vulkan the Matrix
  *
  *        Version:  0.1.0
  *        Created:  2024-03-25

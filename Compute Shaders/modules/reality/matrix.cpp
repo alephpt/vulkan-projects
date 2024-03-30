@@ -1,6 +1,7 @@
 #include "matrix.h"
 #include "./scaffolds.h"
 #include "./virtual.h"
+#include "./gateway.h"
 
 #include <thread>
 #include <chrono>
@@ -51,19 +52,23 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 Reality::~Reality() 
     {
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
+
         vkDestroySwapchainKHR(_context.logical_device, _context.swapchain.instance, nullptr);
+
+        for (size_t i = 0; i < _context.swapchain.image_views.size(); i++) 
+            { vkDestroyImageView(_context.logical_device, _context.swapchain.image_views[i], nullptr); }
+
         vkDestroyDevice(_context.logical_device, nullptr);
 
         if (USE_VALIDATION_LAYERS) 
             { destroyDebugUtilsMessengerEXT(_context.instance, _debug_messenger, nullptr); }
 
         vkDestroySurfaceKHR(_context.instance, _context.surface, nullptr);
+
         vkDestroyInstance(_context.instance, nullptr);
 
-
-        if (initialized) {
-            SDL_DestroyWindow(_window);
-        }
+        if (initialized) 
+            { SDL_DestroyWindow(_window); }
 
         SDL_Quit();
     }
@@ -77,16 +82,18 @@ void Reality::illuminate(fnManifest fnManifest)
         printf("Illuminating ..\n");
 
         while (!_quit) {
-            while (SDL_PollEvent(&_e) != 0) {
-                if (_e.type == SDL_QUIT) { _quit = !_quit; }
-                if (_e.window.event == SDL_WINDOWEVENT_MINIMIZED) { _suspended = true; }
-                if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
-            }
+            while (SDL_PollEvent(&_e) != 0) 
+                {
+                    if (_e.type == SDL_QUIT) { _quit = !_quit; }
+                    if (_e.window.event == SDL_WINDOWEVENT_MINIMIZED) { _suspended = true; }
+                    if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
+                }
 
-            if (_suspended) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                continue;
-            }
+            if (_suspended) 
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    continue;
+                }
 
             fnManifest();
         }
@@ -113,11 +120,16 @@ void Reality::init_swapchain()
         SwapChainDetails _swapchain_details = querySwapChainDetails(_swapchain_support, _context.window_extent);
 
         constructSwapChain(_swapchain_details, _swapchain_support, &_context);
+        constructImageViews(&_context);
     }
 
 void Reality::init_commands() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Commands ..");
+        //createCommandPool(&_context);
+        //createCommandBuffers(&_context);
+        Gateway _gateway;
+        VkPipeline pipeline = _gateway.build(&_context).pipeline();
     }
 
 void Reality::init_sync_structures()

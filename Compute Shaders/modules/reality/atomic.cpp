@@ -84,7 +84,7 @@ static inline void setQueueFamilyProperties(EngineContext* context, int i) {
 
 static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineContext *context) 
     {
-        report(LOGGER::DLINE, "\t .. Acquiring Queue Families ..");
+        report(LOGGER::VLINE, "\t .. Acquiring Queue Families ..");
         uint32_t _queue_family_count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
         context->queue_families.resize(_queue_family_count);
@@ -117,7 +117,7 @@ static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineConte
 
 SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface) 
     {
-        report(LOGGER::DLINE, "\t .. Querying SwapChain Support ..");
+        report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
 

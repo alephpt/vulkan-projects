@@ -14,7 +14,6 @@ class Existence {
     private:
         std::string _application_name = "Compute Shaders";
         VkExtent2D _window_extent { 1660, 1440 };
-
         Reality* _actuality;
 
         Existence* create();            // Init

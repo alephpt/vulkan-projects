@@ -1,8 +1,9 @@
 #include "./virtual.h"
+#include "virtual.h"
 
 static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) 
     {
-        report(LOGGER::DLINE, "\t .. Selecting Swap Surface Format ..");
+        report(LOGGER::VLINE, "\t .. Selecting Swap Surface Format ..");
         for (const auto& available_format : available_formats) 
             {
                 if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
@@ -15,7 +16,7 @@ static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFor
 
 static VkPresentModeKHR selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes) 
     {
-        report(LOGGER::DLINE, "\t .. Selecting Swap Present Mode ..");
+        report(LOGGER::VLINE, "\t .. Selecting Swap Present Mode ..");
         for (const auto& available_present_mode : available_present_modes) 
             {
                 if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) 
@@ -28,7 +29,7 @@ static VkPresentModeKHR selectSwapPresentMode(const std::vector<VkPresentModeKHR
 
 static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D window_extent) 
     {
-        report(LOGGER::DLINE, "\t .. Selecting Swap Extent ..");
+        report(LOGGER::VLINE, "\t .. Selecting Swap Extent ..");
         if (capabilities.currentExtent.width != UINT32_MAX) 
             { return capabilities.currentExtent; }
         else 
@@ -43,7 +44,7 @@ static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
 
 SwapChainDetails querySwapChainDetails(SwapChainSupportDetails swap_chain_support, VkExtent2D window_extent)
     {
-        report(LOGGER::DLINE, "\t .. Querying SwapChain Details ..");
+        report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
         SwapChainDetails details;
 
         if (swap_chain_support.formats.empty() || swap_chain_support.present_modes.empty()) 
@@ -85,14 +86,14 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
         // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (context->queue_indices.graphics_family != context->queue_indices.present_family)
             {
-                report(LOGGER::DLINE, "\t .. Concurrent Queue Families Achieved ..");
+                report(LOGGER::VLINE, "\t .. Concurrent Queue Families Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                 _create_info.queueFamilyIndexCount = context->queue_priorities.size();
                 _create_info.pQueueFamilyIndices = &context->queue_indices.graphics_family.value();
             }
         else
             {
-                report(LOGGER::DLINE, "\t .. Single Queue Family Achieved ..");
+                report(LOGGER::VLINE, "\t .. Single Queue Family Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 _create_info.queueFamilyIndexCount = 0;
                 _create_info.pQueueFamilyIndices =  nullptr;
@@ -107,6 +108,40 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
         context->swapchain.format = swap_chain_details.surface_format.format;
         context->swapchain.extent = swap_chain_details.extent;
 
-        report(LOGGER::DLINE, "\t .. SwapChain Constructed ..");
-        return; 
+        report(LOGGER::VLINE, "\t .. SwapChain Constructed ..");
+        return;
+    }
+
+    void constructImageViews(EngineContext *context)
+    {
+        report(LOGGER::DLINE, "\t .. Constructing Image Views ..");
+        context->swapchain.image_views.resize(context->swapchain.images.size());
+
+        for (size_t i = 0; i < context->swapchain.images.size(); i++) 
+            {
+                VkImageViewCreateInfo _create_info = {
+                    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                    .image = context->swapchain.images[i],
+                    .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                    .format = context->swapchain.format,
+                    .components = {
+                        .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                        .a = VK_COMPONENT_SWIZZLE_IDENTITY
+                    },
+                    .subresourceRange = {
+                        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                        .baseMipLevel = 0,
+                        .levelCount = 1,
+                        .baseArrayLayer = 0,
+                        .layerCount = 1
+                    }
+                };
+
+                VK_TRY(vkCreateImageView(context->logical_device, &_create_info, nullptr, &context->swapchain.image_views[i]));
+            }
+
+        report(LOGGER::VLINE, "\t .. Image Views Constructed ..");
+        return;
     }

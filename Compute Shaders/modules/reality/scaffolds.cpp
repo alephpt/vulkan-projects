@@ -32,17 +32,19 @@ bool checkValidationLayerSupport()
 void createVulkanInstance(VkInstance *instance) 
     {
         report(LOGGER::DLINE, "\t .. Instantiating Engine ..");
-        VkApplicationInfo app_info = {};
-        app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        app_info.pApplicationName = "Compute Shaders";
-        app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.pEngineName = "Genesis";
-        app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        app_info.apiVersion = VK_API_VERSION_1_0;
+        VkApplicationInfo app_info = {
+            .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+            .pApplicationName = "Vulkan Engine",
+            .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
+            .pEngineName = "Vulkan Engine",
+            .engineVersion = VK_MAKE_VERSION(1, 0, 0),
+            .apiVersion = VK_API_VERSION_1_0,
+        };
 
-        VkInstanceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        create_info.pApplicationInfo = &app_info;
+        VkInstanceCreateInfo create_info = {
+            .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+            .pApplicationInfo = &app_info,
+        };
 
         // Handle Extensions
         report(LOGGER::VERBOSE, "Vulkan: Checking for extensions ..");
@@ -61,11 +63,11 @@ void createVulkanInstance(VkInstance *instance)
         // This code gets only the required extensions by SDL, and append the debug extension.
         SDL_Vulkan_GetInstanceExtensions(nullptr, &extension_count, extensions.data());
         
-        if (USE_VALIDATION_LAYERS){
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-            extension_count++;
-        
-        }
+        if (USE_VALIDATION_LAYERS)
+            {
+                extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+                extension_count++;
+            }
 
         report(LOGGER::VERBOSE, "Vulkan: %d extensions supported:", extension_count);
 
@@ -204,7 +206,7 @@ void createLogicalDevice(EngineContext *context)
             context->queue_indices.compute_family.value()
         };
 
-        report(LOGGER::DLINE, "\t .. Creating Queue Family ..");
+        report(LOGGER::VLINE, "\t .. Creating Queue Family ..");
         for (uint32_t _queue_family : _unique_queue_families) 
             {
                 report(LOGGER::VLINE, "\t\tQueue Family: %d", _queue_family);
@@ -224,11 +226,13 @@ void createLogicalDevice(EngineContext *context)
                 _queue_create_infos.push_back(queue_create_info);
             }
 
-        VkDeviceCreateInfo create_info = {};
-        create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        create_info.pQueueCreateInfos = _queue_create_infos.data();
-        create_info.queueCreateInfoCount = static_cast<uint32_t>(_queue_create_infos.size());
-        create_info.pEnabledFeatures = &_device_features;
+        VkDeviceCreateInfo create_info = {
+            sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            queueCreateInfoCount: static_cast<uint32_t>(_queue_create_infos.size()),
+            pQueueCreateInfos: _queue_create_infos.data(),
+            pEnabledFeatures: &_device_features,
+        };
+
         create_info.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
         create_info.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
 
