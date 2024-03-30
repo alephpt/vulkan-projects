@@ -74,6 +74,7 @@ struct EngineContext {
     VkInstance instance;
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
+    std::vector<VkShaderModule> shader_modules;
     std::vector<VkQueueFamilyProperties> queue_families;
     std::vector<std::vector<float>> queue_priorities;
     QueueFamilyIndices queue_indices;

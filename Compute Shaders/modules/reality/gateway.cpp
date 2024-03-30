@@ -89,17 +89,13 @@ void Gateway::createPipelineInfo()
         _pipeline_info.pDepthStencilState = &_depth_stencil;
     }
 
-VkPipeline Gateway::pipeline()
+void Gateway::pipeline()
     {
         report(LOGGER::DLINE, "\t .. Creating Pipeline ..");
-        VkPipeline new_gateway;
-
-        VK_TRY(vkCreateGraphicsPipelines(_context->logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &new_gateway));
-
-        return new_gateway;
+        VK_TRY(vkCreateGraphicsPipelines(_context->logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &_instance));
     }
 
-Gateway Gateway::build(EngineContext *context)
+Gateway Gateway::define(EngineContext *context)
     {
         report(LOGGER::DLINE, "\t .. Building Pipeline ..");
         _context = context;
@@ -126,9 +122,24 @@ Gateway Gateway::build(EngineContext *context)
         return *this;
     }
 
+VkShaderModule Gateway::createShaderModule(const std::vector<char>& code)
+    {
+        report(LOGGER::INFO, "Gateway - Creating Shader Module ..");
+        VkShaderModuleCreateInfo _create_info = {
+                .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+                .codeSize = code.size(),
+                .pCode = reinterpret_cast<const uint32_t*>(code.data())
+            };
+
+        VkShaderModule shader_module;
+        VK_TRY(vkCreateShaderModule(_context->logical_device, &_create_info, nullptr, &shader_module));
+
+        return shader_module;
+    }
 
 void Gateway::addShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage)
     {
+        report(LOGGER::DLINE, "\t .. Adding Shader Stage ..");
         VkPipelineShaderStageCreateInfo _shader_stage = {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage = stage,

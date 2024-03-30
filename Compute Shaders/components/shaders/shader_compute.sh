@@ -1,0 +1,2 @@
+glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/tri.vert -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/tri_vert.spv
+glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/tri.frag -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/tri_frag.spv

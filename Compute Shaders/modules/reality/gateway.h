@@ -10,13 +10,15 @@ class Gateway {
 	    Gateway();
         ~Gateway();
 
-        VkPipeline pipeline();
-        Gateway build(EngineContext*);
+        void pipeline();
+        Gateway define(EngineContext*);
+        VkShaderModule createShaderModule(const std::vector<char>&);
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
         void clear();
 
     private:
         EngineContext *_context;
+        VkPipeline _instance;
 
         VkPipelineInputAssemblyStateCreateInfo _input_assembly;
         VkPipelineViewportStateCreateInfo _viewport_state;

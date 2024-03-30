@@ -2,6 +2,7 @@
 #include "./scaffolds.h"
 #include "./virtual.h"
 #include "./gateway.h"
+#include "./veil.h"
 
 #include <thread>
 #include <chrono>
@@ -126,10 +127,15 @@ void Reality::init_swapchain()
 void Reality::init_commands() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Commands ..");
+
+        Gateway _gateway;
+        
+        _gateway.define(&_context);//.pipeline();
+
+        createShaderData(&_gateway);
+        
         //createCommandPool(&_context);
         //createCommandBuffers(&_context);
-        Gateway _gateway;
-        VkPipeline pipeline = _gateway.build(&_context).pipeline();
     }
 
 void Reality::init_sync_structures()
