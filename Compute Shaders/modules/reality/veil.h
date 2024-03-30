@@ -3,4 +3,5 @@
 #include "./gateway.h"
 #include "../../components/lexicon.h"
 
-void createShaderData(Gateway* gateway);
+void createRenderPass(EngineContext* context);
+void constructGateway(EngineContext* context, Gateway* gateway);

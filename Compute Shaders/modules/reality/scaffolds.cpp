@@ -1,5 +1,4 @@
 #include "./scaffolds.h"
-#include "./matrix.h"
 #include "../../components/lexicon.h"
 #include <SDL2/SDL_vulkan.h>
 #include <set>

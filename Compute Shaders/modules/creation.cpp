@@ -4,7 +4,6 @@
 #include <functional>
 #include <SDL2/SDL_vulkan.h>
 
-
 Existence* _essence = nullptr;
 
 // Singleton to ensure only one instance of Existence is created.

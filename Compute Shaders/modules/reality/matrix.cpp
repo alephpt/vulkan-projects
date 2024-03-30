@@ -1,7 +1,6 @@
 #include "matrix.h"
 #include "./scaffolds.h"
 #include "./virtual.h"
-#include "./gateway.h"
 #include "./veil.h"
 
 #include <thread>
@@ -122,17 +121,13 @@ void Reality::init_swapchain()
 
         constructSwapChain(_swapchain_details, _swapchain_support, &_context);
         constructImageViews(&_context);
+        constructGateway(&_context, _gateway);
     }
 
 void Reality::init_commands() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Commands ..");
 
-        Gateway _gateway;
-        
-        _gateway.define(&_context);//.pipeline();
-
-        createShaderData(&_gateway);
         
         //createCommandPool(&_context);
         //createCommandBuffers(&_context);

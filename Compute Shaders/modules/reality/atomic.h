@@ -74,14 +74,16 @@ struct EngineContext {
     VkInstance instance;
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
-    std::vector<VkShaderModule> shader_modules;
-    std::vector<VkQueueFamilyProperties> queue_families;
-    std::vector<std::vector<float>> queue_priorities;
-    QueueFamilyIndices queue_indices;
+    
     VkSurfaceKHR surface;
     VkExtent2D window_extent { 800, 600 };
+    // TODO: Group Queues into a QueueContext
     Queues queues;
+    std::vector<VkQueueFamilyProperties> queue_families;
+    QueueFamilyIndices queue_indices;
+    std::vector<std::vector<float>> queue_priorities;
     SwapChainContext swapchain;
+    VkRenderPass render_pass;
 };
 
 

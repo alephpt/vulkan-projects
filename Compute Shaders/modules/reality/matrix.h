@@ -1,6 +1,7 @@
 #pragma once
 #include "../../components/lexicon.h"
 #include "./atomic.h"
+#include "./gateway.h"
 #include <string>
 
 class Reality {
@@ -25,6 +26,8 @@ class Reality {
 
         FrameData _frames[MAX_FRAMES_IN_FLIGHT];
         FrameData& _current_frame();
+
+        Gateway* _gateway;
 
         void init_framework();
         void init_swapchain();
