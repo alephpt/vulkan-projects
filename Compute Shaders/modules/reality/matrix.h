@@ -10,6 +10,7 @@
 class Reality {
     public:
         bool initialized = false;
+        FrameData& current_frame();
 
         Reality(std::string, VkExtent2D);
         ~Reality();
@@ -27,8 +28,6 @@ class Reality {
         EngineContext _context;
         VkDebugUtilsMessengerEXT _debug_messenger;
 
-        FrameData _frames[MAX_FRAMES_IN_FLIGHT];
-        FrameData& _current_frame();
 
         Gateway* _gateway;
 

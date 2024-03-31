@@ -68,6 +68,12 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 Reality::~Reality() 
     {
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
+        vkDeviceWaitIdle(_context.logical_device);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                vkDestroyCommandPool(_context.logical_device, _context.frames[i].command_pool, nullptr);
+            }
 
         destroyGateway(_gateway);
         vkDestroyRenderPass(_context.logical_device, _context.render_pass, nullptr);
@@ -165,4 +171,4 @@ void Reality::init_sync_structures()
         report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
     }
 
-FrameData &Reality::_current_frame() { { return _frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+FrameData &Reality::current_frame() { { return _context.frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }

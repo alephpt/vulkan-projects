@@ -82,7 +82,7 @@ struct EngineContext {
     VkInstance instance;
     VkPhysicalDevice physical_device;
     VkDevice logical_device;
-    
+    FrameData frames[MAX_FRAMES_IN_FLIGHT];
     VkSurfaceKHR surface;
     VkExtent2D window_extent { 800, 600 };
     Queues queues;

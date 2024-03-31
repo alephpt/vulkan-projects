@@ -154,5 +154,24 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
 void createFrameBuffers(EngineContext *context)
     {
         report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
+        context->swapchain.framebuffers.resize(context->swapchain.image_views.size());
+
+        for (size_t i = 0; i < context->swapchain.image_views.size(); i++) 
+            {
+                VkImageView _attachments[] = { context->swapchain.image_views[i] };
+
+                VkFramebufferCreateInfo _create_info = {
+                    .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+                    .renderPass = context->render_pass,
+                    .attachmentCount = 1,
+                    .pAttachments = _attachments,
+                    .width = context->swapchain.extent.width,
+                    .height = context->swapchain.extent.height,
+                    .layers = 1
+                };
+
+                VK_TRY(vkCreateFramebuffer(context->logical_device, &_create_info, nullptr, &context->swapchain.framebuffers[i]));
+            }
+
         return;
     }
