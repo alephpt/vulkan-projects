@@ -44,6 +44,7 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Initialize the Vulkan Framework
         init_framework();
         init_swapchain();
+        init_pipeline();
         init_commands();
         init_sync_structures();
         report(LOGGER::INFO, "Reality - Matrix Initialized ..");
@@ -121,6 +122,12 @@ void Reality::init_swapchain()
 
         constructSwapChain(_swapchain_details, _swapchain_support, &_context);
         constructImageViews(&_context);
+    }
+
+void Reality::init_pipeline() 
+    {
+        report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
+        createRenderPass(&_context);
         constructGateway(&_context, _gateway);
     }
 

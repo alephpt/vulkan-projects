@@ -2,25 +2,32 @@
 #include "../../components/genesis.h"
 
 Gateway::Gateway()
-    { clear(); }
+    { 
+        report(LOGGER::INFO, "Gateway - Initializing Pipeline ..");
+        clear(); 
+    }
 
 Gateway::~Gateway()
-    { clear(); }
+    { 
+        report(LOGGER::DEBUG, "Gateway - Deconstructing Pipeline ..");
+        clear(); 
+    }
 
 void Gateway::clear()
     {
-        _pipeline_info = { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
-        _pipeline_layout = {};
-        _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
-        _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
-        _color_blending = { .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+        report(LOGGER::DLINE, "\t .. Clearing Gateway ..");
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+        _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
         _rasterizer = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
-//        _color_blend_attachment = {};
         _multisampling = { .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+        _color_blend_attachment = {  };
+        _color_blending = { .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+        _pipeline_info = { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+        _dynamic_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+        _pipeline_layout_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
         _pipeline_layout = {};
-        _depth_stencil = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+        _depth_stencil = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO }; // not used
         _render_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
         _shader_stages.clear();
     }
@@ -32,7 +39,7 @@ void Gateway::clear()
 
 Gateway& Gateway::define(EngineContext *context)
     {
-        report(LOGGER::DLINE, "\t .. Initializing Pipeline Gateway ..");
+        report(LOGGER::DLINE, "\t .. Initializing Pipeline Gateway Context ..");
         _context = context;
         return *this;
     }
@@ -134,11 +141,8 @@ Gateway& Gateway::viewportState()
     {
         report(LOGGER::DLINE, "\t .. Creating Viewport State ..");
 
-        VkExtent2D extent = _context->swapchain.extent;
-
         _viewport_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-                .pNext = nullptr,
                 .viewportCount = 1,
                 .scissorCount = 1,
             };
@@ -246,10 +250,22 @@ Gateway& Gateway::colorBlending()
     {
         report(LOGGER::DLINE, "\t .. Creating Color Blend State ..");
 
-        VkPipelineColorBlendAttachmentState _color_blend_attachment = colorBlendAttachment();
+        _color_blend_attachment = 
+            {
+                .blendEnable = VK_FALSE,
+                .srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
+                .dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
+                .colorBlendOp = VK_BLEND_OP_ADD,
+                .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+                .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+                .alphaBlendOp = VK_BLEND_OP_ADD,
+                .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+            };
 
         _color_blending = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
                 .logicOpEnable = VK_FALSE,
                 .logicOp = VK_LOGIC_OP_COPY,
                 .attachmentCount = 1,
@@ -306,7 +322,7 @@ Gateway& Gateway::pipeline()
 
         _pipeline_info = {
                 .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-                .stageCount = 0,
+                .stageCount = static_cast<uint32_t>(_shader_stages.size()),
                 .pStages = _shader_stages.data(),
                 .pVertexInputState = &_vertex_input_state,
                 .pInputAssemblyState = &_input_assembly,
@@ -326,7 +342,7 @@ Gateway& Gateway::pipeline()
 
 Gateway& Gateway::create()
     {
-        report(LOGGER::DLINE, "\t .. Creating Graphics Pipeline Gateway ..");
+        report(LOGGER::DLINE, "\t .. Constructing Pipeline ..");
         VK_TRY(vkCreateGraphicsPipelines(_context->logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &_instance));
 
         report(LOGGER::DLINE, "\t .. Cleaning Up Shader Modules ..");

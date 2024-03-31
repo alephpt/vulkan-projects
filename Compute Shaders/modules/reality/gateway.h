@@ -35,8 +35,9 @@ class Gateway {
         VkPipelineRasterizationStateCreateInfo _rasterizer;
         VkPipelineMultisampleStateCreateInfo _multisampling;
         VkPipelineDepthStencilStateCreateInfo _depth_stencil;
+        VkPipelineColorBlendAttachmentState _color_blend_attachment;
         VkPipelineColorBlendStateCreateInfo _color_blending;
-        std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_LINE_WIDTH };
+        std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
         VkPipelineDynamicStateCreateInfo _dynamic_state;
         std::vector<VkShaderModule> _shader_modules;
         std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;

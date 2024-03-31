@@ -31,6 +31,7 @@ class Reality {
 
         void init_framework();
         void init_swapchain();
+        void init_pipeline();
         void init_commands();
         void init_sync_structures();
 };

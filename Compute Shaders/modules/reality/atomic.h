@@ -21,7 +21,9 @@ const std::vector<const char*> VALIDATION_LAYERS =
 
 const std::vector<const char*> DEVICE_EXTENSIONS = 
     {
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+//        VK_EXT_GRAPHICS_PIPELINE_LIBRARY_EXTENSION_NAME,
+//        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
     };
 
 const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
