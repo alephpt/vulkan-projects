@@ -3,7 +3,7 @@
 
 Gateway::Gateway()
     { 
-        report(LOGGER::INFO, "Gateway - Initializing Pipeline ..");
+        report(LOGGER::ILINE, "\t .. Initializing Pipeline ..");
         clear(); 
     }
 
@@ -11,11 +11,14 @@ Gateway::~Gateway()
     { 
         report(LOGGER::DEBUG, "Gateway - Deconstructing Pipeline ..");
         clear(); 
+        vkDestroyPipeline(_context->logical_device, _instance, nullptr);
+        vkDestroyPipelineLayout(_context->logical_device, _pipeline_layout, nullptr);
+        free(_shader_modules.data());
     }
 
 void Gateway::clear()
     {
-        report(LOGGER::DLINE, "\t .. Clearing Gateway ..");
+        report(LOGGER::DLINE, "\t\t .. Clearing Gateway ..");
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
@@ -51,7 +54,7 @@ Gateway& Gateway::define(EngineContext *context)
 
 static inline VkShaderModule createShaderModule(EngineContext* context, std::vector<char>& code)
     {
-        report(LOGGER::INFO, "Gateway - Creating Shader Module ..");
+        report(LOGGER::DLINE, "\t\t .. Creating Shader Module ..");
         VkShaderModuleCreateInfo _create_info = {
                 .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 .codeSize = code.size(),
@@ -66,7 +69,8 @@ static inline VkShaderModule createShaderModule(EngineContext* context, std::vec
 
 void Gateway::addShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage)
     {
-        report(LOGGER::DLINE, "\t .. Adding Shader Stage ..");
+        std::string stage_name = stage == VK_SHADER_STAGE_VERTEX_BIT ? "Vertex" : "Fragment";
+        report(LOGGER::DLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
         _shader_modules.push_back(shaderModule);
 
         VkPipelineShaderStageCreateInfo _shader_stage = {
@@ -101,7 +105,7 @@ Gateway& Gateway::shaders()
 
 Gateway& Gateway::vertexInput()
     {
-        report(LOGGER::DLINE, "\t .. Creating Vertex Input ..");
+        report(LOGGER::DLINE, "\t .. Creating Vertex Input State ..");
 
         _vertex_input_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,

@@ -200,16 +200,16 @@ void createLogicalDevice(EngineContext *context)
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
         std::set<uint32_t> _unique_queue_families = {
-            context->queue_indices.graphics_family.value(), 
-            context->queue_indices.present_family.value(),
-            context->queue_indices.compute_family.value()
+            context->queues.indices.graphics_family.value(), 
+            context->queues.indices.present_family.value(),
+            context->queues.indices.compute_family.value()
         };
 
         report(LOGGER::VLINE, "\t .. Creating Queue Family ..");
         for (uint32_t _queue_family : _unique_queue_families) 
             {
                 report(LOGGER::VLINE, "\t\tQueue Family: %d", _queue_family);
-                report(LOGGER::VLINE, "\t\t\tQueue Count: %d", context->queue_families[_queue_family].queueCount);
+                report(LOGGER::VLINE, "\t\t\tQueue Count: %d", context->queues.families[_queue_family].queueCount);
                 if (_queue_family == -1) { continue; } // if the queue family is not supported
 
                 // resize the queue priorities to match the number of queues in the family
@@ -218,8 +218,8 @@ void createLogicalDevice(EngineContext *context)
                 VkDeviceQueueCreateInfo queue_create_info = {
                     sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
                     queueFamilyIndex: _queue_family,
-                    queueCount: context->queue_families[_queue_family].queueCount,
-                    pQueuePriorities: context->queue_priorities[_queue_family].data()
+                    queueCount: context->queues.families[_queue_family].queueCount,
+                    pQueuePriorities: context->queues.priorities[_queue_family].data()
                 };
 
                 _queue_create_infos.push_back(queue_create_info);
@@ -237,9 +237,9 @@ void createLogicalDevice(EngineContext *context)
 
         VK_TRY(vkCreateDevice(context->physical_device, &create_info, nullptr, &context->logical_device));
 
-        vkGetDeviceQueue(context->logical_device, context->queue_indices.graphics_family.value(), 0, &context->queues.graphics);
-        vkGetDeviceQueue(context->logical_device, context->queue_indices.present_family.value(), 0, &context->queues.present);
-        vkGetDeviceQueue(context->logical_device, context->queue_indices.compute_family.value(), 0, &context->queues.compute);
+        vkGetDeviceQueue(context->logical_device, context->queues.indices.graphics_family.value(), 0, &context->queues.graphics);
+        vkGetDeviceQueue(context->logical_device, context->queues.indices.present_family.value(), 0, &context->queues.present);
+        vkGetDeviceQueue(context->logical_device, context->queues.indices.compute_family.value(), 0, &context->queues.compute);
 
         logContext(context);
     }

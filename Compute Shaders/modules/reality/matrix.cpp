@@ -2,6 +2,7 @@
 #include "./scaffolds.h"
 #include "./virtual.h"
 #include "./veil.h"
+#include "./operator.h"
 
 #include <thread>
 #include <chrono>
@@ -54,11 +55,13 @@ Reality::~Reality()
     {
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
 
+        destroyGateway(_gateway);
+        vkDestroyRenderPass(_context.logical_device, _context.render_pass, nullptr);
+
+        for (auto _image_view : _context.swapchain.image_views) 
+            { vkDestroyImageView(_context.logical_device, _image_view, nullptr); }
+
         vkDestroySwapchainKHR(_context.logical_device, _context.swapchain.instance, nullptr);
-
-        for (size_t i = 0; i < _context.swapchain.image_views.size(); i++) 
-            { vkDestroyImageView(_context.logical_device, _context.swapchain.image_views[i], nullptr); }
-
         vkDestroyDevice(_context.logical_device, nullptr);
 
         if (USE_VALIDATION_LAYERS) 
@@ -133,11 +136,10 @@ void Reality::init_pipeline()
 
 void Reality::init_commands() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Commands ..");
+        report(LOGGER::INFO, "Matrix - Initializing Command Operatior..");
 
-        
-        //createCommandPool(&_context);
-        //createCommandBuffers(&_context);
+        createCommandPool(&_context);
+        createCommandBuffers(&_context);
     }
 
 void Reality::init_sync_structures()

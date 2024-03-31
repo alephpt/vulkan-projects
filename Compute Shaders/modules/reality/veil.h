@@ -5,3 +5,4 @@
 
 void createRenderPass(EngineContext* context);
 void constructGateway(EngineContext* context, Gateway* gateway);
+void destroyGateway(Gateway* gateway);

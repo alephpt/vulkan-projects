@@ -3,7 +3,7 @@
 
 std::vector<char> genesis::loadFile(const std::string& filename) 
     {
-        report(LOGGER::INFO, "Genesis - Creating Buffer from %s ..", filename.c_str());
+        report(LOGGER::VERBOSE, "Genesis - Creating Buffer from %s ..", filename.c_str());
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) 

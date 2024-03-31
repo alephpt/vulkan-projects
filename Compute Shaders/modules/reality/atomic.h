@@ -46,10 +46,15 @@ struct QueueFamilyIndices {
     }
 };
 
+// This could be a class that constructs queues and families dynamically
 struct Queues {
     VkQueue graphics;
     VkQueue present;
     VkQueue compute;
+
+    std::vector<VkQueueFamilyProperties> families;
+    QueueFamilyIndices indices;
+    std::vector<std::vector<float>> priorities;
 };
 
 struct SwapChainSupportDetails {
@@ -68,6 +73,7 @@ struct SwapChainContext {
     VkSwapchainKHR instance;
     std::vector<VkImage> images;
     std::vector<VkImageView> image_views;
+    std::vector<VkFramebuffer> framebuffers;
     VkFormat format;
     VkExtent2D extent;
 };
@@ -79,11 +85,7 @@ struct EngineContext {
     
     VkSurfaceKHR surface;
     VkExtent2D window_extent { 800, 600 };
-    // TODO: Group Queues into a QueueContext
     Queues queues;
-    std::vector<VkQueueFamilyProperties> queue_families;
-    QueueFamilyIndices queue_indices;
-    std::vector<std::vector<float>> queue_priorities;
     SwapChainContext swapchain;
     VkRenderPass render_pass;
 };

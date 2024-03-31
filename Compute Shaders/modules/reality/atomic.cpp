@@ -12,8 +12,8 @@ void logContext(EngineContext *context)
         report(LOGGER::VLINE, "\t\tPhysical Device: %p", context->physical_device);
         report(LOGGER::VLINE, "\t\tLogical Device: %p", context->logical_device);
         report(LOGGER::VLINE, "\t\tSurface: %p", context->surface);
-        report(LOGGER::VLINE, "\t\tQueue Families: %d", context->queue_families.size());
-        report(LOGGER::VLINE, "\t\tQueue Indices: %d", context->queue_priorities.size());
+        report(LOGGER::VLINE, "\t\tQueue Families: %d", context->queues.families.size());
+        report(LOGGER::VLINE, "\t\tQueue Indices: %d", context->queues.priorities.size());
     }
 
     //////////////////
@@ -46,23 +46,23 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 
 
 static inline void setQueueFamilyProperties(EngineContext* context, int i) {
-    VkQueueFamilyProperties* queue_family = &context->queue_families[i];
+    VkQueueFamilyProperties* queue_family = &context->queues.families[i];
     std::string queue_name = "";
 
     if (queue_family->queueFlags & VK_QUEUE_GRAPHICS_BIT) 
         { 
             queue_name += "{ Graphics } "; 
-            context->queue_indices.graphics_family = i;
-            context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+            context->queues.indices.graphics_family = i;
+            context->queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
             report(LOGGER::VLINE, "\t\tGraphics Family Set.");
         }
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
         { 
             queue_name += "{ Compute } "; 
-            if (context->queue_indices.graphics_family.value() != i) 
+            if (context->queues.indices.graphics_family.value() != i) 
                 {
-                    context->queue_indices.compute_family = i;
-                    context->queue_priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                    context->queues.indices.compute_family = i;
+                    context->queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
                     report(LOGGER::VLINE, "\t\tCompute Family Set.");
                 }
         }
@@ -87,21 +87,21 @@ static inline void getQueueFamilies(VkPhysicalDevice scanned_device, EngineConte
         report(LOGGER::VLINE, "\t .. Acquiring Queue Families ..");
         uint32_t _queue_family_count = 0;
         vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, nullptr);
-        context->queue_families.resize(_queue_family_count);
-        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, context->queue_families.data());
+        context->queues.families.resize(_queue_family_count);
+        vkGetPhysicalDeviceQueueFamilyProperties(scanned_device, &_queue_family_count, context->queues.families.data());
 
-        for (int i = 0; i < context->queue_families.size(); i++) 
+        for (int i = 0; i < context->queues.families.size(); i++) 
             {
                 report(LOGGER::VLINE, "\t\tQueue Family %d", i);
 
                 // If we haven't found a present family yet, we'll take the first one we find
-                if (context->queue_indices.present_family.value() == -1){
+                if (context->queues.indices.present_family.value() == -1){
                     VkBool32 _present_support = false;  
                     vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, context->surface, &_present_support);
 
                     if (_present_support) 
                         { 
-                            context->queue_indices.present_family = i; 
+                            context->queues.indices.present_family = i; 
                             report(LOGGER::VLINE, "\t\tPresent Family Set.");    
                         }
                 }
@@ -176,5 +176,5 @@ bool deviceProvisioned(VkPhysicalDevice scanned_device, EngineContext *context)
                 swap_chain_adequate = !swap_chain_support.formats.empty() && !swap_chain_support.present_modes.empty();
             }
 
-        return context->queue_indices.isComplete() && extensions_supported && swap_chain_adequate;
+        return context->queues.indices.isComplete() && extensions_supported && swap_chain_adequate;
     }
