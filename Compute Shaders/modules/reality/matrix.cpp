@@ -43,23 +43,23 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
                 return;
             }
 
-        // Initialize the Vulkan Framework
+        // Initialize the Engine Device Context
+        init_framework();
 
+        // We need to multithread the Swapchain and Pipeline Instantiation
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();
         std::promise<void> waitForGateway; 
         std::future<void> waitingForGateway = waitForGateway.get_future();
 
-        init_framework();
-        //init_swapchain(waitForPipeline, waitingForGateway);
         std::thread _swapchain_thread(&Reality::init_swapchain, this, std::move(waitingForGateway), std::move(waitForSwapchain));
-        //init_pipeline(waitForGateway);
         std::thread _pipeline_thread(&Reality::init_pipeline, this, std::move(waitForGateway));
         waitingForFrameBuffer.wait();
 
         _swapchain_thread.join();
         _pipeline_thread.join();
 
+        // Now we can construct the Command Buffers 
         init_commands();
         init_sync_structures();
         report(LOGGER::INFO, "Reality - Matrix Initialized ..");
@@ -154,7 +154,7 @@ void Reality::init_pipeline(std::promise<void>&& waitForGateway)
 
 void Reality::init_commands() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Command Operatior..");
+        report(LOGGER::INFO, "Matrix - Initializing Command Operator ..");
 
         createCommandPool(&_context);
         createCommandBuffers(&_context);

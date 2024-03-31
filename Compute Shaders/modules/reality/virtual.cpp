@@ -153,5 +153,6 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
 
 void createFrameBuffers(EngineContext *context)
     {
+        report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
         return;
     }
