@@ -47,15 +47,19 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();
-        std::promise<void> waitForGateway;
+        std::promise<void> waitForGateway; 
         std::future<void> waitingForGateway = waitForGateway.get_future();
 
         init_framework();
         //init_swapchain(waitForPipeline, waitingForGateway);
-        std::thread _swapchain_thread(&init_swapchain, this, std::ref(waitForSwapchain), std::ref(waitingForGateway));
+        std::thread _swapchain_thread(&Reality::init_swapchain, this, std::move(waitingForGateway), std::move(waitForSwapchain));
         //init_pipeline(waitForGateway);
-        std::thread _pipeline_thread(&init_pipeline, this, std::ref(waitForGateway));
+        std::thread _pipeline_thread(&Reality::init_pipeline, this, std::move(waitForGateway));
         waitingForFrameBuffer.wait();
+
+        _swapchain_thread.join();
+        _pipeline_thread.join();
+
         init_commands();
         init_sync_structures();
         report(LOGGER::INFO, "Reality - Matrix Initialized ..");
@@ -127,7 +131,7 @@ void Reality::init_framework()
         createLogicalDevice(&_context);
     }
 
-void Reality::init_swapchain(std::future<void>& waitForGateway, std::promise<void>& waitForFrameBuffer) 
+void Reality::init_swapchain(std::future<void>&& waitingForGateway, std::promise<void>&& waitForFrameBuffer) 
     {
         report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
         SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_context.physical_device, _context.surface);
@@ -135,12 +139,12 @@ void Reality::init_swapchain(std::future<void>& waitForGateway, std::promise<voi
 
         constructSwapChain(_swapchain_details, _swapchain_support, &_context);
         constructImageViews(&_context);
-        waitForGateway.wait();
+        waitingForGateway.wait();
         createFrameBuffers(&_context);
         waitForFrameBuffer.set_value();
     }
 
-void Reality::init_pipeline(std::promise<void>& waitForGateway) 
+void Reality::init_pipeline(std::promise<void>&& waitForGateway) 
     {
         report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
         createRenderPass(&_context);
