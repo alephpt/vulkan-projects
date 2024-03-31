@@ -16,7 +16,7 @@
  * =====================================================================================
  */
 #include <iostream>
-#include "modules/creation.h"
+//#include "modules/creation.h"
 #include "components/logger.h"
 
 #include <thread>
@@ -31,23 +31,24 @@ void fB1() { printf("Function B1\n"); }
 void fB2() { printf("Function B2\n"); }
 void fB3() { printf("Function B3\n"); }
 
-
-void fA(std::promise<void>& waitForB) {
+void fA(std::promise<void>& waitForA, std::future<void>& waitingForB) {
     printf("Function A\n");
     fA1();
     fA2();
     fA3();
-    waitForB.set_value();   // Notify fB that fA has completed its work
+    waitForA.set_value();   // Notify fB that fA has completed its work
+    waitingForB.wait();     // Wait for fB to complete its work
     fA4();
     printf("Function A Done\n");
 }
 
-void fB(std::future<void>& waitForA) {
+void fB(std::promise<void>& waitForB, std::future<void>& waitingForA) {
     printf("Function B\n");
     fB1();
-    waitForA.wait();     // Wait for fA to complete its work
+    waitingForA.wait();     // Wait for fA to complete its work
     fB2();
     fB3();
+    waitForB.set_value();   // Notify fA that fB has completed its work
     printf("Function B Done\n");
 }
 
@@ -55,11 +56,13 @@ void fB(std::future<void>& waitForA) {
 int main(int argc, char* argv[]) {
     report(LOGGER::VLINE, "Manifestation Exists.");
 
-    std::promise<void> waitForB;                        // Create a promise that fA will signal fB
-    std::future<void> waitForA = waitForB.get_future(); // Get the future from the promise
+    std::promise<void> waitForA;                        // Create a promise that fA will signal fB
+    std::future<void> waitingForA = waitForA.get_future(); // Get the future from the promise
+    std::promise<void> waitForB;                        // Create a promise that fB will signal fA
+    std::future<void> waitingForB = waitForB.get_future(); // Get the future from the promise
 
-    std::thread threadB(fB, std::ref(waitForA));
-    std::thread threadA(fA, std::ref(waitForB));
+    std::thread threadA(fA, std::ref(waitForA), std::ref(waitingForB)); // Create a thread for fA
+    std::thread threadB(fB, std::ref(waitForB), std::ref(waitingForA)); // Create a thread for fB
 
     threadA.join();
     threadB.join();

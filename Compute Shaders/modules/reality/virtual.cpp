@@ -145,3 +145,13 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
         report(LOGGER::VLINE, "\t .. Image Views Constructed ..");
         return;
     }
+
+
+    ///////////////////////////
+    // FRAME BUFFER CREATION //
+    ///////////////////////////
+
+void createFrameBuffers(EngineContext *context)
+    {
+        return;
+    }

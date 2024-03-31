@@ -1,6 +1,13 @@
 
 #include "./veil.h"
 #include "../../components/genesis.h"
+#include "veil.h"
+
+
+
+    //////////////////////////
+    // RENDER PASS CREATION //
+    //////////////////////////
 
 static inline VkAttachmentDescription colorAttachment(EngineContext* _context)
     {
@@ -68,6 +75,12 @@ void createRenderPass(EngineContext* context)
         return;
     }
 
+
+
+    ///////////////////////////////////
+    // PIPELINE GATEWAY CONSTRUCTION //
+    ///////////////////////////////////
+
 void constructGateway(EngineContext* context, Gateway* gateway) 
     {
         gateway = new Gateway();
@@ -88,7 +101,15 @@ void constructGateway(EngineContext* context, Gateway* gateway)
         return;
     }
 
-void destroyGateway(Gateway* gateway) 
+
+
+
+
+    /////////////////////////
+    // GATEWAY DESTRUCTION //
+    /////////////////////////
+
+void destroyGateway(Gateway *gateway)
     {
         delete gateway;
         

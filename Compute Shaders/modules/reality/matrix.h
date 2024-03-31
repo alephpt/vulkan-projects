@@ -2,7 +2,10 @@
 #include "../../components/lexicon.h"
 #include "./atomic.h"
 #include "./gateway.h"
+
 #include <string>
+#include <future>
+
 
 class Reality {
     public:
@@ -30,8 +33,8 @@ class Reality {
         Gateway* _gateway;
 
         void init_framework();
-        void init_swapchain();
-        void init_pipeline();
+        void init_swapchain(std::future<void>&, std::promise<void>&);
+        void init_pipeline(std::promise<void>&);
         void init_commands();
         void init_sync_structures();
 };
