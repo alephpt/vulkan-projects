@@ -3,4 +3,4 @@
 #include "./atomic.h"
 
 void createCommandPool(EngineContext*);
-void createCommandBuffers(EngineContext*);
+void createSyncObjects(EngineContext*);

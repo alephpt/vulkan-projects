@@ -23,9 +23,9 @@
 int main(int argc, char* argv[]) {
     report(LOGGER::VLINE, "Manifestation Exists.");
 
-    Existence* creation = Existence::manifest();
-    creation->actualize();
-    creation->cease();
+    Existence* creation = Existence::manifest();    // Instantiate the World
+    creation->actualize();                          // Run the Simulation
+    creation->cease();                              // End the Simulation and Cleanup
 
     return 0;
 }

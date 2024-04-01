@@ -175,3 +175,28 @@ void createFrameBuffers(EngineContext *context)
 
         return;
     }
+
+void destroySwapChain(EngineContext* context) 
+    {
+        report(LOGGER::INFO, "Matrix - Destroying Swapchain ..");
+
+        for (const auto _frame_buffers : context->swapchain.framebuffers) 
+            { vkDestroyFramebuffer(context->logical_device, _frame_buffers, nullptr); }
+        
+        for (const auto _image_view : context->swapchain.image_views) 
+            { vkDestroyImageView(context->logical_device, _image_view, nullptr); }
+
+        vkDestroySwapchainKHR(context->logical_device, context->swapchain.instance, nullptr);
+    }
+
+void recreateSwapChain(EngineContext* context) 
+    {
+        report(LOGGER::INFO, "Matrix - Creating Swapchain ..");
+
+        vkDeviceWaitIdle(context->logical_device);
+        destroySwapChain(context);
+
+        constructSwapChain(context->swapchain.details, context->swapchain.support, context);
+        constructImageViews(context);
+        createFrameBuffers(context);
+    }

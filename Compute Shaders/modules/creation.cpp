@@ -29,7 +29,6 @@ Existence* Existence::create()
         _actuality = new Reality(_application_name, _window_extent);
 
         // Initialize the Reality with Genesis 
-
         report(LOGGER::INFO, "Existence - Reality Complete ..");
 
         _actuality->initialized = true;
@@ -39,7 +38,9 @@ Existence* Existence::create()
 
 void Existence::materialize() 
     {
-       // report(LOGGER::INFO, "Existence - Materializing ..");
+       report(LOGGER::VERBOSE, "Existence - Materializing ..");
+       // This is where we need to handle the real time calculations and state changes
+       // TODO: Implement Menu and User Input Handling and Processing
 
         return;
     }
@@ -49,7 +50,7 @@ void Existence::actualize()
         report(LOGGER::INFO, "Existence - Actualizing ..");
 
         //_actuality->illuminate();
-        _actuality->illuminate(Existence::materialize);
+        _actuality->illuminate(Existence::materialize);   
     }
 
 // Why aren't we using the destructor to clean up?

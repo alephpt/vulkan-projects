@@ -76,7 +76,10 @@ struct SwapChainContext {
     std::vector<VkFramebuffer> framebuffers;
     VkFormat format;
     VkExtent2D extent;
+    SwapChainSupportDetails support;
+    SwapChainDetails details;
 };
+
 
 struct EngineContext {
     VkInstance instance;
@@ -89,6 +92,7 @@ struct EngineContext {
     SwapChainContext swapchain;
     VkRenderPass render_pass;
 };
+
 
 
     ////////////////////

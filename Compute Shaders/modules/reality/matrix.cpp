@@ -44,24 +44,30 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
             }
 
         // Initialize the Engine Device Context
-        init_framework();
+        _initFramework();
 
         // We need to multithread the Swapchain and Pipeline Instantiation
+        _context.swapchain.support = querySwapChainSupport(_context.physical_device, _context.surface);
+        _context.swapchain.details = querySwapChainDetails(_context.swapchain.support, _context.window_extent);
+
+        // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();
         std::promise<void> waitForGateway; 
         std::future<void> waitingForGateway = waitForGateway.get_future();
 
-        std::thread _swapchain_thread(&Reality::init_swapchain, this, std::move(waitingForGateway), std::move(waitForSwapchain));
-        std::thread _pipeline_thread(&Reality::init_pipeline, this, std::move(waitForGateway));
+        std::thread _swapchain_thread(&Reality::_initSwapChain, this, std::move(waitingForGateway), std::move(waitForSwapchain));
+        std::thread _pipeline_thread(&Reality::_initGateway, this, std::move(waitForGateway));
         waitingForFrameBuffer.wait();
 
         _swapchain_thread.join();
         _pipeline_thread.join();
 
+        // We need to multithread the Swapchain and Pipeline Instantiation
+
         // Now we can construct the Command Buffers 
-        init_commands();
-        init_sync_structures();
+        _initCommands();
+        _initSyncStructures();
         report(LOGGER::INFO, "Reality - Matrix Initialized ..");
     }
 
@@ -70,27 +76,35 @@ Reality::~Reality()
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
         vkDeviceWaitIdle(_context.logical_device);
 
+        destroySwapChain(&_context);
+
+        report(LOGGER::INFO, "Reality - Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
+                vkDestroySemaphore(_context.logical_device, _context.frames[i].image_available, nullptr);
+                vkDestroySemaphore(_context.logical_device, _context.frames[i].render_finished, nullptr);
+                vkDestroyFence(_context.logical_device, _context.frames[i].in_flight, nullptr);
                 vkDestroyCommandPool(_context.logical_device, _context.frames[i].command_pool, nullptr);
             }
 
+        report(LOGGER::INFO, "Reality - Destroying Gateway and Render Pass ..");
         destroyGateway(_gateway);
         vkDestroyRenderPass(_context.logical_device, _context.render_pass, nullptr);
 
-        for (auto _image_view : _context.swapchain.image_views) 
-            { vkDestroyImageView(_context.logical_device, _image_view, nullptr); }
-
-        vkDestroySwapchainKHR(_context.logical_device, _context.swapchain.instance, nullptr);
+        report(LOGGER::INFO, "Reality - Destroying Logical Device ..");
         vkDestroyDevice(_context.logical_device, nullptr);
 
+        report(LOGGER::INFO, "Reality - Destroying Debug Messenger ..");
         if (USE_VALIDATION_LAYERS) 
             { destroyDebugUtilsMessengerEXT(_context.instance, _debug_messenger, nullptr); }
 
+        report(LOGGER::INFO, "Reality - Destroying Surface ..");
         vkDestroySurfaceKHR(_context.instance, _context.surface, nullptr);
 
+        report(LOGGER::INFO, "Reality - Destroying Instance ..");
         vkDestroyInstance(_context.instance, nullptr);
-
+        
+        report(LOGGER::INFO, "Reality - Destroying Window ..");
         if (initialized) 
             { SDL_DestroyWindow(_window); }
 
@@ -127,7 +141,7 @@ void Reality::illuminate(fnManifest fnManifest)
     // INITIALIZERS //
     //////////////////
 
-void Reality::init_framework() 
+void Reality::_initFramework() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
         createVulkanInstance(&_context.instance);
@@ -137,20 +151,17 @@ void Reality::init_framework()
         createLogicalDevice(&_context);
     }
 
-void Reality::init_swapchain(std::future<void>&& waitingForGateway, std::promise<void>&& waitForFrameBuffer) 
+void Reality::_initSwapChain(std::future<void>&& waitingForGateway, std::promise<void>&& waitForFrameBuffer) 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Buffers ..");
-        SwapChainSupportDetails _swapchain_support = querySwapChainSupport(_context.physical_device, _context.surface);
-        SwapChainDetails _swapchain_details = querySwapChainDetails(_swapchain_support, _context.window_extent);
-
-        constructSwapChain(_swapchain_details, _swapchain_support, &_context);
+        report(LOGGER::INFO, "Matrix - Initializing SwapChain Buffers ..");
+        constructSwapChain(_context.swapchain.details, _context.swapchain.support, &_context);
         constructImageViews(&_context);
         waitingForGateway.wait();
         createFrameBuffers(&_context);
         waitForFrameBuffer.set_value();
     }
 
-void Reality::init_pipeline(std::promise<void>&& waitForGateway) 
+void Reality::_initGateway(std::promise<void>&& waitForGateway) 
     {
         report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
         createRenderPass(&_context);
@@ -158,17 +169,18 @@ void Reality::init_pipeline(std::promise<void>&& waitForGateway)
         waitForGateway.set_value();
     }
 
-void Reality::init_commands() 
+void Reality::_initCommands() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Command Operator ..");
 
         createCommandPool(&_context);
-        createCommandBuffers(&_context);
     }
 
-void Reality::init_sync_structures()
+void Reality::_initSyncStructures()
     {
         report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
+
+        createSyncObjects(&_context);
     }
 
 FrameData &Reality::current_frame() { { return _context.frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }

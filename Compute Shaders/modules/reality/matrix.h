@@ -31,9 +31,10 @@ class Reality {
 
         Gateway* _gateway;
 
-        void init_framework();
-        void init_swapchain(std::future<void>&&, std::promise<void>&&);
-        void init_pipeline(std::promise<void>&&);
-        void init_commands();
-        void init_sync_structures();
+        void _initFramework();
+        void _initSwapChain(std::future<void>&&, std::promise<void>&&);
+        void _initGateway(std::promise<void>&&);
+        void _initCommands();
+        void _initSyncStructures();
+        void _drawFrame();
 };
