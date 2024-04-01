@@ -15,8 +15,8 @@ class Reality {
         Reality(std::string, VkExtent2D);
         ~Reality();
 
-        //void illuminate();
-        void illuminate(fnManifest);
+        void illuminate();
+        //void illuminate(fnManifest);
 
     private:
         std::string _application_name;

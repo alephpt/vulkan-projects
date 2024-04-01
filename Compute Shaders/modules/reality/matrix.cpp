@@ -111,8 +111,79 @@ Reality::~Reality()
         SDL_Quit();
     }
 
-//void Reality::illuminate()
-void Reality::illuminate(fnManifest fnManifest)
+
+    /////////////////////////
+    // TOP LEVEL FUNCTIONS //
+    /////////////////////////
+
+    // Get Current Frame
+
+FrameData& Reality::current_frame() { { return _context.frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+
+    // Draw
+
+void Reality::_drawFrame() 
+    {
+        report(LOGGER::INFO, "Matrix - Drawing Frame ..");
+
+        vkWaitForFences(_context.logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX);
+
+        uint32_t _image_index;
+        VkResult _result = vkAcquireNextImageKHR(
+            _context.logical_device, _context.swapchain.instance, UINT64_MAX, 
+            current_frame().image_available, VK_NULL_HANDLE, &_image_index
+        );
+
+        if (_result == VK_ERROR_OUT_OF_DATE_KHR) 
+            {
+                report(LOGGER::ERROR, "Matrix - Swapchain out of date ..");
+                return;
+            }
+
+        if (_result != VK_SUCCESS && _result != VK_SUBOPTIMAL_KHR) 
+            {
+                report(LOGGER::ERROR, "Matrix - Failed to acquire next image ..");
+                return;
+            }
+
+        VkSemaphore _wait_semaphores[] = { current_frame().image_available };
+        VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
+        VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+
+        VkSubmitInfo _submit_info = {
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = _wait_semaphores,
+            .pWaitDstStageMask = _wait_stages,
+            .commandBufferCount = 1,
+            .pCommandBuffers = &current_frame().command_buffer,
+            .signalSemaphoreCount = 1,
+            .pSignalSemaphores = _signal_semaphores
+        };
+
+        vkResetFences(_context.logical_device, 1, &current_frame().in_flight);
+
+        VK_TRY(vkQueueSubmit(_context.queues.graphics, 1, &_submit_info, current_frame().in_flight));
+
+        VkSwapchainKHR _swapchains[] = { _context.swapchain.instance };
+        VkPresentInfoKHR _present_info = {
+            .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = _signal_semaphores,
+            .swapchainCount = 1,
+            .pSwapchains = _swapchains,
+            .pImageIndices = &_image_index
+        };
+
+        VK_TRY(vkQueuePresentKHR(_context.queues.present, &_present_info));
+
+        _frame_ct = (_frame_ct + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    // Main Loop
+
+void Reality::illuminate()
+//void Reality::illuminate(fnManifest fnManifest)
     {
         SDL_Event _e;
         bool _quit = false;
@@ -125,6 +196,13 @@ void Reality::illuminate(fnManifest fnManifest)
                     if (_e.type == SDL_QUIT) { _quit = !_quit; }
                     if (_e.window.event == SDL_WINDOWEVENT_MINIMIZED) { _suspended = true; }
                     if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
+
+                    if (_e.type == SDL_KEYDOWN) 
+                        {
+                            if (_e.key.keysym.sym == SDLK_ESCAPE) { _quit = !_quit; }
+                        }
+
+                    _drawFrame();
                 }
 
             if (_suspended) 
@@ -133,7 +211,7 @@ void Reality::illuminate(fnManifest fnManifest)
                     continue;
                 }
 
-            fnManifest();
+            //fnManifest();
         }
     }
 
@@ -183,4 +261,4 @@ void Reality::_initSyncStructures()
         createSyncObjects(&_context);
     }
 
-FrameData &Reality::current_frame() { { return _context.frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+

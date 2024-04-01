@@ -6,31 +6,35 @@
 
 Existence* _essence = nullptr;
 
+Existence::Existence() 
+    {
+        report(LOGGER::INFO, "Existence - Constructing Reality ..");
+        assert(_essence == nullptr);
+        
+        _application_name = "Compute Shaders";
+        _window_extent = { 1660, 1440 };
+        _actuality = nullptr;
+    }
+
 // Singleton to ensure only one instance of Existence is created.
 Existence* Existence::manifest()
     {
         report(LOGGER::INFO, "Existence - Manifesting ..");
 
         if (_essence == nullptr) {
-            Existence essence;
-            return essence.create();
+            Existence* essence = new Existence();
+            _essence = essence->realize();
         }
 
         return _essence;
     }
 
-Existence* Existence::create() 
+Existence* Existence::realize() 
     {
-        assert(_essence == nullptr);    // We don't ever want to re-initialize or our singleton did not work.
-        _essence = this;
-
-        report(LOGGER::INFO, "Existence - Constructing Reality ..");
-        // Handles Vulkan Rendering Engine and Compute Buffers
-        _actuality = new Reality(_application_name, _window_extent);
-
         // Initialize the Reality with Genesis 
         report(LOGGER::INFO, "Existence - Reality Complete ..");
 
+        _actuality = new Reality(_application_name, _window_extent);
         _actuality->initialized = true;
 
         return this;
@@ -49,8 +53,8 @@ void Existence::actualize()
     {
         report(LOGGER::INFO, "Existence - Actualizing ..");
 
-        //_actuality->illuminate();
-        _actuality->illuminate(Existence::materialize);   
+        _actuality->illuminate();
+        //_actuality->illuminate(Existence::materialize);   
     }
 
 // Why aren't we using the destructor to clean up?

@@ -5,6 +5,9 @@
 
 class Existence {
     public:
+        Existence();
+        ~Existence();
+
         static Existence* manifest();   // Singleton
 
         static void materialize();      // Draw
@@ -12,9 +15,9 @@ class Existence {
         void cease();                   // Cleanup
     
     private:
-        std::string _application_name = "Compute Shaders";
-        VkExtent2D _window_extent { 1660, 1440 };
+        std::string _application_name;
+        VkExtent2D _window_extent;
         Reality* _actuality;
 
-        Existence* create();            // Init
+        Existence* realize();            // Init
 };
