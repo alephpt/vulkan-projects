@@ -1,91 +1,110 @@
 #include "./architect.h"
 
-static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) 
+static void selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats, VkSurfaceFormatKHR* surface_format)
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Surface Format ..");
+
         for (const auto& available_format : available_formats) 
             {
                 if (available_format.format == VK_FORMAT_B8G8R8A8_SRGB && available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
-                    { return available_format; }
+                    { *surface_format = available_format; }
             }
 
-        return available_formats[0];
+        *surface_format = available_formats[0];
+
+        return;
     }
 
 
-static VkPresentModeKHR selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes) 
+static void selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes, VkPresentModeKHR* present_mode)
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Present Mode ..");
+
         for (const auto& available_present_mode : available_present_modes) 
             {
                 if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) 
-                    { return available_present_mode; }
+                    { *present_mode = available_present_mode; }
             }
 
-        return VK_PRESENT_MODE_FIFO_KHR;
+        *present_mode = VK_PRESENT_MODE_FIFO_KHR;
+
+        return;
     }
 
 
-static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D window_extent) 
+static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D* window_extent) 
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Extent ..");
+
         if (capabilities.currentExtent.width != UINT32_MAX) 
-            { return capabilities.currentExtent; }
+            { 
+                window_extent->width = capabilities.currentExtent.width;
+                window_extent->height = capabilities.currentExtent.height;
+            }
         else 
             {
-                window_extent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, window_extent.width));
-                window_extent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, window_extent.height));
+                uint32_t width = window_extent->width;
+                uint32_t height = window_extent->height;
 
-                return window_extent;
+                window_extent->width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, width));
+                window_extent->height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, height));
             }
+
+        return;
     }
 
 
 SwapChainDetails EngineContext::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
+
         SwapChainDetails details;
 
         if (swapchain.support.formats.empty() || swapchain.support.present_modes.empty()) 
             { report(LOGGER::ERROR, "Vulkan: Swap chain support not available"); }
 
-        details.surface_format = selectSwapSurfaceFormat(swapchain.support.formats);
-        details.present_mode = selectSwapPresentMode(swapchain.support.present_modes);
-        details.extent = selectSwapExtent(swapchain.support.capabilities, window_extent);
+        selectSwapSurfaceFormat(swapchain.support.formats, &details.surface_format);
+        selectSwapPresentMode(swapchain.support.present_modes, &details.present_mode);
+        selectSwapExtent(swapchain.support.capabilities, &details.extent);
 
         return details;
     }
 
+VkSwapchainCreateInfoKHR EngineContext::createSwapchainInfoKHR() {
+    return {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .surface = surface,
+        .minImageCount = swapchain.support.capabilities.minImageCount + 1,
+        .imageFormat = swapchain.details.surface_format.format,
+        .imageColorSpace = swapchain.details.surface_format.colorSpace,
+        .imageExtent = swapchain.details.extent,
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .preTransform = swapchain.support.capabilities.currentTransform,
+        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        .presentMode = swapchain.details.present_mode,
+        .clipped = VK_TRUE,
+        .oldSwapchain = VK_NULL_HANDLE
+    };
+}
 
 void EngineContext::constructSwapChain() 
     {
         report(LOGGER::DLINE, "\t .. Constructing SwapChain ..");
+
         uint32_t _image_count = swapchain.support.capabilities.minImageCount + 1;
 
         if (swapchain.support.capabilities.maxImageCount > 0 && _image_count > swapchain.support.capabilities.maxImageCount) 
             { _image_count = swapchain.support.capabilities.maxImageCount; }
 
-        VkSwapchainCreateInfoKHR _create_info = {
-            .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-            .surface = surface,
-            .minImageCount = _image_count,
-            .imageFormat = swapchain.details.surface_format.format,
-            .imageColorSpace = swapchain.details.surface_format.colorSpace,
-            .imageExtent = swapchain.details.extent,
-            .imageArrayLayers = 1,
-            .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-            .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            .preTransform = swapchain.support.capabilities.currentTransform,
-            .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-            .presentMode = swapchain.details.present_mode,
-            .clipped = VK_TRUE,
-            .oldSwapchain = VK_NULL_HANDLE
-        };
+        VkSwapchainCreateInfoKHR _create_info = createSwapchainInfoKHR();
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (queues.indices.graphics_family != queues.indices.present_family)
             {
                 report(LOGGER::VLINE, "\t .. Concurrent Queue Families Achieved ..");
+
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
                 _create_info.queueFamilyIndexCount = queues.priorities.size();
                 _create_info.pQueueFamilyIndices = &queues.indices.graphics_family.value();
@@ -93,6 +112,7 @@ void EngineContext::constructSwapChain()
         else
             {
                 report(LOGGER::VLINE, "\t .. Single Queue Family Achieved ..");
+
                 _create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
                 _create_info.queueFamilyIndexCount = 0;
                 _create_info.pQueueFamilyIndices =  nullptr;
@@ -108,6 +128,7 @@ void EngineContext::constructSwapChain()
         swapchain.extent = swapchain.details.extent;
 
         report(LOGGER::VLINE, "\t .. SwapChain Constructed ..");
+
         return;
     }
 
@@ -137,6 +158,7 @@ VkImageViewCreateInfo EngineContext::createImageViewInfo(size_t image) {
 void EngineContext::constructImageViews()
     {
         report(LOGGER::DLINE, "\t .. Constructing Image Views ..");
+
         swapchain.image_views.resize(swapchain.images.size());
 
         for (size_t i = 0; i < swapchain.images.size(); i++) 
@@ -146,6 +168,7 @@ void EngineContext::constructImageViews()
             }
 
         report(LOGGER::VLINE, "\t .. Image Views Constructed ..");
+
         return;
     }
 
@@ -157,6 +180,7 @@ void EngineContext::constructImageViews()
 void EngineContext::createFrameBuffers()
     {
         report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
+
         swapchain.framebuffers.resize(swapchain.image_views.size());
 
         for (size_t i = 0; i < swapchain.image_views.size(); i++) 
@@ -190,6 +214,8 @@ void EngineContext::destroySwapChain()
             { vkDestroyImageView(logical_device, _image_view, nullptr); }
 
         vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
+
+        return;
     }
 
 void EngineContext::recreateSwapChain() 
@@ -202,6 +228,8 @@ void EngineContext::recreateSwapChain()
         constructSwapChain();
         constructImageViews();
         createFrameBuffers();
+
+        return;
     }
 
 
@@ -212,25 +240,26 @@ void EngineContext::recreateSwapChain()
 SwapChainSupportDetails EngineContext::querySwapChainSupport(VkPhysicalDevice device)
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
-        SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
+        
+        SwapChainSupportDetails details = {};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
 
         uint32_t _format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, nullptr);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, nullptr);
 
         if (_format_count != 0) 
             {
                 details.formats.resize(_format_count);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, details.formats.data());
+                vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, details.formats.data());
             }
 
         uint32_t _present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, nullptr);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, nullptr);
 
         if (_present_mode_count != 0) 
             {
                 details.present_modes.resize(_present_mode_count);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, details.present_modes.data());
+                vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details.present_modes.data());
             }
 
         return details;

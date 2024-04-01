@@ -54,8 +54,6 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         _context->querySwapChainSupport(_context->physical_device);
         _context->querySwapChainDetails();
 
-
-
         // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();

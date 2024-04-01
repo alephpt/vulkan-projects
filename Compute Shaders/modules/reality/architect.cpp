@@ -65,6 +65,22 @@ static Queues initQueues() {
     };
 }
 
+static SwapChainSupportDetails initSwapChainSupport() {
+    return {
+        .capabilities = {},
+        .formats = {},
+        .present_modes = {}
+    };
+}
+
+static SwapChainDetails initSwapChainDetails() {
+    return {
+        .surface_format = {},
+        .present_mode = {},
+        .extent = {}
+    };
+}
+
 static SwapChainContext initSwapchain() {
     return {
         .instance = VK_NULL_HANDLE,
@@ -73,8 +89,8 @@ static SwapChainContext initSwapchain() {
         .framebuffers = {},
         .format = VK_FORMAT_UNDEFINED,
         .extent = {0, 0},
-        .support = {},
-        .details = {}
+        .support = initSwapChainSupport(),
+        .details = initSwapChainDetails()
     };
 }
 
