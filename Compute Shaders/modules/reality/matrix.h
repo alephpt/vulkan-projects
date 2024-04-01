@@ -1,6 +1,6 @@
 #pragma once
 #include "../../components/lexicon.h"
-#include "./atomic.h"
+#include "./architect.h"
 #include "./gateway.h"
 
 #include <string>
@@ -24,8 +24,8 @@ class Reality {
         int _frame_ct = 0;
 
         struct SDL_Window* _window = nullptr;
+        EngineContext* _context;
 
-        EngineContext _context;
         VkDebugUtilsMessengerEXT _debug_messenger;
 
 

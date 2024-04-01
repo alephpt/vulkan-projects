@@ -1,5 +1,4 @@
-#include "./virtual.h"
-#include "virtual.h"
+#include "./architect.h"
 
 static VkSurfaceFormatKHR selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats) 
     {
@@ -42,54 +41,54 @@ static VkExtent2D selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
     }
 
 
-SwapChainDetails querySwapChainDetails(SwapChainSupportDetails swap_chain_support, VkExtent2D window_extent)
+SwapChainDetails EngineContext::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
         SwapChainDetails details;
 
-        if (swap_chain_support.formats.empty() || swap_chain_support.present_modes.empty()) 
+        if (swapchain.support.formats.empty() || swapchain.support.present_modes.empty()) 
             { report(LOGGER::ERROR, "Vulkan: Swap chain support not available"); }
 
-        details.surface_format = selectSwapSurfaceFormat(swap_chain_support.formats);
-        details.present_mode = selectSwapPresentMode(swap_chain_support.present_modes);
-        details.extent = selectSwapExtent(swap_chain_support.capabilities, window_extent);
+        details.surface_format = selectSwapSurfaceFormat(swapchain.support.formats);
+        details.present_mode = selectSwapPresentMode(swapchain.support.present_modes);
+        details.extent = selectSwapExtent(swapchain.support.capabilities, window_extent);
 
         return details;
     }
 
 
-void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDetails swap_chain_support, EngineContext *context) 
+void EngineContext::constructSwapChain() 
     {
         report(LOGGER::DLINE, "\t .. Constructing SwapChain ..");
-        uint32_t _image_count = swap_chain_support.capabilities.minImageCount + 1;
+        uint32_t _image_count = swapchain.support.capabilities.minImageCount + 1;
 
-        if (swap_chain_support.capabilities.maxImageCount > 0 && _image_count > swap_chain_support.capabilities.maxImageCount) 
-            { _image_count = swap_chain_support.capabilities.maxImageCount; }
+        if (swapchain.support.capabilities.maxImageCount > 0 && _image_count > swapchain.support.capabilities.maxImageCount) 
+            { _image_count = swapchain.support.capabilities.maxImageCount; }
 
         VkSwapchainCreateInfoKHR _create_info = {
             .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-            .surface = context->surface,
+            .surface = surface,
             .minImageCount = _image_count,
-            .imageFormat = swap_chain_details.surface_format.format,
-            .imageColorSpace = swap_chain_details.surface_format.colorSpace,
-            .imageExtent = swap_chain_details.extent,
+            .imageFormat = swapchain.details.surface_format.format,
+            .imageColorSpace = swapchain.details.surface_format.colorSpace,
+            .imageExtent = swapchain.details.extent,
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            .preTransform = swap_chain_support.capabilities.currentTransform,
+            .preTransform = swapchain.support.capabilities.currentTransform,
             .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-            .presentMode = swap_chain_details.present_mode,
+            .presentMode = swapchain.details.present_mode,
             .clipped = VK_TRUE,
             .oldSwapchain = VK_NULL_HANDLE
         };
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different
-        if (context->queues.indices.graphics_family != context->queues.indices.present_family)
+        if (queues.indices.graphics_family != queues.indices.present_family)
             {
                 report(LOGGER::VLINE, "\t .. Concurrent Queue Families Achieved ..");
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                _create_info.queueFamilyIndexCount = context->queues.priorities.size();
-                _create_info.pQueueFamilyIndices = &context->queues.indices.graphics_family.value();
+                _create_info.queueFamilyIndexCount = queues.priorities.size();
+                _create_info.pQueueFamilyIndices = &queues.indices.graphics_family.value();
             }
         else
             {
@@ -99,47 +98,51 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
                 _create_info.pQueueFamilyIndices =  nullptr;
             }
 
-        VK_TRY(vkCreateSwapchainKHR(context->logical_device, &_create_info, nullptr, &context->swapchain.instance));
+        VK_TRY(vkCreateSwapchainKHR(logical_device, &_create_info, nullptr, &swapchain.instance));
 
-        vkGetSwapchainImagesKHR(context->logical_device, context->swapchain.instance, &_image_count, nullptr);
-        context->swapchain.images.resize(_image_count);
-        vkGetSwapchainImagesKHR(context->logical_device, context->swapchain.instance, &_image_count, context->swapchain.images.data());
+        vkGetSwapchainImagesKHR(logical_device, swapchain.instance, &_image_count, nullptr);
+        swapchain.images.resize(_image_count);
+        vkGetSwapchainImagesKHR(logical_device, swapchain.instance, &_image_count, swapchain.images.data());
 
-        context->swapchain.format = swap_chain_details.surface_format.format;
-        context->swapchain.extent = swap_chain_details.extent;
+        swapchain.format = swapchain.details.surface_format.format;
+        swapchain.extent = swapchain.details.extent;
 
         report(LOGGER::VLINE, "\t .. SwapChain Constructed ..");
         return;
     }
 
-    void constructImageViews(EngineContext *context)
+VkImageViewCreateInfo EngineContext::createImageViewInfo(size_t image) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = swapchain.images[image],
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = swapchain.format,
+        .components = {
+            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .a = VK_COMPONENT_SWIZZLE_IDENTITY
+        },
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+}
+
+
+void EngineContext::constructImageViews()
     {
         report(LOGGER::DLINE, "\t .. Constructing Image Views ..");
-        context->swapchain.image_views.resize(context->swapchain.images.size());
+        swapchain.image_views.resize(swapchain.images.size());
 
-        for (size_t i = 0; i < context->swapchain.images.size(); i++) 
+        for (size_t i = 0; i < swapchain.images.size(); i++) 
             {
-                VkImageViewCreateInfo _create_info = {
-                    .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-                    .image = context->swapchain.images[i],
-                    .viewType = VK_IMAGE_VIEW_TYPE_2D,
-                    .format = context->swapchain.format,
-                    .components = {
-                        .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                        .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                        .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                        .a = VK_COMPONENT_SWIZZLE_IDENTITY
-                    },
-                    .subresourceRange = {
-                        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                        .baseMipLevel = 0,
-                        .levelCount = 1,
-                        .baseArrayLayer = 0,
-                        .layerCount = 1
-                    }
-                };
-
-                VK_TRY(vkCreateImageView(context->logical_device, &_create_info, nullptr, &context->swapchain.image_views[i]));
+                VkImageViewCreateInfo _create_info = createImageViewInfo(i);
+                VK_TRY(vkCreateImageView(logical_device, &_create_info, nullptr, &swapchain.image_views[i]));
             }
 
         report(LOGGER::VLINE, "\t .. Image Views Constructed ..");
@@ -151,52 +154,85 @@ void constructSwapChain(SwapChainDetails swap_chain_details, SwapChainSupportDet
     // FRAME BUFFER CREATION //
     ///////////////////////////
 
-void createFrameBuffers(EngineContext *context)
+void EngineContext::createFrameBuffers()
     {
         report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
-        context->swapchain.framebuffers.resize(context->swapchain.image_views.size());
+        swapchain.framebuffers.resize(swapchain.image_views.size());
 
-        for (size_t i = 0; i < context->swapchain.image_views.size(); i++) 
+        for (size_t i = 0; i < swapchain.image_views.size(); i++) 
             {
-                VkImageView _attachments[] = { context->swapchain.image_views[i] };
+                VkImageView _attachments[] = { swapchain.image_views[i] };
 
                 VkFramebufferCreateInfo _create_info = {
                     .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-                    .renderPass = context->render_pass,
+                    .renderPass = render_pass,
                     .attachmentCount = 1,
                     .pAttachments = _attachments,
-                    .width = context->swapchain.extent.width,
-                    .height = context->swapchain.extent.height,
+                    .width = swapchain.extent.width,
+                    .height = swapchain.extent.height,
                     .layers = 1
                 };
 
-                VK_TRY(vkCreateFramebuffer(context->logical_device, &_create_info, nullptr, &context->swapchain.framebuffers[i]));
+                VK_TRY(vkCreateFramebuffer(logical_device, &_create_info, nullptr, &swapchain.framebuffers[i]));
             }
 
         return;
     }
 
-void destroySwapChain(EngineContext* context) 
+void EngineContext::destroySwapChain() 
     {
         report(LOGGER::INFO, "Matrix - Destroying Swapchain ..");
 
-        for (const auto _frame_buffers : context->swapchain.framebuffers) 
-            { vkDestroyFramebuffer(context->logical_device, _frame_buffers, nullptr); }
+        for (const auto _frame_buffers : swapchain.framebuffers) 
+            { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
         
-        for (const auto _image_view : context->swapchain.image_views) 
-            { vkDestroyImageView(context->logical_device, _image_view, nullptr); }
+        for (const auto _image_view : swapchain.image_views) 
+            { vkDestroyImageView(logical_device, _image_view, nullptr); }
 
-        vkDestroySwapchainKHR(context->logical_device, context->swapchain.instance, nullptr);
+        vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
     }
 
-void recreateSwapChain(EngineContext* context) 
+void EngineContext::recreateSwapChain() 
     {
         report(LOGGER::INFO, "Matrix - Creating Swapchain ..");
 
-        vkDeviceWaitIdle(context->logical_device);
-        destroySwapChain(context);
+        vkDeviceWaitIdle(logical_device);
+        destroySwapChain();
 
-        constructSwapChain(context->swapchain.details, context->swapchain.support, context);
-        constructImageViews(context);
-        createFrameBuffers(context);
+        constructSwapChain();
+        constructImageViews();
+        createFrameBuffers();
     }
+
+
+    ///////////////////////////////
+    //  Virtual Swapchain Layers //
+    ///////////////////////////////
+
+SwapChainSupportDetails EngineContext::querySwapChainSupport(VkPhysicalDevice device)
+    {
+        report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
+        SwapChainSupportDetails details;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physical_device, surface, &details.capabilities);
+
+        uint32_t _format_count;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, nullptr);
+
+        if (_format_count != 0) 
+            {
+                details.formats.resize(_format_count);
+                vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &_format_count, details.formats.data());
+            }
+
+        uint32_t _present_mode_count;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, nullptr);
+
+        if (_present_mode_count != 0) 
+            {
+                details.present_modes.resize(_present_mode_count);
+                vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &_present_mode_count, details.present_modes.data());
+            }
+
+        return details;
+    }
+

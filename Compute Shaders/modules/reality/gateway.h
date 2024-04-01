@@ -1,6 +1,7 @@
 #pragma once
 #include "../../components/lexicon.h"
 #include "./atomic.h"
+#include "./architect.h"
 #include <vector>
 
 

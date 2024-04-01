@@ -1,14 +1,18 @@
 #include "matrix.h"
 #include "./scaffolds.h"
-#include "./virtual.h"
 #include "./veil.h"
 #include "./operator.h"
+#include "./illuminati.h"
+
 
 #include <thread>
 #include <chrono>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
+
+
+
 
 
     ///////////////////
@@ -22,7 +26,8 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
         // Set the application name and window extent
         _application_name = name;
-        _context.window_extent = window_extent;
+        _context = new EngineContext();
+        _context->setWindowExtent(window_extent);
 
         // Initialize SDL and create a window
         SDL_Init(SDL_INIT_VIDEO);
@@ -32,8 +37,8 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
             name.c_str(),
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            _context.window_extent.width,
-            _context.window_extent.height,
+            _context->window_extent.width,
+            _context->window_extent.height,
             window_flags
         );
 
@@ -46,9 +51,10 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Initialize the Engine Device Context
         _initFramework();
 
-        // We need to multithread the Swapchain and Pipeline Instantiation
-        _context.swapchain.support = querySwapChainSupport(_context.physical_device, _context.surface);
-        _context.swapchain.details = querySwapChainDetails(_context.swapchain.support, _context.window_extent);
+        _context->querySwapChainSupport(_context->physical_device);
+        _context->querySwapChainDetails();
+
+
 
         // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
@@ -74,36 +80,19 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 Reality::~Reality() 
     {
         report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
-        vkDeviceWaitIdle(_context.logical_device);
+        vkDeviceWaitIdle(_context->logical_device);
 
-        destroySwapChain(&_context);
-
-        report(LOGGER::INFO, "Reality - Destroying Semaphores, Fences and Command Pools ..");
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                vkDestroySemaphore(_context.logical_device, _context.frames[i].image_available, nullptr);
-                vkDestroySemaphore(_context.logical_device, _context.frames[i].render_finished, nullptr);
-                vkDestroyFence(_context.logical_device, _context.frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(_context.logical_device, _context.frames[i].command_pool, nullptr);
-            }
-
-        report(LOGGER::INFO, "Reality - Destroying Gateway and Render Pass ..");
-        destroyGateway(_gateway);
-        vkDestroyRenderPass(_context.logical_device, _context.render_pass, nullptr);
-
-        report(LOGGER::INFO, "Reality - Destroying Logical Device ..");
-        vkDestroyDevice(_context.logical_device, nullptr);
 
         report(LOGGER::INFO, "Reality - Destroying Debug Messenger ..");
         if (USE_VALIDATION_LAYERS) 
-            { destroyDebugUtilsMessengerEXT(_context.instance, _debug_messenger, nullptr); }
-
-        report(LOGGER::INFO, "Reality - Destroying Surface ..");
-        vkDestroySurfaceKHR(_context.instance, _context.surface, nullptr);
-
-        report(LOGGER::INFO, "Reality - Destroying Instance ..");
-        vkDestroyInstance(_context.instance, nullptr);
+            { destroyDebugUtilsMessengerEXT(_context->instance, _debug_messenger, nullptr); }
         
+        report(LOGGER::INFO, "Reality - Destroying Gateway ..");
+        destroyGateway(_gateway);
+
+        report(LOGGER::INFO, "Reality - Destroying Context ..");
+        delete _context;
+
         report(LOGGER::INFO, "Reality - Destroying Window ..");
         if (initialized) 
             { SDL_DestroyWindow(_window); }
@@ -117,8 +106,7 @@ Reality::~Reality()
     /////////////////////////
 
     // Get Current Frame
-
-FrameData& Reality::current_frame() { { return _context.frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+FrameData& Reality::current_frame() { { return _context->frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
     // Draw
 
@@ -126,58 +114,37 @@ void Reality::_drawFrame()
     {
         report(LOGGER::INFO, "Matrix - Drawing Frame ..");
 
-        vkWaitForFences(_context.logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX);
+        vkWaitForFences(_context->logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX);
 
         uint32_t _image_index;
-        VkResult _result = vkAcquireNextImageKHR(
-            _context.logical_device, _context.swapchain.instance, UINT64_MAX, 
-            current_frame().image_available, VK_NULL_HANDLE, &_image_index
-        );
+        VK_TRY(vkAcquireNextImageKHR(
+                _context->logical_device, 
+                _context->swapchain.instance, 
+                UINT64_MAX, 
+                current_frame().image_available, 
+                VK_NULL_HANDLE, 
+                &_image_index
+            ));
 
-        if (_result == VK_ERROR_OUT_OF_DATE_KHR) 
-            {
-                report(LOGGER::ERROR, "Matrix - Swapchain out of date ..");
-                return;
-            }
+        // We don't have to store these
+        _context->present.wait_semaphores[0] = current_frame().image_available;
+        _context->present.signal_semaphores[0] = current_frame().render_finished;
+        _context->present.wait_stages[0] = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-        if (_result != VK_SUCCESS && _result != VK_SUBOPTIMAL_KHR) 
-            {
-                report(LOGGER::ERROR, "Matrix - Failed to acquire next image ..");
-                return;
-            }
+        _context->present.submit_info = getSubmitInfo(&_context->present, &current_frame().command_buffer);
 
-        VkSemaphore _wait_semaphores[] = { current_frame().image_available };
-        VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
-        VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        vkResetFences(_context->logical_device, 1, &current_frame().in_flight);
 
-        VkSubmitInfo _submit_info = {
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = _wait_semaphores,
-            .pWaitDstStageMask = _wait_stages,
-            .commandBufferCount = 1,
-            .pCommandBuffers = &current_frame().command_buffer,
-            .signalSemaphoreCount = 1,
-            .pSignalSemaphores = _signal_semaphores
-        };
+        VK_TRY(vkQueueSubmit(_context->queues.graphics, 1, &_context->present.submit_info, current_frame().in_flight));
 
-        vkResetFences(_context.logical_device, 1, &current_frame().in_flight);
+        VkSwapchainKHR _swapchains[] = { _context->swapchain.instance };
+        _context->present.present_info = getPresentInfoKHR(_context->present.signal_semaphores, _swapchains, &_image_index);
 
-        VK_TRY(vkQueueSubmit(_context.queues.graphics, 1, &_submit_info, current_frame().in_flight));
-
-        VkSwapchainKHR _swapchains[] = { _context.swapchain.instance };
-        VkPresentInfoKHR _present_info = {
-            .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-            .waitSemaphoreCount = 1,
-            .pWaitSemaphores = _signal_semaphores,
-            .swapchainCount = 1,
-            .pSwapchains = _swapchains,
-            .pImageIndices = &_image_index
-        };
-
-        VK_TRY(vkQueuePresentKHR(_context.queues.present, &_present_info));
+        VK_TRY(vkQueuePresentKHR(_context->queues.present, &_context->present.present_info));
 
         _frame_ct = (_frame_ct + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        return;
     }
 
     // Main Loop
@@ -185,6 +152,8 @@ void Reality::_drawFrame()
 void Reality::illuminate()
 //void Reality::illuminate(fnManifest fnManifest)
     {
+        report(LOGGER::INFO, "Matrix - Illuminating ..");
+
         SDL_Event _e;
         bool _quit = false;
 
@@ -213,7 +182,10 @@ void Reality::illuminate()
 
             //fnManifest();
         }
+
+        return;
     }
+
 
     //////////////////
     // INITIALIZERS //
@@ -222,43 +194,56 @@ void Reality::illuminate()
 void Reality::_initFramework() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
-        createVulkanInstance(&_context.instance);
-        SDL_Vulkan_CreateSurface(_window, _context.instance, &_context.surface);
-        createDebugMessenger(&_context.instance, &_debug_messenger);
-        createPhysicalDevice(&_context);
-        createLogicalDevice(&_context);
+
+        createVulkanInstance(&_context->instance);
+        SDL_Vulkan_CreateSurface(_window, _context->instance, &_context->surface);
+        createDebugMessenger(&_context->instance, &_debug_messenger);
+        _context->createPhysicalDevice();
+        _context->createLogicalDevice();
+
+        return;
     }
 
 void Reality::_initSwapChain(std::future<void>&& waitingForGateway, std::promise<void>&& waitForFrameBuffer) 
     {
         report(LOGGER::INFO, "Matrix - Initializing SwapChain Buffers ..");
-        constructSwapChain(_context.swapchain.details, _context.swapchain.support, &_context);
-        constructImageViews(&_context);
+
+        _context->constructSwapChain();
+        _context->constructImageViews();
         waitingForGateway.wait();
-        createFrameBuffers(&_context);
+        _context->createFrameBuffers();
         waitForFrameBuffer.set_value();
+     
+        return;
     }
 
 void Reality::_initGateway(std::promise<void>&& waitForGateway) 
     {
         report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
-        createRenderPass(&_context);
-        constructGateway(&_context, _gateway);
+
+        createRenderPass(_context);
+        constructGateway(_context, _gateway);
         waitForGateway.set_value();
+     
+        return;
     }
 
 void Reality::_initCommands() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Command Operator ..");
 
-        createCommandPool(&_context);
+        createCommandPool(_context);
+     
+        return;
     }
 
 void Reality::_initSyncStructures()
     {
         report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
 
-        createSyncObjects(&_context);
+        createSyncObjects(_context);
+
+        return;
     }
 
 

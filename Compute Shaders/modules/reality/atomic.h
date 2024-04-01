@@ -80,35 +80,18 @@ struct SwapChainContext {
     SwapChainDetails details;
 };
 
-
-struct EngineContext {
-    VkInstance instance;
-    VkPhysicalDevice physical_device;
-    VkDevice logical_device;
-    FrameData frames[MAX_FRAMES_IN_FLIGHT];
-    VkSurfaceKHR surface;
-    VkExtent2D window_extent { 800, 600 };
-    Queues queues;
-    SwapChainContext swapchain;
-    VkRenderPass render_pass;
+struct QueuePresentContext {
+    VkSemaphore wait_semaphores[1];
+    VkSemaphore signal_semaphores[1];
+    VkPipelineStageFlags wait_stages[1];
+    VkSubmitInfo submit_info;
+    VkPresentInfoKHR present_info;
 };
 
 
 
-    ////////////////////
-    // CORE FUNCTIONS //
-    ////////////////////
-
-// Vulkan Instance Functions
-void logContext(EngineContext *context);
-VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, 
-                                             VkDebugUtilsMessageTypeFlagsEXT messageType, 
-                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
-                                             void* pUserData);
-void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-
-// Framework Scaffolding Functions
-bool deviceProvisioned(VkPhysicalDevice scanned_device, EngineContext *context);
-
-// Swapchain Buffer Functions
-SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice& physical_device, VkSurfaceKHR& surface);
+void destroyDebugUtilsMessengerEXT(VkInstance, VkDebugUtilsMessengerEXT, const VkAllocationCallbacks*);
+VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT, 
+                                                    VkDebugUtilsMessageTypeFlagsEXT, 
+                                                    const VkDebugUtilsMessengerCallbackDataEXT*, 
+                                                    void*);
