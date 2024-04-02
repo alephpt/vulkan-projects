@@ -56,17 +56,18 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();
+        std::promise<void> startGateway;
+        std::future<void> startingGateway = startGateway.get_future();
         std::promise<void> waitForGateway; 
         std::future<void> waitingForGateway = waitForGateway.get_future();
 
-        std::thread _swapchain_thread(&Reality::_initSwapChain, this, std::move(waitingForGateway), std::move(waitForSwapchain));
-        std::thread _pipeline_thread(&Reality::_initGateway, this, std::move(waitForGateway));
+        std::thread _swapchain_thread(&Reality::_initSwapChain, this, std::ref(startGateway), std::ref(waitingForGateway), std::ref(waitForSwapchain));
+        std::thread _pipeline_thread(&Reality::_initGateway, this, std::ref(startingGateway), std::ref(waitForGateway));
+
         waitingForFrameBuffer.wait();
 
         _swapchain_thread.join();
         _pipeline_thread.join();
-
-        // We need to multithread the Swapchain and Pipeline Instantiation
 
         // Now we can construct the Command Buffers 
         _initCommands();
@@ -201,12 +202,13 @@ void Reality::_initFramework()
         return;
     }
 
-void Reality::_initSwapChain(std::future<void>&& waitingForGateway, std::promise<void>&& waitForFrameBuffer) 
+void Reality::_initSwapChain(std::promise<void>& startGateway, std::future<void>& waitingForGateway, std::promise<void>& waitForFrameBuffer) 
     {
         report(LOGGER::INFO, "Matrix - Initializing SwapChain Buffers ..");
 
         _context->constructSwapChain();
         _context->constructImageViews();
+        startGateway.set_value();
         waitingForGateway.wait();
         _context->createFrameBuffers();
         waitForFrameBuffer.set_value();
@@ -214,11 +216,13 @@ void Reality::_initSwapChain(std::future<void>&& waitingForGateway, std::promise
         return;
     }
 
-void Reality::_initGateway(std::promise<void>&& waitForGateway) 
+void Reality::_initGateway(std::future<void>& startingGateway, std::promise<void>& waitForGateway) 
     {
         report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
 
         // abstract both of these as part of the Architect and rename _context to Architect
+
+        startingGateway.wait();
         _context->createRenderPass();
         _gateway = constructGateway(_context);
         waitForGateway.set_value();

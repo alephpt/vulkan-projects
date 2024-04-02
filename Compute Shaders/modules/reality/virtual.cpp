@@ -71,6 +71,8 @@ SwapChainDetails EngineContext::querySwapChainDetails()
     }
 
 VkSwapchainCreateInfoKHR EngineContext::createSwapchainInfoKHR() {
+    log();
+
     return {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .surface = surface,
@@ -99,6 +101,19 @@ void EngineContext::constructSwapChain()
             { _image_count = swapchain.support.capabilities.maxImageCount; }
 
         VkSwapchainCreateInfoKHR _create_info = createSwapchainInfoKHR();
+
+        report(LOGGER::VLINE, "\t .. SwapChain Info Constructed ..");
+        report(LOGGER::DEBUG, "\tCreate Info minImageCount: %d", _create_info.minImageCount);
+        report(LOGGER::DEBUG, "\tCreate Info imageFormat: %d", _create_info.imageFormat);
+        report(LOGGER::DEBUG, "\tCreate Info imageColorSpace: %d", _create_info.imageColorSpace);
+        report(LOGGER::DEBUG, "\tCreate Info imageExtent: %d, %d", _create_info.imageExtent.width, _create_info.imageExtent.height);
+        report(LOGGER::DEBUG, "\tCreate Info imageArrayLayers: %d", _create_info.imageArrayLayers);
+        report(LOGGER::DEBUG, "\tCreate Info imageUsage: %d", _create_info.imageUsage);
+        report(LOGGER::DEBUG, "\tCreate Info imageSharingMode: %d", _create_info.imageSharingMode);
+        report(LOGGER::DEBUG, "\tCreate Info preTransform: %d", _create_info.preTransform);
+        report(LOGGER::DEBUG, "\tCreate Info compositeAlpha: %d", _create_info.compositeAlpha);
+        report(LOGGER::DEBUG, "\tCreate Info presentMode: %d", _create_info.presentMode);
+        report(LOGGER::DEBUG, "\tCreate Info clipped: %d", _create_info.clipped);
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (queues.indices.graphics_family != queues.indices.present_family)
