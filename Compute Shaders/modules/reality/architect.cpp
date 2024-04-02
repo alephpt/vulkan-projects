@@ -46,52 +46,56 @@ EngineContext::~EngineContext()
     //  CONTEXT CREATION  //
     ////////////////////////
 
-static QueuePresentContext initPresent() {
-    return {
-        .wait_semaphores = {},
-        .signal_semaphores = {},
-        .wait_stages = {},
-    };
-}
+static QueuePresentContext initPresent() 
+    {
+        return {
+                .wait_semaphores = {},
+                .signal_semaphores = {},
+                .wait_stages = {},
+            };
+    }
 
-static Queues initQueues() {
-    return {
-        .graphics = VK_NULL_HANDLE,
-        .present = VK_NULL_HANDLE,
-        .compute = VK_NULL_HANDLE,
-        .families = {},
-        .indices = {},
-        .priorities = {}
-    };
-}
+static Queues initQueues() 
+    {
+        return {
+                .graphics = VK_NULL_HANDLE,
+                .present = VK_NULL_HANDLE,
+                .compute = VK_NULL_HANDLE,
+                .families = {},
+                .indices = {},
+                .priorities = {}
+            };
+    }
 
-static SwapChainSupportDetails initSwapChainSupport() {
-    return {
-        .capabilities = {},
-        .formats = {},
-        .present_modes = {}
-    };
-}
+static SwapChainSupportDetails initSwapChainSupport() 
+    {
+        return {
+                .capabilities = {},
+                .formats = {},
+                .present_modes = {}
+            };
+    }
 
-static SwapChainDetails initSwapChainDetails() {
-    return {
-        .surface_format = {},
-        .present_mode = {},
-        .extent = {}
-    };
-}
+static SwapChainDetails initSwapChainDetails() 
+    {
+        return {
+                .surface_format = {},
+                .present_mode = {},
+                .extent = {}
+            };
+    }
 
 static SwapChainContext initSwapchain() {
     return {
-        .instance = VK_NULL_HANDLE,
-        .images = {},
-        .image_views = {},
-        .framebuffers = {},
-        .format = VK_FORMAT_UNDEFINED,
-        .extent = {0, 0},
-        .support = initSwapChainSupport(),
-        .details = initSwapChainDetails()
-    };
+            .instance = VK_NULL_HANDLE,
+            .images = {},
+            .image_views = {},
+            .framebuffers = {},
+            .format = VK_FORMAT_UNDEFINED,
+            .extent = {0, 0},
+            .support = initSwapChainSupport(),
+            .details = initSwapChainDetails()
+        };
 }
 
 
@@ -135,31 +139,31 @@ void EngineContext::setWindowExtent(VkExtent2D extent)
 
 void EngineContext::logSwapChain() 
     {
-        report(LOGGER::VLINE, "\t .. Logging SwapChain ..");
-        report(LOGGER::VLINE, "\t\tSwapchain: %p", swapchain.instance);
-        report(LOGGER::VLINE, "\t\tImage Count: %d", swapchain.images.size());
-        report(LOGGER::VLINE, "\t\tImage Views: %d", swapchain.image_views.size());
-        report(LOGGER::VLINE, "\t\tFramebuffers: %d", swapchain.framebuffers.size());
-        report(LOGGER::VLINE, "\t\tImage Format: %d", swapchain.format);
-        report(LOGGER::ILINE, "\t\tSupport: %d Formats", swapchain.support.formats.size());
-        report(LOGGER::ILINE, "\t\tSupport: %d Present Modes", swapchain.support.present_modes.size());
-        report(LOGGER::ILINE, "\t\tDetails: %d Formats", swapchain.details.surface_format.format);
-        report(LOGGER::ILINE, "\t\tDetails: %d Present Modes", swapchain.details.present_mode);
-        report(LOGGER::VLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
+        report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
+        report(LOGGER::DLINE, "\t\tSwapchain: %p", swapchain.instance);
+        report(LOGGER::DLINE, "\t\tImage Count: %d", swapchain.images.size());
+        report(LOGGER::DLINE, "\t\tImage Views: %d", swapchain.image_views.size());
+        report(LOGGER::DLINE, "\t\tFramebuffers: %d", swapchain.framebuffers.size());
+        report(LOGGER::DLINE, "\t\tImage Format: %d", swapchain.format);
+        report(LOGGER::DLINE, "\t\tSupport: %d Formats", swapchain.support.formats.size());
+        report(LOGGER::DLINE, "\t\tSupport: %d Present Modes", swapchain.support.present_modes.size());
+        report(LOGGER::DLINE, "\t\tDetails: %d Formats", swapchain.details.surface_format.format);
+        report(LOGGER::DLINE, "\t\tDetails: %d Present Modes", swapchain.details.present_mode);
+        report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
     }
 
 void EngineContext::log() 
     {
-        report(LOGGER::VLINE, "\t .. Logging Context ..");
-        report(LOGGER::VLINE, "\t\tInstance: %p", instance);
-        report(LOGGER::VLINE, "\t\tPhysical Device: %p", physical_device);
-        report(LOGGER::VLINE, "\t\tLogical Device: %p", logical_device);
-        report(LOGGER::VLINE, "\t\tSurface: %p", surface);
-        report(LOGGER::VLINE, "\t\tQueue Families: %d", queues.families.size());
-        report(LOGGER::VLINE, "\t\tQueue Indices: %d", queues.priorities.size());
+        report(LOGGER::DEBUG, "\t .. Logging Context ..");
+        report(LOGGER::DLINE, "\t\tInstance: %p", instance);
+        report(LOGGER::DLINE, "\t\tPhysical Device: %p", physical_device);
+        report(LOGGER::DLINE, "\t\tLogical Device: %p", logical_device);
+        report(LOGGER::DLINE, "\t\tSurface: %p", surface);
+        report(LOGGER::DLINE, "\t\tQueue Families: %d", queues.families.size());
+        report(LOGGER::DLINE, "\t\tQueue Indices: %d", queues.priorities.size());
         logSwapChain();
-        report(LOGGER::VLINE, "\t\tRender Pass: %p", render_pass);
-        report(LOGGER::VLINE, "\t\tPresent Info: %p", &present);
+        report(LOGGER::DLINE, "\t\tRender Pass: %p", render_pass);
+        report(LOGGER::DLINE, "\t\tPresent Info: %p", &present);
     }
 
 
@@ -178,6 +182,7 @@ void EngineContext::setQueueFamilyProperties(unsigned int i) {
             queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
             report(LOGGER::VLINE, "\t\tGraphics Family Set.");
         }
+
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
         { 
             queue_name += "{ Compute } "; 
@@ -188,14 +193,12 @@ void EngineContext::setQueueFamilyProperties(unsigned int i) {
                     report(LOGGER::VLINE, "\t\tCompute Family Set.");
                 }
         }
+        
     if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
-        { 
-            queue_name += "{ Transfer } "; 
-        }
+        { queue_name += "{ Transfer } "; }
+
     if (queue_family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
-        { 
-            queue_name += "{ Sparse Binding } "; 
-        }
+        { queue_name += "{ Sparse Binding } "; }
 
     if (queue_name.empty()) 
         { queue_name = "~ Unknown ~"; }
@@ -218,15 +221,15 @@ void EngineContext::getQueueFamilies(VkPhysicalDevice scanned_device)
 
                 // If we haven't found a present family yet, we'll take the first one we find
                 if (queues.indices.present_family.value() == -1){
-                    VkBool32 _present_support = false;  
-                    vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, surface, &_present_support);
+                        VkBool32 _present_support = false;  
+                        vkGetPhysicalDeviceSurfaceSupportKHR(scanned_device, i, surface, &_present_support);
 
-                    if (_present_support) 
-                        { 
-                            queues.indices.present_family = i; 
-                            report(LOGGER::VLINE, "\t\tPresent Family Set.");    
-                        }
-                }
+                        if (_present_support) 
+                            { 
+                                queues.indices.present_family = i; 
+                                report(LOGGER::VLINE, "\t\tPresent Family Set.");    
+                            }
+                    }
 
                 setQueueFamilyProperties(i);
             }
@@ -309,6 +312,8 @@ void EngineContext::createPhysicalDevice()
 
         if (physical_device == VK_NULL_HANDLE) 
             { report(LOGGER::ERROR, "Vulkan: Failed to find a suitable GPU"); }
+
+        return;
     }
 
 
@@ -319,11 +324,11 @@ void EngineContext::createPhysicalDevice()
 VkDeviceQueueCreateInfo EngineContext::getQueueCreateInfo(uint32_t queue_family)
     {
         return {
-            sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            queueFamilyIndex: queue_family,
-            queueCount: queues.families[queue_family].queueCount,
-            pQueuePriorities: queues.priorities[queue_family].data()
-        };
+                sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                queueFamilyIndex: queue_family,
+                queueCount: queues.families[queue_family].queueCount,
+                pQueuePriorities: queues.priorities[queue_family].data()
+            };
     }
 
 void EngineContext::createLogicalDevice()
@@ -333,27 +338,30 @@ void EngineContext::createLogicalDevice()
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
         std::set<uint32_t> _unique_queue_families = {
-            queues.indices.graphics_family.value(), 
-            queues.indices.present_family.value(),
-            queues.indices.compute_family.value()
-        };
+                queues.indices.graphics_family.value(), 
+                queues.indices.present_family.value(),
+                queues.indices.compute_family.value()
+            };
 
         report(LOGGER::VLINE, "\t .. Creating Queue Family ..");
         for (uint32_t _queue_family : _unique_queue_families) 
             {
                 report(LOGGER::VLINE, "\t\tQueue Family: %d", _queue_family);
                 report(LOGGER::VLINE, "\t\t\tQueue Count: %d", queues.families[_queue_family].queueCount);
-                if (_queue_family == -1) { continue; } // if the queue family is not supported
 
-                _queue_create_infos.push_back(getQueueCreateInfo(_queue_family));
+                if (_queue_family == -1) { continue; }
+
+                VkDeviceQueueCreateInfo _queue_info = getQueueCreateInfo(_queue_family);
+
+                _queue_create_infos.push_back(_queue_info);
             }
 
         VkDeviceCreateInfo create_info = {
-            sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            queueCreateInfoCount: static_cast<uint32_t>(_queue_create_infos.size()),
-            pQueueCreateInfos: _queue_create_infos.data(),
-            pEnabledFeatures: &_device_features,
-        };
+                sType: VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+                queueCreateInfoCount: static_cast<uint32_t>(_queue_create_infos.size()),
+                pQueueCreateInfos: _queue_create_infos.data(),
+                pEnabledFeatures: &_device_features,
+            };
 
         create_info.enabledExtensionCount = static_cast<uint32_t>(DEVICE_EXTENSIONS.size());
         create_info.ppEnabledExtensionNames = DEVICE_EXTENSIONS.data();
@@ -364,5 +372,5 @@ void EngineContext::createLogicalDevice()
         vkGetDeviceQueue(logical_device, queues.indices.present_family.value(), 0, &queues.present);
         vkGetDeviceQueue(logical_device, queues.indices.compute_family.value(), 0, &queues.compute);
 
-        log();
+        //log();
     }

@@ -1,6 +1,5 @@
 #include "matrix.h"
 #include "./scaffolds.h"
-#include "./veil.h"
 #include "./operator.h"
 #include "./illuminati.h"
 
@@ -51,7 +50,7 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Initialize the Engine Device Context
         _initFramework();
 
-        _context->querySwapChainSupport(_context->physical_device);
+        _context->swapchain.support = _context->querySwapChainSupport(_context->physical_device);
         _context->querySwapChainDetails();
 
         // Now we can construct the Swapchain
@@ -219,8 +218,9 @@ void Reality::_initGateway(std::promise<void>&& waitForGateway)
     {
         report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
 
-        createRenderPass(_context);
-        constructGateway(_context, _gateway);
+        // abstract both of these as part of the Architect and rename _context to Architect
+        _context->createRenderPass();
+        _gateway = constructGateway(_context);
         waitForGateway.set_value();
      
         return;

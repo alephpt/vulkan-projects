@@ -1,21 +1,20 @@
 
-#include "./veil.h"
+#include "../../components/lexicon.h"
 #include "../../components/genesis.h"
-#include "veil.h"
-
-
+#include "./architect.h"
+#include "./gateway.h"
 
     //////////////////////////
     // RENDER PASS CREATION //
     //////////////////////////
 
-static inline VkAttachmentDescription colorAttachment(EngineContext* _context)
+VkAttachmentDescription EngineContext::colorAttachment()
     {
         report(LOGGER::DLINE, "\t\t .. Creating Color Attachment ..");
 
         return {
             .flags = 0,
-            .format = _context->swapchain.format,
+            .format = swapchain.format,
             .samples = VK_SAMPLE_COUNT_1_BIT,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -26,7 +25,7 @@ static inline VkAttachmentDescription colorAttachment(EngineContext* _context)
         };
     }
 
-static inline VkAttachmentReference colorAttachmentRef()
+static VkAttachmentReference colorAttachmentRef()
     {
         report(LOGGER::DLINE, "\t\t .. Creating Color Attachment Reference ..");
 
@@ -36,7 +35,7 @@ static inline VkAttachmentReference colorAttachmentRef()
         };
     }
 
-static inline VkSubpassDescription subpassDescription(VkAttachmentReference* color_attachment_ref)
+static VkSubpassDescription subpassDescription(VkAttachmentReference* color_attachment_ref)
     {
         report(LOGGER::DLINE, "\t\t .. Creating Subpass Description");
 
@@ -48,7 +47,7 @@ static inline VkSubpassDescription subpassDescription(VkAttachmentReference* col
         };
     }
 
-static inline VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
+static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
     {
         report(LOGGER::DLINE, "\t\t .. Creating Render Pass Info ..");
 
@@ -62,56 +61,16 @@ static inline VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* col
         };
     }
 
-void createRenderPass(EngineContext* context)
+void EngineContext::createRenderPass()
     {
         report(LOGGER::ILINE, "\t .. Creating Render Pass ..");
 
-        VkAttachmentDescription _color_attachment = colorAttachment(context);
+        VkAttachmentDescription _color_attachment = colorAttachment();
         VkAttachmentReference _color_attachment_ref = colorAttachmentRef();
         VkSubpassDescription _subpass_description = subpassDescription(&_color_attachment_ref);
         VkRenderPassCreateInfo render_pass_info = renderPassInfo(&_color_attachment, &_subpass_description);
-        VK_TRY(vkCreateRenderPass(context->logical_device, &render_pass_info, nullptr, &context->render_pass));
-
-        return;
-    }
-
-
-
-    ///////////////////////////////////
-    // PIPELINE GATEWAY CONSTRUCTION //
-    ///////////////////////////////////
-
-void constructGateway(EngineContext* context, Gateway* gateway) 
-    {
-        gateway = new Gateway();
-
-        gateway->define(context)
-                .shaders()
-                .vertexInput()
-                .inputAssembly()
-                .viewportState()
-                .rasterizer()
-                .multisampling()
-                .colorBlending()
-                .dynamicState()
-                .layout()
-                .pipeline()
-                .create();
-
-        return;
-    }
-
-
-
-
-
-    /////////////////////////
-    // GATEWAY DESTRUCTION //
-    /////////////////////////
-
-void destroyGateway(Gateway *gateway)
-    {
-        delete gateway;
         
+        VK_TRY(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
+
         return;
     }

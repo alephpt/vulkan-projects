@@ -35,7 +35,7 @@ class EngineContext {
         void createFrameBuffers();
         void destroySwapChain();
         void recreateSwapChain();
-
+        void createRenderPass();
 
     private:
         void _blankContext();
@@ -44,5 +44,6 @@ class EngineContext {
         VkSwapchainCreateInfoKHR createSwapchainInfoKHR();
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
+        VkAttachmentDescription colorAttachment();
 };
 

@@ -10,7 +10,7 @@ static void selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& avail
                     { *surface_format = available_format; }
             }
 
-        *surface_format = available_formats[0];
+        *surface_format = available_formats.front();
 
         return;
     }
@@ -61,11 +61,11 @@ SwapChainDetails EngineContext::querySwapChainDetails()
         SwapChainDetails details;
 
         if (swapchain.support.formats.empty() || swapchain.support.present_modes.empty()) 
-            { report(LOGGER::ERROR, "Vulkan: Swap chain support not available"); }
+            { report(LOGGER::ERROR, "Vulkan: SwapChain support is not available."); }
 
         selectSwapSurfaceFormat(swapchain.support.formats, &details.surface_format);
         selectSwapPresentMode(swapchain.support.present_modes, &details.present_mode);
-        selectSwapExtent(swapchain.support.capabilities, &details.extent);
+        selectSwapExtent(swapchain.support.capabilities, &window_extent);
 
         return details;
     }

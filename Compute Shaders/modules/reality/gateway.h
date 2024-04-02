@@ -49,3 +49,6 @@ class Gateway {
 //        inline VkPipelineColorBlendAttachmentState Gateway::colorBlendAttachment();
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
 };
+
+Gateway* constructGateway(EngineContext *context);
+void destroyGateway(Gateway *gateway);

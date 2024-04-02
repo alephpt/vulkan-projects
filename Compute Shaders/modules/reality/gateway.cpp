@@ -1,6 +1,49 @@
 #include "gateway.h"
 #include "../../components/genesis.h"
 
+
+    ///////////////////////////////////
+    // PIPELINE GATEWAY CONSTRUCTION //
+    ///////////////////////////////////
+
+Gateway* constructGateway(EngineContext *context) 
+    {
+        Gateway* gateway = new Gateway();
+
+        gateway->define(context)
+                .shaders()
+                .vertexInput()
+                .inputAssembly()
+                .viewportState()
+                .rasterizer()
+                .multisampling()
+                .colorBlending()
+                .dynamicState()
+                .layout()
+                .pipeline()
+                .create();
+
+        return gateway;
+    }
+
+
+
+    /////////////////////////
+    // GATEWAY DESTRUCTION //
+    /////////////////////////
+
+void destroyGateway(Gateway *gateway)
+    {
+        delete gateway;
+        
+        return;
+    }
+
+
+    ////////////////////////
+    // GATEWAY DEFINITION //
+    ////////////////////////
+
 Gateway::Gateway()
     { 
         report(LOGGER::ILINE, "\t .. Initializing Pipeline ..");
