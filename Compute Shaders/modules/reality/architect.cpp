@@ -139,6 +139,33 @@ void EngineContext::setWindowExtent(VkExtent2D extent)
     // LOGGING //
     /////////////
 
+void EngineContext::logQueues() 
+    {
+        report(LOGGER::DEBUG, "\t .. Logging Queues ..");
+        report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
+        report(LOGGER::DLINE, "\t\tPresent: %p", queues.present);
+        report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
+        report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
+        report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
+        report(LOGGER::DLINE, "\t\tIndices Present Family: %d", queues.indices.present_family.value());
+        report(LOGGER::DLINE, "\t\tIndices : %d", queues.indices.graphics_family.value());
+    }
+
+void EngineContext::logFrameData()
+    {
+        report(LOGGER::DEBUG, "\t .. Logging Frame Data ..");
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                report(LOGGER::DLINE, "\t\tFrame %d", i);
+                report(LOGGER::DLINE, "\t\t\tCommand Pool: %p", frames[i].command_pool);
+                report(LOGGER::DLINE, "\t\t\tCommand Buffer: %p", frames[i].command_buffer);
+                report(LOGGER::DLINE, "\t\t\tImage Available: %p", frames[i].image_available);
+                report(LOGGER::DLINE, "\t\t\tRender Finished: %p", frames[i].render_finished);
+                report(LOGGER::DLINE, "\t\t\tIn Flight: %p", frames[i].in_flight);
+            }
+    
+    }
+
 void EngineContext::logSwapChain() 
     {
         report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
@@ -161,11 +188,11 @@ void EngineContext::log()
         report(LOGGER::DLINE, "\t\tPhysical Device: %p", physical_device);
         report(LOGGER::DLINE, "\t\tLogical Device: %p", logical_device);
         report(LOGGER::DLINE, "\t\tSurface: %p", surface);
-        report(LOGGER::DLINE, "\t\tQueue Families: %d", queues.families.size());
-        report(LOGGER::DLINE, "\t\tQueue Indices: %d", queues.priorities.size());
+        logQueues();
         logSwapChain();
         report(LOGGER::DLINE, "\t\tRender Pass: %p", render_pass);
         report(LOGGER::DLINE, "\t\tPresent Info: %p", &present);
+        logFrameData();
     }
 
 

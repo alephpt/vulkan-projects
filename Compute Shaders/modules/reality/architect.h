@@ -21,7 +21,6 @@ class EngineContext {
         void setWindowExtent(VkExtent2D);
 
 
-        void logSwapChain();
         void log();
 
         bool deviceProvisioned(VkPhysicalDevice);
@@ -36,8 +35,17 @@ class EngineContext {
         void destroySwapChain();
         void recreateSwapChain();
         void createRenderPass();
+        void createCommandPool();
+        void createSyncObjects();
+        void resetCommandBuffers();
+        void recordCommandBuffers(); 
 
     private:
+        const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+
+        void logQueues();
+        void logSwapChain();
+        void logFrameData();
         void _blankContext();
         void getQueueFamilies(VkPhysicalDevice);
         void setQueueFamilyProperties(unsigned int);
@@ -45,5 +53,7 @@ class EngineContext {
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
         VkAttachmentDescription colorAttachment();
+        VkCommandBufferAllocateInfo EngineContext::createCommandBuffers(unsigned int);
+        VkRenderPassBeginInfo getRenderPassInfo(size_t);
 };
 

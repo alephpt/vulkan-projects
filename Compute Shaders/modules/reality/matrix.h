@@ -28,7 +28,6 @@ class Reality {
 
         VkDebugUtilsMessengerEXT _debug_messenger;
 
-
         Gateway* _gateway;
 
         void _initFramework();

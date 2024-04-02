@@ -133,6 +133,8 @@ void Reality::_drawFrame()
 
         vkResetFences(_context->logical_device, 1, &current_frame().in_flight);
 
+        _context->log();
+
         VK_TRY(vkQueueSubmit(_context->queues.graphics, 1, &_context->present.submit_info, current_frame().in_flight));
 
         VkSwapchainKHR _swapchains[] = { _context->swapchain.instance };
