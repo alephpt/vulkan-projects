@@ -54,35 +54,34 @@ static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExt
     }
 
 
-SwapChainDetails EngineContext::querySwapChainDetails()
+void EngineContext::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
-
-        SwapChainDetails details;
 
         if (swapchain.support.formats.empty() || swapchain.support.present_modes.empty()) 
             { report(LOGGER::ERROR, "Vulkan: SwapChain support is not available."); }
 
-        selectSwapSurfaceFormat(swapchain.support.formats, &details.surface_format);
-        selectSwapPresentMode(swapchain.support.present_modes, &details.present_mode);
+        selectSwapSurfaceFormat(swapchain.support.formats, &swapchain.details.surface_format);
+        selectSwapPresentMode(swapchain.support.present_modes, &swapchain.details.present_mode);
         selectSwapExtent(swapchain.support.capabilities, &window_extent);
 
-        return details;
+        return;
     }
 
-VkSwapchainCreateInfoKHR EngineContext::createSwapchainInfoKHR() {
-    log();
-
-    return {
+void EngineContext::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info) 
+    {
+    *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .surface = surface,
         .minImageCount = swapchain.support.capabilities.minImageCount + 1,
         .imageFormat = swapchain.details.surface_format.format,
         .imageColorSpace = swapchain.details.surface_format.colorSpace,
-        .imageExtent = swapchain.details.extent,
+        .imageExtent = swapchain.extent,
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount = 0,
+        .pQueueFamilyIndices = nullptr,
         .preTransform = swapchain.support.capabilities.currentTransform,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = swapchain.details.present_mode,
@@ -90,6 +89,28 @@ VkSwapchainCreateInfoKHR EngineContext::createSwapchainInfoKHR() {
         .oldSwapchain = VK_NULL_HANDLE
     };
 }
+
+static void logCreateInfo(VkSwapchainCreateInfoKHR* create_info) 
+    {
+        report(LOGGER::VLINE, "\t .. Logging SwapChain Create Info ..");
+
+        report(LOGGER::VLINE, "\t\t .. Surface: ", create_info->surface);
+        report(LOGGER::VLINE, "\t\t .. Min Image Count: ", create_info->minImageCount);
+        report(LOGGER::VLINE, "\t\t .. Image Format: ", create_info->imageFormat);
+        report(LOGGER::VLINE, "\t\t .. Image Color Space: ", create_info->imageColorSpace);
+        report(LOGGER::VLINE, "\t\t .. Image Extent: ", create_info->imageExtent.width, " x ", create_info->imageExtent.height);
+        report(LOGGER::VLINE, "\t\t .. Image Array Layers: ", create_info->imageArrayLayers);
+        report(LOGGER::VLINE, "\t\t .. Image Usage: ", create_info->imageUsage);
+        report(LOGGER::VLINE, "\t\t .. Image Sharing Mode: ", create_info->imageSharingMode);
+        report(LOGGER::VLINE, "\t\t .. Queue Family Index Count: ", create_info->queueFamilyIndexCount);
+        report(LOGGER::VLINE, "\t\t .. Pre Transform: ", create_info->preTransform);
+        report(LOGGER::VLINE, "\t\t .. Composite Alpha: ", create_info->compositeAlpha);
+        report(LOGGER::VLINE, "\t\t .. Present Mode: ", create_info->presentMode);
+        report(LOGGER::VLINE, "\t\t .. Clipped: ", create_info->clipped);
+        report(LOGGER::VLINE, "\t\t .. Old Swapchain: ", create_info->oldSwapchain);
+
+        return;
+    }
 
 void EngineContext::constructSwapChain() 
     {
@@ -100,20 +121,10 @@ void EngineContext::constructSwapChain()
         if (swapchain.support.capabilities.maxImageCount > 0 && _image_count > swapchain.support.capabilities.maxImageCount) 
             { _image_count = swapchain.support.capabilities.maxImageCount; }
 
-        VkSwapchainCreateInfoKHR _create_info = createSwapchainInfoKHR();
-
-        report(LOGGER::VLINE, "\t .. SwapChain Info Constructed ..");
-        report(LOGGER::DEBUG, "\tCreate Info minImageCount: %d", _create_info.minImageCount);
-        report(LOGGER::DEBUG, "\tCreate Info imageFormat: %d", _create_info.imageFormat);
-        report(LOGGER::DEBUG, "\tCreate Info imageColorSpace: %d", _create_info.imageColorSpace);
-        report(LOGGER::DEBUG, "\tCreate Info imageExtent: %d, %d", _create_info.imageExtent.width, _create_info.imageExtent.height);
-        report(LOGGER::DEBUG, "\tCreate Info imageArrayLayers: %d", _create_info.imageArrayLayers);
-        report(LOGGER::DEBUG, "\tCreate Info imageUsage: %d", _create_info.imageUsage);
-        report(LOGGER::DEBUG, "\tCreate Info imageSharingMode: %d", _create_info.imageSharingMode);
-        report(LOGGER::DEBUG, "\tCreate Info preTransform: %d", _create_info.preTransform);
-        report(LOGGER::DEBUG, "\tCreate Info compositeAlpha: %d", _create_info.compositeAlpha);
-        report(LOGGER::DEBUG, "\tCreate Info presentMode: %d", _create_info.presentMode);
-        report(LOGGER::DEBUG, "\tCreate Info clipped: %d", _create_info.clipped);
+        //log();
+        VkSwapchainCreateInfoKHR _create_info = {}; // TODO: This could be 1 line
+        createSwapchainInfoKHR(&_create_info);
+        //logCreateInfo(&_create_info);
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (queues.indices.graphics_family != queues.indices.present_family)

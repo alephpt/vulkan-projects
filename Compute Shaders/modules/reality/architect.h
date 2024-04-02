@@ -28,8 +28,8 @@ class EngineContext {
         void createPhysicalDevice();
         void createLogicalDevice();    
 
-        SwapChainDetails querySwapChainDetails();
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
+        void querySwapChainDetails();
         void constructSwapChain();
         void constructImageViews();
         void createFrameBuffers();
@@ -41,7 +41,7 @@ class EngineContext {
         void _blankContext();
         void getQueueFamilies(VkPhysicalDevice);
         void setQueueFamilyProperties(unsigned int);
-        VkSwapchainCreateInfoKHR createSwapchainInfoKHR();
+        void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*);
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
         VkAttachmentDescription colorAttachment();

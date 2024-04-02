@@ -126,10 +126,12 @@ void EngineContext::_blankContext()
         swapchain = initSwapchain();
     }
 
+// This should not be done like this
 void EngineContext::setWindowExtent(VkExtent2D extent) 
     {
         window_extent = extent;
         swapchain.extent = extent;
+        swapchain.details.extent = extent;
     }
 
 

@@ -65,7 +65,7 @@ void EngineContext::createRenderPass()
     {
         report(LOGGER::ILINE, "\t .. Creating Render Pass ..");
 
-        log();
+        //log();
 
         VkAttachmentDescription _color_attachment = colorAttachment();
         VkAttachmentReference _color_attachment_ref = colorAttachmentRef();
