@@ -87,7 +87,7 @@ void EngineContext::recordCommandBuffers()
 
                 vkCmdBeginRenderPass(frames[i].command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-                vkCmdBindPipeline(frames[i].command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline);
+                vkCmdBindPipeline(frames[i].command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, );
 
                 VkBuffer _vertex_buffers[] = { vertex_buffer };
                 VkDeviceSize _offsets[] = { 0 };
