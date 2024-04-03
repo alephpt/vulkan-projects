@@ -1,5 +1,5 @@
 #pragma once
-#include "./atomic.h"
+#include "./architecture/atomic.h"
 
 bool checkValidationLayerSupport();
 void createVulkanInstance(VkInstance *instance);

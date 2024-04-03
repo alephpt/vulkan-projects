@@ -1,4 +1,40 @@
-#include "./architect.h"
+#include "../architect.h"
+
+
+    ///////////////////////////////////
+    // PIPELINE GATEWAY CONSTRUCTION //
+    ///////////////////////////////////
+
+void Architect::constructGateway() 
+    {
+        gateway = new Gateway();
+
+        gateway->shaders(&logical_device)
+                .vertexInput()
+                .inputAssembly()
+                .viewportState()
+                .rasterizer()
+                .multisampling()
+                .colorBlending()
+                .dynamicState()
+                .layout(&logical_device)
+                .pipe(&render_pass)
+                .create(&logical_device);
+    }
+
+
+    /////////////////////////
+    // GATEWAY DESTRUCTION //
+    /////////////////////////
+
+void Architect::destroyGateway()
+    {
+        
+        vkDestroyPipeline(logical_device, gateway->pipeline, nullptr);
+        vkDestroyPipelineLayout(logical_device, gateway->pipeline_layout, nullptr);
+        delete gateway;
+        return;
+    }
 
 
     /////////////////////
@@ -17,7 +53,7 @@ static VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_i
     }
     
 
-VkCommandBufferAllocateInfo EngineContext::createCommandBuffers(unsigned int n)
+VkCommandBufferAllocateInfo Architect::createCommandBuffers(unsigned int n)
     {
         report(LOGGER::DLINE, "\t .. Creating Command Buffer %d ..", n);
 
@@ -30,7 +66,7 @@ VkCommandBufferAllocateInfo EngineContext::createCommandBuffers(unsigned int n)
             };
     }
 
-void EngineContext::createCommandPool() 
+void Architect::createCommandPool() 
     {
         report(LOGGER::DLINE, "\t .. Creating Command Pool ..");
 
@@ -57,13 +93,13 @@ static VkCommandBufferBeginInfo createBeginInfo() {
         };
 }
 
-VkRenderPassBeginInfo EngineContext::getRenderPassInfo(size_t i)
+VkRenderPassBeginInfo Architect::getRenderPassInfo(size_t i)
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                 .pNext = nullptr,
                 .renderPass = render_pass,
-                .framebuffer = frames[i].frame_buffer,
+                .framebuffer = swapchain.framebuffers[i],
                 .renderArea = {
                     .offset = {0, 0},
                     .extent = window_extent
@@ -73,39 +109,54 @@ VkRenderPassBeginInfo EngineContext::getRenderPassInfo(size_t i)
             };
     }
 
-void EngineContext::recordCommandBuffers() 
+static inline VkViewport getViewport(VkExtent2D extent)
+    {
+        return {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        };
+    }
+
+static inline VkRect2D getScissor(VkExtent2D extent)
+    {
+        return {
+            .offset = {0, 0},
+            .extent = extent
+        };
+    }
+
+void Architect::recordCommandBuffers(uint32_t i) 
     {
         report(LOGGER::DLINE, "\t .. Recording Command Buffers ..");
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-            {
-                VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VK_TRY(vkBeginCommandBuffer(frames[i].command_buffer, &_begin_info));
 
-                VK_TRY(vkBeginCommandBuffer(frames[i].command_buffer, &_begin_info));
+        VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
+        vkCmdBeginRenderPass(frames[i].command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-                VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
+        vkCmdBindPipeline(frames[i].command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gateway->pipeline);
 
-                vkCmdBeginRenderPass(frames[i].command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        VkViewport _viewport = getViewport(swapchain.extent);
+        vkCmdSetViewport(frames[i].command_buffer, 0, 1, &_viewport);
 
-                vkCmdBindPipeline(frames[i].command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, );
+        VkRect2D _scissor = getScissor(swapchain.extent);
+        vkCmdSetScissor(frames[i].command_buffer, 0, 1, &_scissor);
 
-                VkBuffer _vertex_buffers[] = { vertex_buffer };
-                VkDeviceSize _offsets[] = { 0 };
-                vkCmdBindVertexBuffers(frames[i].command_buffer, 0, 1, _vertex_buffers, _offsets);
+        vkCmdDraw(frames[i].command_buffer, 3, 1, 0, 0);
 
-                vkCmdBindIndexBuffer(frames[i].command_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdEndRenderPass(frames[i].command_buffer);
 
-                vkCmdDrawIndexed(frames[i].command_buffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-
-                vkCmdEndRenderPass(frames[i].command_buffer);
-
-                VK_TRY(vkEndCommandBuffer(frames[i].command_buffer));
-            }
+        VK_TRY(vkEndCommandBuffer(frames[i].command_buffer));
 
         return;
     }
 
-void EngineContext::resetCommandBuffers() 
+void Architect::resetCommandBuffers() 
     {
         report(LOGGER::DLINE, "\t .. Resetting Command Buffers ..");
 
@@ -144,7 +195,7 @@ static VkFenceCreateInfo createFenceInfo()
         };
     }
 
-void EngineContext::createSyncObjects() 
+void Architect::createSyncObjects() 
     {
         report(LOGGER::DLINE, "\t .. Creating Sync Objects ..");
 

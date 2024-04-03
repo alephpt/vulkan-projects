@@ -1,5 +1,5 @@
 #pragma once
-#include "../../components/lexicon.h"
+#include "../../../components/lexicon.h"
 
 #include <optional>
 #include <vector>

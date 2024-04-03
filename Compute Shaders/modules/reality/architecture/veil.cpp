@@ -1,14 +1,11 @@
 
-#include "../../components/lexicon.h"
-#include "../../components/genesis.h"
-#include "./architect.h"
-#include "./gateway.h"
+#include "../architect.h"
 
     //////////////////////////
     // RENDER PASS CREATION //
     //////////////////////////
 
-VkAttachmentDescription EngineContext::colorAttachment()
+VkAttachmentDescription Architect::colorAttachment()
     {
         report(LOGGER::DLINE, "\t\t .. Creating Color Attachment ..");
 
@@ -61,12 +58,11 @@ static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_atta
         };
     }
 
-void EngineContext::createRenderPass()
+void Architect::createRenderPass()
     {
         report(LOGGER::ILINE, "\t .. Creating Render Pass ..");
 
         //log();
-
         VkAttachmentDescription _color_attachment = colorAttachment();
         VkAttachmentReference _color_attachment_ref = colorAttachmentRef();
         VkSubpassDescription _subpass_description = subpassDescription(&_color_attachment_ref);

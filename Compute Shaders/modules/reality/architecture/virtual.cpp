@@ -1,4 +1,38 @@
-#include "./architect.h"
+#include "../architect.h"
+
+    ///////////////////////////////
+    //  Virtual Swapchain Layers //
+    ///////////////////////////////
+
+SwapChainSupportDetails Architect::querySwapChainSupport(VkPhysicalDevice device)
+    {
+        report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
+        
+        SwapChainSupportDetails details = {};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
+
+        uint32_t _format_count;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, nullptr);
+
+        if (_format_count != 0) 
+            {
+                details.formats.resize(_format_count);
+                vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, details.formats.data());
+            }
+
+        uint32_t _present_mode_count;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, nullptr);
+
+        if (_present_mode_count != 0) 
+            {
+                details.present_modes.resize(_present_mode_count);
+                vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details.present_modes.data());
+            }
+
+        return details;
+    }
+
+
 
 static void selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats, VkSurfaceFormatKHR* surface_format)
     {
@@ -54,7 +88,7 @@ static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExt
     }
 
 
-void EngineContext::querySwapChainDetails()
+void Architect::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
 
@@ -68,7 +102,7 @@ void EngineContext::querySwapChainDetails()
         return;
     }
 
-void EngineContext::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info) 
+void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info) 
     {
     *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -112,7 +146,7 @@ static void logCreateInfo(VkSwapchainCreateInfoKHR* create_info)
         return;
     }
 
-void EngineContext::constructSwapChain() 
+void Architect::constructSwapChain() 
     {
         report(LOGGER::DLINE, "\t .. Constructing SwapChain ..");
 
@@ -158,7 +192,7 @@ void EngineContext::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo EngineContext::createImageViewInfo(size_t image) {
+VkImageViewCreateInfo Architect::createImageViewInfo(size_t image) {
     return {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image = swapchain.images[image],
@@ -181,7 +215,7 @@ VkImageViewCreateInfo EngineContext::createImageViewInfo(size_t image) {
 }
 
 
-void EngineContext::constructImageViews()
+void Architect::constructImageViews()
     {
         report(LOGGER::DLINE, "\t .. Constructing Image Views ..");
 
@@ -203,7 +237,7 @@ void EngineContext::constructImageViews()
     // FRAME BUFFER CREATION //
     ///////////////////////////
 
-void EngineContext::createFrameBuffers()
+void Architect::createFrameBuffers()
     {
         report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
 
@@ -229,7 +263,7 @@ void EngineContext::createFrameBuffers()
         return;
     }
 
-void EngineContext::destroySwapChain() 
+void Architect::destroySwapChain() 
     {
         report(LOGGER::INFO, "Matrix - Destroying Swapchain ..");
 
@@ -244,7 +278,7 @@ void EngineContext::destroySwapChain()
         return;
     }
 
-void EngineContext::recreateSwapChain() 
+void Architect::recreateSwapChain() 
     {
         report(LOGGER::INFO, "Matrix - Creating Swapchain ..");
 
@@ -256,38 +290,5 @@ void EngineContext::recreateSwapChain()
         createFrameBuffers();
 
         return;
-    }
-
-
-    ///////////////////////////////
-    //  Virtual Swapchain Layers //
-    ///////////////////////////////
-
-SwapChainSupportDetails EngineContext::querySwapChainSupport(VkPhysicalDevice device)
-    {
-        report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
-        
-        SwapChainSupportDetails details = {};
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
-
-        uint32_t _format_count;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, nullptr);
-
-        if (_format_count != 0) 
-            {
-                details.formats.resize(_format_count);
-                vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &_format_count, details.formats.data());
-            }
-
-        uint32_t _present_mode_count;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, nullptr);
-
-        if (_present_mode_count != 0) 
-            {
-                details.present_modes.resize(_present_mode_count);
-                vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details.present_modes.data());
-            }
-
-        return details;
     }
 

@@ -12,7 +12,7 @@ Existence::Existence()
         assert(_essence == nullptr);
         
         _application_name = "Compute Shaders";
-        _window_extent = { 1660, 1440 };
+        _window_extent = { 1600, 1200 };
         _actuality = nullptr;
     }
 

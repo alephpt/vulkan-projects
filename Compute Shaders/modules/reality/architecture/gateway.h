@@ -1,8 +1,6 @@
 #pragma once
-#include "../../components/lexicon.h"
-#include "./atomic.h"
-#include "./architect.h"
 #include <vector>
+#include "./atomic.h"
 
 
 class Gateway {
@@ -10,8 +8,10 @@ class Gateway {
 	    Gateway();
         ~Gateway();
 
-        Gateway& define(EngineContext*);
-        Gateway& shaders();
+        VkPipeline pipeline;
+        VkPipelineLayout pipeline_layout;
+
+        Gateway& shaders(VkDevice*);
         Gateway& vertexInput();
         Gateway& inputAssembly();
         Gateway& viewportState();
@@ -20,35 +20,28 @@ class Gateway {
         Gateway& depthStencil();
         Gateway& colorBlending();
         Gateway& dynamicState();
-        Gateway& layout();
-        Gateway& pipeline();
-        Gateway& create();
+        Gateway& layout(VkDevice*);
+        Gateway& pipe(VkRenderPass*);
+        Gateway& create(VkDevice*);
         void clear();
 
-    private:
-        EngineContext *_context;
-        VkPipeline _instance;
 
-        VkPipelineInputAssemblyStateCreateInfo _input_assembly;
+    private:
+        VkGraphicsPipelineCreateInfo _pipeline_info;
+        VkPipelineLayoutCreateInfo _pipeline_layout_info;
         VkPipelineViewportStateCreateInfo _viewport_state;
-        VkRenderingInfo _render_info;
         VkPipelineVertexInputStateCreateInfo _vertex_input_state;
+        VkPipelineInputAssemblyStateCreateInfo _input_assembly;
+        VkPipelineDynamicStateCreateInfo _dynamic_state;
+        std::vector<VkShaderModule> _shader_modules;
+        std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;
+        VkRenderingInfo _render_info;
         VkPipelineRasterizationStateCreateInfo _rasterizer;
         VkPipelineMultisampleStateCreateInfo _multisampling;
         VkPipelineDepthStencilStateCreateInfo _depth_stencil;
         VkPipelineColorBlendAttachmentState _color_blend_attachment;
         VkPipelineColorBlendStateCreateInfo _color_blending;
         std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
-        VkPipelineDynamicStateCreateInfo _dynamic_state;
-        std::vector<VkShaderModule> _shader_modules;
-        std::vector<VkPipelineShaderStageCreateInfo> _shader_stages;
-        VkPipelineLayoutCreateInfo _pipeline_layout_info;
-        VkPipelineLayout _pipeline_layout;
-        VkGraphicsPipelineCreateInfo _pipeline_info;
-
-//        inline VkPipelineColorBlendAttachmentState Gateway::colorBlendAttachment();
+       
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
 };
-
-Gateway* constructGateway(EngineContext *context);
-void destroyGateway(Gateway *gateway);

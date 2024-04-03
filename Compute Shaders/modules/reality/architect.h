@@ -1,8 +1,9 @@
 #pragma once
+#include "./scaffolds.h"
+#include "./architecture/gateway.h"
 #include "../../components/lexicon.h"
-#include "./atomic.h"
 
-class EngineContext {
+class Architect {
     public:
         VkInstance instance;
         VkPhysicalDevice physical_device;
@@ -14,14 +15,14 @@ class EngineContext {
         SwapChainContext swapchain;
         VkRenderPass render_pass;
         QueuePresentContext present;
+        Gateway *gateway;
 
-        EngineContext();
-        ~EngineContext();
-
-        void setWindowExtent(VkExtent2D);
-
+        Architect();
+        ~Architect();
 
         void log();
+
+        void setWindowExtent(VkExtent2D);
 
         bool deviceProvisioned(VkPhysicalDevice);
         void createPhysicalDevice();
@@ -30,18 +31,29 @@ class EngineContext {
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
         void querySwapChainDetails();
         void constructSwapChain();
+        void recreateSwapChain();
+        void destroySwapChain();
+        
+        void createRenderPass();
+
         void constructImageViews();
         void createFrameBuffers();
-        void destroySwapChain();
-        void recreateSwapChain();
-        void createRenderPass();
+
         void createCommandPool();
         void createSyncObjects();
+        
         void resetCommandBuffers();
-        void recordCommandBuffers(); 
+        void recordCommandBuffers(uint32_t); 
+
+        void constructGateway();
+        void destroyGateway();
+        
+        void drawFrame();
 
     private:
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        FrameData& current_frame();
+        int _frame_ct = 0;
 
         void logQueues();
         void logSwapChain();
@@ -53,7 +65,7 @@ class EngineContext {
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
         VkAttachmentDescription colorAttachment();
-        VkCommandBufferAllocateInfo EngineContext::createCommandBuffers(unsigned int);
+        VkCommandBufferAllocateInfo createCommandBuffers(unsigned int);
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
 };
 

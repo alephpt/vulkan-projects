@@ -1,19 +1,22 @@
-#include "./architect.h"
+#include "../architect.h"
 
 #include <set>
 #include <string>
 
 
+    // Get Current Frame
+FrameData& Architect::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+
     ////////////////////////
     //  INSTANCE CREATION //
     ////////////////////////
 
-EngineContext::EngineContext() 
+Architect::Architect() 
     {
         _blankContext();
     }
 
-EngineContext::~EngineContext() 
+Architect::~Architect() 
     {
         _blankContext();
 
@@ -99,7 +102,7 @@ static SwapChainContext initSwapchain() {
 }
 
 
-void initContext(EngineContext *context) 
+void initContext(Architect *context) 
     {
         report(LOGGER::VLINE, "\t .. Initializing Context ..");
 
@@ -114,7 +117,7 @@ void initContext(EngineContext *context)
     }
 
 
-void EngineContext::_blankContext() 
+void Architect::_blankContext() 
     {
         instance = VK_NULL_HANDLE;
         physical_device = VK_NULL_HANDLE;
@@ -127,7 +130,7 @@ void EngineContext::_blankContext()
     }
 
 // This should not be done like this
-void EngineContext::setWindowExtent(VkExtent2D extent) 
+void Architect::setWindowExtent(VkExtent2D extent) 
     {
         window_extent = extent;
         swapchain.extent = extent;
@@ -139,7 +142,7 @@ void EngineContext::setWindowExtent(VkExtent2D extent)
     // LOGGING //
     /////////////
 
-void EngineContext::logQueues() 
+void Architect::logQueues() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Queues ..");
         report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
@@ -151,7 +154,7 @@ void EngineContext::logQueues()
         report(LOGGER::DLINE, "\t\tIndices : %d", queues.indices.graphics_family.value());
     }
 
-void EngineContext::logFrameData()
+void Architect::logFrameData()
     {
         report(LOGGER::DEBUG, "\t .. Logging Frame Data ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -166,7 +169,7 @@ void EngineContext::logFrameData()
     
     }
 
-void EngineContext::logSwapChain() 
+void Architect::logSwapChain() 
     {
         report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
         report(LOGGER::DLINE, "\t\tSwapchain: %p", swapchain.instance);
@@ -181,7 +184,7 @@ void EngineContext::logSwapChain()
         report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
     }
 
-void EngineContext::log() 
+void Architect::log() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Context ..");
         report(LOGGER::DLINE, "\t\tInstance: %p", instance);
@@ -200,7 +203,7 @@ void EngineContext::log()
     //  Device Queues //
     ////////////////////
 
-void EngineContext::setQueueFamilyProperties(unsigned int i) {
+void Architect::setQueueFamilyProperties(unsigned int i) {
     VkQueueFamilyProperties* queue_family = &queues.families[i];
     std::string queue_name = "";
 
@@ -236,7 +239,7 @@ void EngineContext::setQueueFamilyProperties(unsigned int i) {
     report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
 }
 
-void EngineContext::getQueueFamilies(VkPhysicalDevice scanned_device) 
+void Architect::getQueueFamilies(VkPhysicalDevice scanned_device) 
     {
         report(LOGGER::VLINE, "\t .. Acquiring Queue Families ..");
         uint32_t _queue_family_count = 0;
@@ -284,7 +287,7 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     //  DEVICE PROVISION  //
     ////////////////////////
 
-bool EngineContext::deviceProvisioned(VkPhysicalDevice scanned_device)
+bool Architect::deviceProvisioned(VkPhysicalDevice scanned_device)
     {
         getQueueFamilies(scanned_device);
         bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
@@ -304,7 +307,7 @@ bool EngineContext::deviceProvisioned(VkPhysicalDevice scanned_device)
     // PHYSICAL DEVICE INFO //
     //////////////////////////
 
-void EngineContext::createPhysicalDevice() 
+void Architect::createPhysicalDevice() 
     {
         report(LOGGER::DLINE, "\t .. Scanning for Physical Devices ..");
 
@@ -350,7 +353,7 @@ void EngineContext::createPhysicalDevice()
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-VkDeviceQueueCreateInfo EngineContext::getQueueCreateInfo(uint32_t queue_family)
+VkDeviceQueueCreateInfo Architect::getQueueCreateInfo(uint32_t queue_family)
     {
         return {
                 sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -360,7 +363,7 @@ VkDeviceQueueCreateInfo EngineContext::getQueueCreateInfo(uint32_t queue_family)
             };
     }
 
-void EngineContext::createLogicalDevice()
+void Architect::createLogicalDevice()
     {
         report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};

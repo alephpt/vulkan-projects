@@ -1,43 +1,5 @@
-#include "gateway.h"
-#include "../../components/genesis.h"
-
-
-    ///////////////////////////////////
-    // PIPELINE GATEWAY CONSTRUCTION //
-    ///////////////////////////////////
-
-Gateway* constructGateway(EngineContext *context) 
-    {
-        Gateway* gateway = new Gateway();
-
-        gateway->define(context)
-                .shaders()
-                .vertexInput()
-                .inputAssembly()
-                .viewportState()
-                .rasterizer()
-                .multisampling()
-                .colorBlending()
-                .dynamicState()
-                .layout()
-                .pipeline()
-                .create();
-
-        return gateway;
-    }
-
-
-
-    /////////////////////////
-    // GATEWAY DESTRUCTION //
-    /////////////////////////
-
-void destroyGateway(Gateway *gateway)
-    {
-        delete gateway;
-        
-        return;
-    }
+#include "./gateway.h"
+#include "../../../components/genesis.h"
 
 
     ////////////////////////
@@ -53,9 +15,6 @@ Gateway::Gateway()
 Gateway::~Gateway()
     { 
         report(LOGGER::DEBUG, "Gateway - Deconstructing Pipeline ..");
-        clear(); 
-        vkDestroyPipeline(_context->logical_device, _instance, nullptr);
-        vkDestroyPipelineLayout(_context->logical_device, _pipeline_layout, nullptr);
         free(_shader_modules.data());
     }
 
@@ -72,22 +31,10 @@ void Gateway::clear()
         _pipeline_info = { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
         _dynamic_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
         _pipeline_layout_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        _pipeline_layout = {};
+        pipeline_layout = {};
         _depth_stencil = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO }; // not used
         _render_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
         _shader_stages.clear();
-    }
-
-
-    ////////////////////////
-    // INITIALIZE CONTEXT //
-    ////////////////////////
-
-Gateway& Gateway::define(EngineContext *context)
-    {
-        report(LOGGER::DLINE, "\t .. Initializing Pipeline Gateway Context ..");
-        _context = context;
-        return *this;
     }
 
 
@@ -95,47 +42,51 @@ Gateway& Gateway::define(EngineContext *context)
     // SHADERS //
     /////////////
 
-static inline VkShaderModule createShaderModule(EngineContext* context, std::vector<char>& code)
+static inline void createShaderModule(VkDevice* logical_device, std::vector<char>& code, VkShaderModule* shader_module)
     {
         report(LOGGER::DLINE, "\t\t .. Creating Shader Module ..");
+
         VkShaderModuleCreateInfo _create_info = {
                 .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 .codeSize = code.size(),
                 .pCode = reinterpret_cast<const uint32_t*>(code.data())
             };
 
-        VkShaderModule shader_module;
-        VK_TRY(vkCreateShaderModule(context->logical_device, &_create_info, nullptr, &shader_module));
+        VK_TRY(vkCreateShaderModule(*logical_device, &_create_info, nullptr, shader_module));
 
-        return shader_module;
+        return;
     }
 
-void Gateway::addShaderStage(VkShaderModule shaderModule, VkShaderStageFlagBits stage)
+void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
     {
         std::string stage_name = stage == VK_SHADER_STAGE_VERTEX_BIT ? "Vertex" : "Fragment";
         report(LOGGER::DLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
-        _shader_modules.push_back(shaderModule);
+        _shader_modules.push_back(shader_module);
 
         VkPipelineShaderStageCreateInfo _shader_stage = {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage = stage,
-            .module = shaderModule,
+            .module = shader_module,
             .pName = "main"
         };
 
         _shader_stages.push_back(_shader_stage);
+
+        return;
     }
 
-Gateway& Gateway::shaders()
+Gateway& Gateway::shaders(VkDevice* logical_device)
     {
         report(LOGGER::DLINE, "\t .. Creating Shaders ..");
 
         std::vector<char> _vert_shader_code = genesis::loadFile(vert_shader);
-        VkShaderModule _vert_shader_module = createShaderModule(_context, _vert_shader_code);
+        VkShaderModule _vert_shader_module;
+        createShaderModule(logical_device, _vert_shader_code, &_vert_shader_module);
         addShaderStage(_vert_shader_module, VK_SHADER_STAGE_VERTEX_BIT);
 
         std::vector<char> _frag_shader_code = genesis::loadFile(frag_shader);
-        VkShaderModule _frag_shader_module = createShaderModule(_context, _frag_shader_code);
+        VkShaderModule _frag_shader_module;
+        createShaderModule(logical_device, _frag_shader_code, &_frag_shader_module);
         addShaderStage(_frag_shader_module, VK_SHADER_STAGE_FRAGMENT_BIT);
 
         return *this;
@@ -279,7 +230,7 @@ Gateway& Gateway::depthStencil()
     // COLOR BLEND //
     /////////////////
 
-static inline VkPipelineColorBlendAttachmentState colorBlendAttachment()
+static VkPipelineColorBlendAttachmentState colorBlendAttachment()
     {
         return {
                 .blendEnable = VK_FALSE,
@@ -346,7 +297,7 @@ Gateway& Gateway::dynamicState()
     // LAYOUT //
     ////////////
 
-Gateway& Gateway::layout()
+Gateway& Gateway::layout(VkDevice* logical_device)
     {
         report(LOGGER::DLINE, "\t .. Creating Pipeline Layout ..");
 
@@ -358,12 +309,12 @@ Gateway& Gateway::layout()
                 .pPushConstantRanges = nullptr
             };
 
-        VK_TRY(vkCreatePipelineLayout(_context->logical_device, &_pipeline_layout_info, nullptr, &_pipeline_layout));
+        VK_TRY(vkCreatePipelineLayout(*logical_device, &_pipeline_layout_info, nullptr, &pipeline_layout));
 
         return *this;
     }
 
-Gateway& Gateway::pipeline()
+Gateway& Gateway::pipe(VkRenderPass* render_pass)
     {
         report(LOGGER::DLINE, "\t .. Creating Pipeline Create Info ..");
 
@@ -378,8 +329,8 @@ Gateway& Gateway::pipeline()
                 .pMultisampleState = &_multisampling,
                 .pColorBlendState = &_color_blending,
                 .pDynamicState = &_dynamic_state,
-                .layout = _pipeline_layout,
-                .renderPass = _context->render_pass,
+                .layout = pipeline_layout,
+                .renderPass = *render_pass,
                 .subpass = 0,
                 .basePipelineHandle = VK_NULL_HANDLE,
             };
@@ -387,14 +338,14 @@ Gateway& Gateway::pipeline()
         return *this;
     }
 
-Gateway& Gateway::create()
+Gateway& Gateway::create(VkDevice* logical_device)
     {
         report(LOGGER::DLINE, "\t .. Constructing Pipeline ..");
-        VK_TRY(vkCreateGraphicsPipelines(_context->logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &_instance));
+        VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &pipeline));
 
         report(LOGGER::DLINE, "\t .. Cleaning Up Shader Modules ..");
         for (auto shader_module : _shader_modules) 
-            { vkDestroyShaderModule(_context->logical_device, shader_module, nullptr); }
+            { vkDestroyShaderModule(*logical_device, shader_module, nullptr); }
 
         return *this;
     }
