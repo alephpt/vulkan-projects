@@ -32,14 +32,22 @@ void Architect::drawFrame()
         vkResetFences(logical_device, 1, &current_frame().in_flight);
 
         uint32_t _image_index;
-        VK_TRY(vkAcquireNextImageKHR(
-                logical_device, 
-                swapchain.instance, 
-                UINT64_MAX, 
-                current_frame().image_available, 
-                VK_NULL_HANDLE, 
-                &_image_index
-            ));
+        VkResult res = vkAcquireNextImageKHR(
+                            logical_device, 
+                            swapchain.instance, 
+                            UINT64_MAX, 
+                            current_frame().image_available, 
+                            VK_NULL_HANDLE, 
+                            &_image_index
+                        );
+
+        if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return;
+        } else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
+            printf("Failed to acquire swap chain image!\n");
+            return;
+        }
 
         vkResetCommandBuffer(current_frame().command_buffer, 0);
         recordCommandBuffers(_image_index);
@@ -55,7 +63,14 @@ void Architect::drawFrame()
         VkSwapchainKHR _swapchains[] = { swapchain.instance };
         present.present_info = getPresentInfoKHR(present.signal_semaphores, _swapchains, &_image_index);
 
-        VK_TRY(vkQueuePresentKHR(queues.present, &present.present_info));
+        res = vkQueuePresentKHR(queues.present, &present.present_info);
+
+        if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR || framebuffer_resized) {
+            framebuffer_resized = false;
+            recreateSwapChain();
+        } else if (res != VK_SUCCESS) {
+            printf("Failed to present swap chain image!\n");
+        }
 
         _frame_ct = (_frame_ct + 1) % MAX_FRAMES_IN_FLIGHT;
 

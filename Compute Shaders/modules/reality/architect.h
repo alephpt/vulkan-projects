@@ -54,6 +54,7 @@ class Architect {
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         FrameData& current_frame();
         int _frame_ct = 0;
+        bool framebuffer_resized = false;
 
         void logQueues();
         void logSwapChain();
