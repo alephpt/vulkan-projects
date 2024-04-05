@@ -56,10 +56,10 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         std::thread _swapchain_thread(&Reality::_initSwapChain, this, std::ref(startGateway), std::ref(waitingForGateway), std::ref(waitForSwapchain));
         std::thread _pipeline_thread(&Reality::_initGateway, this, std::ref(startingGateway), std::ref(waitForGateway));
 
+        _pipeline_thread.join();
+        _swapchain_thread.join();
         waitingForFrameBuffer.wait();
 
-        _swapchain_thread.join();
-        _pipeline_thread.join();
 
         // Now we can construct the Command Buffers 
         _initCommands();

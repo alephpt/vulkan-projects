@@ -280,7 +280,7 @@ void Architect::destroySwapChain()
 
 void Architect::recreateSwapChain() 
     {
-        report(LOGGER::INFO, "Matrix - Creating Swapchain ..");
+        report(LOGGER::INFO, "Matrix - Recreating Swapchain ..");
 
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();
