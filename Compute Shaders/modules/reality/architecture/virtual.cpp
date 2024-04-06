@@ -102,12 +102,12 @@ void Architect::querySwapChainDetails()
         return;
     }
 
-void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info) 
+void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
     {
     *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .surface = surface,
-        .minImageCount = swapchain.support.capabilities.minImageCount + 1,
+        .minImageCount = image_count,
         .imageFormat = swapchain.details.surface_format.format,
         .imageColorSpace = swapchain.details.surface_format.colorSpace,
         .imageExtent = swapchain.extent,
@@ -157,7 +157,7 @@ void Architect::constructSwapChain()
 
         //log();
         VkSwapchainCreateInfoKHR _create_info = {}; // TODO: This could be 1 line
-        createSwapchainInfoKHR(&_create_info);
+        createSwapchainInfoKHR(&_create_info, _image_count);
         //logCreateInfo(&_create_info);
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different

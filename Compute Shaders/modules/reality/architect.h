@@ -43,7 +43,7 @@ class Architect {
         void createSyncObjects();
         
         void resetCommandBuffers();
-        void recordCommandBuffers(uint32_t); 
+        void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
 
         void constructGateway();
         void destroyGateway();
@@ -62,7 +62,7 @@ class Architect {
         void _blankContext();
         void getQueueFamilies(VkPhysicalDevice);
         void setQueueFamilyProperties(unsigned int);
-        void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*);
+        void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*, uint32_t);
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
         VkAttachmentDescription colorAttachment();

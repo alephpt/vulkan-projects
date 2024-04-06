@@ -68,6 +68,8 @@ void Architect::drawFrame()
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
 
+        report(LOGGER::INFO, "Matrix - Acquiring Image Index ..");
+        log();
         uint32_t _image_index;
         VK_TRY(vkAcquireNextImageKHR(
                             logical_device, 
@@ -79,15 +81,14 @@ void Architect::drawFrame()
                         ));
         report(LOGGER::INFO, "Matrix - Image Index: %d", _image_index);
 
-        _image_index = _image_index % MAX_FRAMES_IN_FLIGHT;
-
         VkCommandBuffer _command_buffer = current_frame().command_buffer;
 
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
         VK_TRY(vkResetCommandBuffer(_command_buffer, 0));
 
-        recordCommandBuffers(_image_index);
+        recordCommandBuffers(_command_buffer, _image_index);
 
+        present.submit_info = {};
         VkSemaphore _wait_semaphores[] = { current_frame().image_available };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
         VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
@@ -96,6 +97,7 @@ void Architect::drawFrame()
         VK_TRY(vkQueueSubmit(queues.graphics, 1, &present.submit_info, current_frame().in_flight));
 
         VkSwapchainKHR _swapchains[] = { swapchain.instance };
+        present.present_info = {};
         present.present_info = getPresentInfoKHR(_signal_semaphores, _swapchains, &_image_index);
 
         VK_TRY(vkQueuePresentKHR(queues.present, &present.present_info));

@@ -139,8 +139,9 @@ void Architect::logQueues()
         report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
         report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
         report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
-        report(LOGGER::DLINE, "\t\tIndices Present Family: %d", queues.indices.present_family.value());
-        report(LOGGER::DLINE, "\t\tIndices : %d", queues.indices.graphics_family.value());
+        report(LOGGER::DLINE, "\t\tPresent Family Index: %d", queues.indices.present_family.value());
+        report(LOGGER::DLINE, "\t\tGraphics Family Index: %d", queues.indices.graphics_family.value());
+        report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());
     }
 
 void Architect::logFrameData()

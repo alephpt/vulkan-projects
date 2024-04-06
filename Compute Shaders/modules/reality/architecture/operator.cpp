@@ -129,29 +129,29 @@ static inline VkRect2D getScissor(VkExtent2D extent)
         };
     }
 
-void Architect::recordCommandBuffers(uint32_t i) 
+void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
         report(LOGGER::DLINE, "\t .. Recording Command Buffer %d ..", i);
 
         VkCommandBufferBeginInfo _begin_info = createBeginInfo();
-        VK_TRY(vkBeginCommandBuffer(current_frame().command_buffer, &_begin_info));
+        VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));
 
-        VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(_frame_ct);
-        vkCmdBeginRenderPass(current_frame().command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+        VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
+        vkCmdBeginRenderPass(command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(current_frame().command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gateway->pipeline);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gateway->pipeline);
 
         VkViewport _viewport = getViewport(swapchain.extent);
-        vkCmdSetViewport(current_frame().command_buffer, 0, 1, &_viewport);
+        vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
 
         VkRect2D _scissor = getScissor(swapchain.extent);
-        vkCmdSetScissor(current_frame().command_buffer, 0, 1, &_scissor);
+        vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
-        vkCmdDraw(current_frame().command_buffer, 3, 1, 0, 0);
+        vkCmdDraw(command_buffer, 3, 1, 0, 0);
 
-        vkCmdEndRenderPass(current_frame().command_buffer);
+        vkCmdEndRenderPass(command_buffer);
 
-        VK_TRY(vkEndCommandBuffer(current_frame().command_buffer));
+        VK_TRY(vkEndCommandBuffer(command_buffer));
 
         return;
     }
