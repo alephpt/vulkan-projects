@@ -81,9 +81,6 @@ struct SwapChainContext {
 };
 
 struct QueuePresentContext {
-    VkSemaphore wait_semaphores[1];
-    VkSemaphore signal_semaphores[1];
-    VkPipelineStageFlags wait_stages[1];
     VkSubmitInfo submit_info;
     VkPresentInfoKHR present_info;
 };

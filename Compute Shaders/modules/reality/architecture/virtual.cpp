@@ -267,11 +267,16 @@ void Architect::destroySwapChain()
     {
         report(LOGGER::INFO, "Matrix - Destroying Swapchain ..");
 
-        for (const auto _frame_buffers : swapchain.framebuffers) 
+        for (const auto& _frame_buffers : swapchain.framebuffers) 
             { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
         
-        for (const auto _image_view : swapchain.image_views) 
+        swapchain.framebuffers.clear();
+
+        
+        for (const auto& _image_view : swapchain.image_views) 
             { vkDestroyImageView(logical_device, _image_view, nullptr); }
+
+        swapchain.image_views.clear();
 
         vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
 

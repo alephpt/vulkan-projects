@@ -49,15 +49,6 @@ Architect::~Architect()
     //  CONTEXT CREATION  //
     ////////////////////////
 
-static QueuePresentContext initPresent() 
-    {
-        return {
-                .wait_semaphores = {},
-                .signal_semaphores = {},
-                .wait_stages = {},
-            };
-    }
-
 static Queues initQueues() 
     {
         return {
@@ -111,7 +102,6 @@ void initContext(Architect *context)
         context->logical_device = VK_NULL_HANDLE;
         context->surface = VK_NULL_HANDLE;
         context->render_pass = VK_NULL_HANDLE;
-        context->present = initPresent();
         context->queues = initQueues();
         context->swapchain = initSwapchain();
     }
@@ -124,7 +114,6 @@ void Architect::_blankContext()
         logical_device = VK_NULL_HANDLE;
         surface = VK_NULL_HANDLE;
         render_pass = VK_NULL_HANDLE;
-        present = initPresent();
         queues = initQueues();
         swapchain = initSwapchain();
     }
