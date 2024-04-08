@@ -34,7 +34,27 @@ static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
 static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
 static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
 
-static int subdivisions = 1;
+static int subdivisions = 3332;
+
+static inline glm::vec3 randomColor() 
+    {
+        // picks a random color from the predefined colors (red, green, blue, yellow)
+        int random = rand() % 4;
+
+        switch (random) 
+            {
+                case 0:
+                    return red;
+                case 1:
+                    return green;
+                case 2:
+                    return blue;
+                case 3:
+                    return yellow;
+                default:
+                    return red;
+            }
+    }
 
 void genesis::populateVertices(std::vector<Vertex>* vertices) 
     {
@@ -62,7 +82,18 @@ void genesis::populateVertices(std::vector<Vertex>* vertices)
                                 float y = (float) j / (subdivisions - 1);
 
                                 positions.push_back(lerp(lerp(p1, p2, x), lerp(p4, p3, x), y));
-                                colors.push_back(lerp(lerp(red, green, x), lerp(blue, yellow, y), 0.5f));
+                                glm::vec3 random_color_1 = randomColor();
+                                glm::vec3 random_color_2 = randomColor();
+
+                                int random_push_back = rand() % 2;
+                                if (random_push_back == 0) 
+                                    {
+                                        colors.push_back(lerp(lerp(red, random_color_1, x), lerp(green, random_color_2, y), 0.5f));
+                                    }
+                                else 
+                                    {
+                                        colors.push_back(lerp(lerp(random_color_1, green, x), lerp(blue, random_color_2, y), 0.5f));
+                                    }
                             }
                     }
 
