@@ -212,7 +212,7 @@ void Reality::_initSyncStructures()
 
 inline void Reality::_resizeWindow(int w, int h)
     {
-        report(LOGGER::INFO, "Matrix - Resizing Window ..");
+        report(LOGGER::VERBOSE, "Matrix - Resizing Window ..");
         _window_extent = { static_cast<uint32_t>(w), static_cast<uint32_t>(h) };
         _architect->setWindowExtent(_window_extent);
         _architect->framebuffer_resized = true;

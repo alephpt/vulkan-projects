@@ -113,8 +113,8 @@ Gateway& Gateway::vertexInput()
                 report(LOGGER::INFO, "\t\t .. Color: %f, %f, %f", vertex.color.x, vertex.color.y, vertex.color.z);
             }
 */
-        auto _binding_description = Vertex::getBindingDescription();
-        auto _attribute_descriptions = Vertex::getAttributeDescriptions();
+        _binding_description = Vertex::getBindingDescription();
+        _attribute_descriptions = Vertex::getAttributeDescriptions();
 
         _vertex_input_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,

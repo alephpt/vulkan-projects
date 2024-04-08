@@ -39,7 +39,7 @@ void genesis::populateVertices(std::vector<Vertex>* vertices)
         const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
         const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
 
-        int subdivisions = 2;
+        int subdivisions = 16;
 
         for (int i = 0; i < subdivisions; i++) 
             {

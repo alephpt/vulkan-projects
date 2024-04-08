@@ -43,6 +43,8 @@ class Gateway {
         VkPipelineColorBlendAttachmentState _color_blend_attachment;
         VkPipelineColorBlendStateCreateInfo _color_blending;
         std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+        VkVertexInputBindingDescription _binding_description;
+        std::array<VkVertexInputAttributeDescription, 2UL> _attribute_descriptions;
        
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
 };
