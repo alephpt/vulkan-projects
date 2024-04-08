@@ -63,7 +63,7 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
 
         // Now we can construct the Command Buffers 
-        _initCommands();
+        _initBuffers();
         _initSyncStructures();
         report(LOGGER::INFO, "Matrix - Initialized ..");
     }
@@ -110,16 +110,18 @@ void Reality::illuminate()
             while (SDL_PollEvent(&_e) != 0) 
                 {
                     if (_e.type == SDL_QUIT) { _quit = !_quit; }
-                    if (_e.window.event == SDL_WINDOWEVENT_MINIMIZED) { _suspended = true; }
-                    if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
-
+                    
                     if (_e.type == SDL_KEYDOWN) 
                         { if (_e.key.keysym.sym == SDLK_ESCAPE) { _quit = !_quit; } }
 
                     if (_e.type == SDL_WINDOWEVENT) 
-                        {
-                            if (_e.window.event == SDL_WINDOWEVENT_RESIZED) 
-                                { _resizeWindow(_e.window.data1, _e.window.data2); }
+                        { 
+                            switch (_e.window.event) 
+                                {
+                                    case SDL_WINDOWEVENT_MINIMIZED: _suspended = true; break;
+                                    case SDL_WINDOWEVENT_RESTORED: _suspended = false; break;
+                                    case SDL_WINDOWEVENT_RESIZED: _resizeWindow(_e.window.data1, _e.window.data2); break;
+                                }
                         }
 
                     _architect->drawFrame();
@@ -144,7 +146,7 @@ void Reality::illuminate()
 
 void Reality::_initFramework() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Frameworks:");
+        report(LOGGER::INFO, "Matrix - Initializing Frameworks ..");
 
         createVulkanInstance(&_architect->instance);
         SDL_Vulkan_CreateSurface(_window, _architect->instance, &_architect->surface);
@@ -183,11 +185,13 @@ void Reality::_initGateway(std::future<void>& startingGateway, std::promise<void
         return;
     }
 
-void Reality::_initCommands() 
+void Reality::_initBuffers() 
     {
         report(LOGGER::INFO, "Matrix - Initializing Command Operator ..");
 
         _architect->createCommandPool();
+        _architect->constructVertexBuffer();
+        _architect->createCommandBuffers();
      
         return;
     }
@@ -206,7 +210,7 @@ void Reality::_initSyncStructures()
     // RESIZE WINDOW //
     ///////////////////
 
-void Reality::_resizeWindow(int w, int h)
+inline void Reality::_resizeWindow(int w, int h)
     {
         report(LOGGER::INFO, "Matrix - Resizing Window ..");
         _window_extent = { static_cast<uint32_t>(w), static_cast<uint32_t>(h) };

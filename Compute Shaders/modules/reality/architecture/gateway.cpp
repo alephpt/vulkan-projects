@@ -8,13 +8,15 @@
 
 Gateway::Gateway()
     { 
-        report(LOGGER::ILINE, "\t .. Initializing Pipeline ..");
+        report(LOGGER::DLINE, "\t .. Initializing Pipeline ..");
         clear(); 
+
+        report(LOGGER::DLINE, "\t .. Populating Vertices ..");
     }
 
 Gateway::~Gateway()
     { 
-        report(LOGGER::DEBUG, "Gateway - Deconstructing Pipeline ..");
+        report(LOGGER::INFO, "Gateway - Deconstructing Pipeline ..");
         clear();
     }
 
@@ -70,7 +72,7 @@ void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits
             .pName = "main"
         };
 
-        _shader_stages.push_back(_shader_stage);
+        _shader_stages.push_back(_shader_stage); // We can pass this by reference and make this a static inline function
 
         return;
     }
@@ -78,6 +80,8 @@ void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits
 Gateway& Gateway::shaders(VkDevice* logical_device)
     {
         report(LOGGER::DLINE, "\t .. Creating Shaders ..");
+
+        genesis::populateVertices(&vertices);
 
         std::vector<char> _vert_shader_code = genesis::loadFile(vert_shader);
         VkShaderModule _vert_shader_module;
@@ -101,12 +105,24 @@ Gateway& Gateway::vertexInput()
     {
         report(LOGGER::DLINE, "\t .. Creating Vertex Input State ..");
 
+        /*
+        report(LOGGER::INFO, "\t\t .. Vertices: %d", vertices.size());
+        
+        for (auto vertex : vertices) 
+            { 
+                report(LOGGER::INFO, "\t\t .. Vertex: %f, %f, %f", vertex.position.x, vertex.position.y, vertex.position.z); 
+                report(LOGGER::INFO, "\t\t .. Color: %f, %f, %f", vertex.color.x, vertex.color.y, vertex.color.z);
+            }
+*/
+        auto _binding_description = Vertex::getBindingDescription();
+        auto _attribute_descriptions = Vertex::getAttributeDescriptions();
+
         _vertex_input_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-                .vertexBindingDescriptionCount = 0,
-                .pVertexBindingDescriptions = nullptr,
-                .vertexAttributeDescriptionCount = 0,
-                .pVertexAttributeDescriptions = nullptr
+                .vertexBindingDescriptionCount = 1,
+                .pVertexBindingDescriptions = &_binding_description,
+                .vertexAttributeDescriptionCount = static_cast<uint32_t>(_attribute_descriptions.size()),
+                .pVertexAttributeDescriptions = _attribute_descriptions.data()
             };
 
         return *this;

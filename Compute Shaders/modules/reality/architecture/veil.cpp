@@ -60,7 +60,7 @@ static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_atta
 
 void Architect::createRenderPass()
     {
-        report(LOGGER::ILINE, "\t .. Creating Render Pass ..");
+        report(LOGGER::DLINE, "\t .. Creating Render Pass ..");
 
         //log();
         VkAttachmentDescription _color_attachment = colorAttachment();

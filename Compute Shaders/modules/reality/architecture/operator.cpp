@@ -1,5 +1,6 @@
 #include "../architect.h"
 
+#include <cstring>
 
     ///////////////////////////////////
     // PIPELINE GATEWAY CONSTRUCTION //
@@ -7,6 +8,7 @@
 
 void Architect::constructGateway() 
     {
+        report(LOGGER::DEBUG, "Operator - Constructing Gateway ..");
         gateway = new Gateway();
 
         gateway->shaders(&logical_device)
@@ -29,6 +31,7 @@ void Architect::constructGateway()
 
 void Architect::destroyGateway()
     {
+        report(LOGGER::DEBUG, "Operator - Destroying Gateway ..");
         vkDestroyPipeline(logical_device, gateway->pipeline, nullptr);
         vkDestroyPipelineLayout(logical_device, gateway->pipeline_layout, nullptr);
         delete gateway;
@@ -72,11 +75,18 @@ void Architect::createCommandPool()
         VkCommandPoolCreateInfo _create_info = createCommandPoolInfo(queues.indices.graphics_family.value());
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+            { VK_TRY(vkCreateCommandPool(logical_device, &_create_info, nullptr, &frames[i].command_pool)); }
+
+        return;
+    }
+
+void Architect::createCommandBuffers() 
+    {
+        report(LOGGER::DLINE, "\t .. Creating Command Buffers ..");
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                VK_TRY(vkCreateCommandPool(logical_device, &_create_info, nullptr, &frames[i].command_pool));
-
                 VkCommandBufferAllocateInfo _alloc_info = createCommandBuffers(i);
-
                 VK_TRY(vkAllocateCommandBuffers(logical_device, &_alloc_info, &frames[i].command_buffer));
             }
 
@@ -140,6 +150,10 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gateway->pipeline);
 
+        VkBuffer _vertex_buffers[] = {vertex.buffer};
+        VkDeviceSize _offsets[] = {0};
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
+
         VkViewport _viewport = getViewport(swapchain.extent);
         vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
 
@@ -166,6 +180,81 @@ void Architect::resetCommandBuffers()
 
         return;
     }
+
+    
+    //////////////////////////
+    // VERTEX BUFFER OBJECT //
+    //////////////////////////
+
+
+static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
+    {
+        report(LOGGER::DLINE, "\t .. Creating Buffer Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = size,
+            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = nullptr
+        };
+    }
+
+static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::DLINE, "\t .. Finding Memory Type ..");
+
+        VkPhysicalDeviceMemoryProperties mem_props;
+        vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
+
+        for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++)
+            { if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties)
+                    { return i; } }
+
+        VK_TRY(VK_ERROR_INITIALIZATION_FAILED);
+        return -1;
+    }
+
+static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physical_device, VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::DLINE, "\t .. Creating Memory Allocate Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .allocationSize = mem_reqs.size,
+            .memoryTypeIndex = findMemoryType(physical_device, mem_reqs.memoryTypeBits, properties)
+        };
+    }
+
+void Architect::constructVertexBuffer() 
+    {
+        report(LOGGER::DLINE, "\t .. Creating Vertex Buffer ..");
+
+        VkBufferCreateInfo _buffer_info = getBufferInfo(sizeof(gateway->vertices[0]) * gateway->vertices.size());
+        VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &vertex.buffer));
+
+        VkMemoryRequirements _mem_reqs;
+        vkGetBufferMemoryRequirements(logical_device, vertex.buffer, &_mem_reqs);
+
+        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(physical_device, _mem_reqs, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &vertex.memory));
+
+        vkBindBufferMemory(logical_device, vertex.buffer, vertex.memory, 0);
+
+        void* data;
+        vkMapMemory(logical_device, vertex.memory, 0, _buffer_info.size, 0, &data);
+        
+        std::memcpy(data, gateway->vertices.data(), (size_t) _buffer_info.size);
+
+        vkUnmapMemory(logical_device, vertex.memory);
+
+        return;
+    }
+
 
 
     /////////////////////

@@ -10,6 +10,7 @@ class Gateway {
 
         VkPipeline pipeline;
         VkPipelineLayout pipeline_layout;
+        std::vector<Vertex> vertices = {};
 
         Gateway& shaders(VkDevice*);
         Gateway& vertexInput();

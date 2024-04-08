@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../components/lexicon.h"
+#include "../../../components/vertex.h"
 
 #include <optional>
 #include <vector>
@@ -99,7 +100,11 @@ struct QueuePresentContext
         VkPresentInfoKHR present_info;
     };
 
-
+struct VertexContext 
+    {
+        VkBuffer buffer;
+        VkDeviceMemory memory;
+    };
 
     /////////////////////////
     // DEBUGGER PROTOTYPES //

@@ -297,3 +297,12 @@ void Architect::recreateSwapChain()
         return;
     }
 
+void Architect::destroyVertexContext() 
+    {
+        report(LOGGER::VERBOSE, "Architect - Destroying Vertex Context ..");
+
+        vkDestroyBuffer(logical_device, vertex.buffer, nullptr);
+        vkFreeMemory(logical_device, vertex.memory, nullptr);
+
+        return;
+    }

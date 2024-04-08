@@ -1,5 +1,6 @@
 #include "genesis.h"
 #include "./lexicon.h"
+#include <fstream>
 
 std::vector<char> genesis::loadFile(const std::string& filename) 
     {
@@ -16,4 +17,52 @@ std::vector<char> genesis::loadFile(const std::string& filename)
         file.close();
 
         return buffer;
+    }
+
+static inline glm::vec3 lerp(glm::vec3 a, glm::vec3 b, float t)
+    {
+        return a + t * (b - a);
+    }
+
+void genesis::populateVertices(std::vector<Vertex>* vertices) 
+    {
+        std::vector<glm::vec3> positions = {};
+        std::vector<glm::vec3> colors = {};
+
+        const glm::vec3 red = glm::vec3(1.0f, 0.0f, 0.0f);
+        const glm::vec3 green = glm::vec3(0.0f, 1.0f, 0.0f);
+        const glm::vec3 blue = glm::vec3(0.0f, 0.0f, 1.0f);
+        const glm::vec3 yellow = glm::vec3(1.0f, 1.0f, 0.0f);
+
+        const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.0f);
+        const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
+        const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
+        const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
+
+        int subdivisions = 2;
+
+        for (int i = 0; i < subdivisions; i++) 
+            {
+                for (int j = 0; j < subdivisions; j++) {
+                    float x = (float) i / (subdivisions - 1);
+                    float y = (float) j / (subdivisions - 1);
+
+                    positions.push_back(lerp(lerp(p1, p2, x), lerp(p4, p3, x), y));
+                    colors.push_back(lerp(lerp(red, green, x), lerp(blue, yellow, y), 0.5f));
+                }
+            }
+
+        for (int i = 0; i < subdivisions - 1; i++) 
+            {
+                for (int j = 0; j < subdivisions - 1; j++) 
+                    {
+                        vertices->push_back({positions[i * subdivisions + j], colors[i * subdivisions + j]});
+                        vertices->push_back({positions[i * subdivisions + j + 1], colors[i * subdivisions + j + 1]});
+                        vertices->push_back({positions[(i + 1) * subdivisions + j + 1], colors[(i + 1) * subdivisions + j + 1]});
+
+                        vertices->push_back({positions[i * subdivisions + j], colors[i * subdivisions + j]});
+                        vertices->push_back({positions[(i + 1) * subdivisions + j + 1], colors[(i + 1) * subdivisions + j + 1]});
+                        vertices->push_back({positions[(i + 1) * subdivisions + j], colors[(i + 1) * subdivisions + j]});
+                    }
+            }
     }

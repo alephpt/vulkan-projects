@@ -15,6 +15,7 @@ class Architect {
         VkRenderPass render_pass;
         QueuePresentContext present;
         Gateway *gateway;
+        VertexContext vertex;
 
         bool framebuffer_resized = false;
 
@@ -41,8 +42,12 @@ class Architect {
         void createFrameBuffers();
 
         void createCommandPool();
+        void createCommandBuffers();
         void createSyncObjects();
         
+        void constructVertexBuffer();
+        void destroyVertexContext();
+
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
 
