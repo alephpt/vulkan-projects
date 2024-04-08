@@ -130,5 +130,10 @@ void Architect::drawFrame()
     }
 
 
+    //////////////////////
+    // TRANSITION IMAGE //
+    //////////////////////
 
-//void Architect::transitionImage()
+void Architect::transitionImage() {
+    
+}

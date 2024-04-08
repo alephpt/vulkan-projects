@@ -8,7 +8,7 @@
     do {                                                                \
         VkResult err = x;                                               \
         if (err) {                                                      \
-            printf(" [ERROR] Vulkan: {}", err);    \
+            fprintf(stderr, " [ERROR] Vulkan: %s\n", err);              \
             abort();                                                    \
         }                                                               \
     } while (0)

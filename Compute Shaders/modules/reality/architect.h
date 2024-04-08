@@ -45,6 +45,8 @@ class Architect {
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
 
+        void transitionImage();
+
         void constructGateway();
         void destroyGateway();
         
