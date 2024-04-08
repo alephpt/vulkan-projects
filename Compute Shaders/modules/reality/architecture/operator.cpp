@@ -131,7 +131,7 @@ static inline VkRect2D getScissor(VkExtent2D extent)
 
 void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
-        report(LOGGER::DLINE, "\t .. Recording Command Buffer %d ..", i);
+        report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
 
         VkCommandBufferBeginInfo _begin_info = createBeginInfo();
         VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));

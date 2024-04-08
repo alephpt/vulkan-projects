@@ -64,7 +64,7 @@ static inline VkSubmitInfo2 getSubmitInfo2(VkSemaphoreSubmitInfo* wait_info, VkC
 
 void Architect::drawFrame() 
     {
-        report(LOGGER::ILINE, "\t\t .. Drawing Frame %d ..", _frame_ct);
+        report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
 
@@ -90,7 +90,7 @@ void Architect::drawFrame()
                 VK_TRY(result);
             }
 
-        report(LOGGER::VLINE, "\t\t .. Acquired Image Index: %d", _image_index);
+        report(LOGGER::VLINE, "\t .. Acquired Image Index: %d", _image_index);
 
         VkCommandBuffer _command_buffer = current_frame().command_buffer;
 
