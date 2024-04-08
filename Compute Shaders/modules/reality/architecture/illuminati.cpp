@@ -64,22 +64,33 @@ static inline VkSubmitInfo2 getSubmitInfo2(VkSemaphoreSubmitInfo* wait_info, VkC
 
 void Architect::drawFrame() 
     {
-        report(LOGGER::INFO, "Matrix - Drawing Frame %d ..", _frame_ct);
+        report(LOGGER::ILINE, "\t\t .. Drawing Frame %d ..", _frame_ct);
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
 
-        report(LOGGER::INFO, "Matrix - Acquiring Image Index ..");
-        log();
+        //log();
         uint32_t _image_index;
-        VK_TRY(vkAcquireNextImageKHR(
+        VkResult result = vkAcquireNextImageKHR(
                             logical_device, 
                             swapchain.instance, 
                             UINT64_MAX, 
                             current_frame().image_available, 
                             VK_NULL_HANDLE, 
                             &_image_index
-                        ));
-        report(LOGGER::INFO, "Matrix - Image Index: %d", _image_index);
+                        );
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+            {
+                recreateSwapChain();
+                return;
+            }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+            {
+                report(LOGGER::ERROR, "Failed to acquire swap chain image!");
+                VK_TRY(result);
+            }
+
+        report(LOGGER::VLINE, "\t\t .. Acquired Image Index: %d", _image_index);
 
         VkCommandBuffer _command_buffer = current_frame().command_buffer;
 
@@ -100,7 +111,18 @@ void Architect::drawFrame()
         present.present_info = {};
         present.present_info = getPresentInfoKHR(_signal_semaphores, _swapchains, &_image_index);
 
-        VK_TRY(vkQueuePresentKHR(queues.present, &present.present_info));
+        result = vkQueuePresentKHR(queues.present, &present.present_info);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized)
+            {
+                framebuffer_resized = false;
+                recreateSwapChain();
+            }
+        else if (result != VK_SUCCESS)
+            {
+                report(LOGGER::ERROR, "Failed to present swap chain image!");
+                VK_TRY(result);
+            }
 
         _frame_ct = (_frame_ct + 1) % MAX_FRAMES_IN_FLIGHT;
 
