@@ -29,7 +29,6 @@ void Architect::constructGateway()
 
 void Architect::destroyGateway()
     {
-        
         vkDestroyPipeline(logical_device, gateway->pipeline, nullptr);
         vkDestroyPipelineLayout(logical_device, gateway->pipeline_layout, nullptr);
         delete gateway;

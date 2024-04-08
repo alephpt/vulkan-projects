@@ -30,7 +30,7 @@ struct DeletionQueue
 
         void push_fn(std::function<void()> fn) { deletors.push_back(fn); }
         void flush() { for (auto it = deletors.rbegin(); it != deletors.rend(); it++) { (*it)(); } deletors.clear(); }
-    }
+    };
 
 struct FrameData 
     {

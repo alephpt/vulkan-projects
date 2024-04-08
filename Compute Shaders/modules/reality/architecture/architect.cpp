@@ -18,7 +18,7 @@ Architect::Architect()
 
 Architect::~Architect() 
     {
-        _blankContext();
+        queues.deletion.flush();
 
         destroySwapChain();
 
@@ -31,6 +31,8 @@ Architect::~Architect()
                 vkDestroyCommandPool(logical_device, frames[i].command_pool, nullptr);
             }
 
+        destroyGateway();
+
         report(LOGGER::INFO, "Reality - Destroying Gateway and Render Pass ..");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
 
@@ -42,6 +44,9 @@ Architect::~Architect()
 
         report(LOGGER::INFO, "Reality - Destroying Instance ..");
         vkDestroyInstance(instance, nullptr);
+
+        _blankContext();
+        
     }
 
 
@@ -91,20 +96,6 @@ static SwapChainContext initSwapchain() {
             .details = initSwapChainDetails()
         };
 }
-
-
-void initContext(Architect *context) 
-    {
-        report(LOGGER::VLINE, "\t .. Initializing Context ..");
-
-        context->instance = VK_NULL_HANDLE;
-        context->physical_device = VK_NULL_HANDLE;
-        context->logical_device = VK_NULL_HANDLE;
-        context->surface = VK_NULL_HANDLE;
-        context->render_pass = VK_NULL_HANDLE;
-        context->queues = initQueues();
-        context->swapchain = initSwapchain();
-    }
 
 
 void Architect::_blankContext() 

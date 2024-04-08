@@ -15,7 +15,7 @@ Gateway::Gateway()
 Gateway::~Gateway()
     { 
         report(LOGGER::DEBUG, "Gateway - Deconstructing Pipeline ..");
-//        free(_shader_modules.data());
+        clear();
     }
 
 void Gateway::clear()

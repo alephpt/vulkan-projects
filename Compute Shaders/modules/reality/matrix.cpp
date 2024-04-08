@@ -69,21 +69,17 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
 Reality::~Reality() 
     {
-        report(LOGGER::INFO, "Reality - Cleaning up the Matrix ..");
+        report(LOGGER::INFO, "Reality - Deconstructing the Matrix ..");
         vkDeviceWaitIdle(_architect->logical_device);
 
-
-        report(LOGGER::INFO, "Reality - Destroying Debug Messenger ..");
+        report(LOGGER::INFO, "\t\t .. Destroying Debug Messenger ..");
         if (USE_VALIDATION_LAYERS) 
             { destroyDebugUtilsMessengerEXT(_architect->instance, _debug_messenger, nullptr); }
         
-        report(LOGGER::INFO, "Reality - Destroying Gateway ..");
-        _architect->destroyGateway();
-
-        report(LOGGER::INFO, "Reality - Destroying Context ..");
+        report(LOGGER::INFO, "\t\t .. Destroying Instance ..");
         delete _architect;
 
-        report(LOGGER::INFO, "Reality - Destroying Window ..");
+        report(LOGGER::INFO, "\t\t .. Destroying Window ..");
         if (initialized) 
             { SDL_DestroyWindow(_window); }
 

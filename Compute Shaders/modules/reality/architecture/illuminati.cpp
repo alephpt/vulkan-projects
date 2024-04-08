@@ -67,6 +67,7 @@ void Architect::drawFrame()
         report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
+        current_frame().deletion_queue.flush();
 
         //log();
         uint32_t _image_index;

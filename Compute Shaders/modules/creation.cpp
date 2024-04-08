@@ -16,6 +16,15 @@ Existence::Existence()
         _actuality = nullptr;
     }
 
+Existence::~Existence()
+    {
+        report(LOGGER::INFO, "Existence - The End is Nigh ..");
+
+        if (_essence != nullptr) {
+            Existence::cease(); // This command is kind of useless  
+        }
+    }
+
 // Singleton to ensure only one instance of Existence is created.
 Existence* Existence::manifest()
     {
@@ -53,6 +62,7 @@ void Existence::actualize()
     {
         report(LOGGER::INFO, "Existence - Actualizing ..");
 
+        // Do we want to pull top level SDL logic out to here?
         _actuality->illuminate();
         //_actuality->illuminate(Existence::materialize);   
     }
