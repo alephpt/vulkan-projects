@@ -24,22 +24,22 @@ static inline glm::vec3 lerp(glm::vec3 a, glm::vec3 b, float t)
         return a + t * (b - a);
     }
 
+static const glm::vec3 red = glm::vec3(1.0f, 0.0f, 0.0f);
+static const glm::vec3 green = glm::vec3(0.0f, 1.0f, 0.0f);
+static const glm::vec3 blue = glm::vec3(0.0f, 0.0f, 1.0f);
+static const glm::vec3 yellow = glm::vec3(1.0f, 1.0f, 0.0f);
+
+static const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.0f);
+static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
+static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
+static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
+
+static const int subdivisions = 1;
+
 void genesis::populateVertices(std::vector<Vertex>* vertices) 
     {
         std::vector<glm::vec3> positions = {};
         std::vector<glm::vec3> colors = {};
-
-        const glm::vec3 red = glm::vec3(1.0f, 0.0f, 0.0f);
-        const glm::vec3 green = glm::vec3(0.0f, 1.0f, 0.0f);
-        const glm::vec3 blue = glm::vec3(0.0f, 0.0f, 1.0f);
-        const glm::vec3 yellow = glm::vec3(1.0f, 1.0f, 0.0f);
-
-        const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.0f);
-        const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
-        const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
-        const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
-
-        int subdivisions = 16;
 
         for (int i = 0; i < subdivisions; i++) 
             {
