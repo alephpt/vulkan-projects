@@ -43,13 +43,14 @@ void genesis::populateVertices(std::vector<Vertex>* vertices)
 
         for (int i = 0; i < subdivisions; i++) 
             {
-                for (int j = 0; j < subdivisions; j++) {
-                    float x = (float) i / (subdivisions - 1);
-                    float y = (float) j / (subdivisions - 1);
+                for (int j = 0; j < subdivisions; j++) 
+                    {
+                        float x = (float) i / (subdivisions - 1);
+                        float y = (float) j / (subdivisions - 1);
 
-                    positions.push_back(lerp(lerp(p1, p2, x), lerp(p4, p3, x), y));
-                    colors.push_back(lerp(lerp(red, green, x), lerp(blue, yellow, y), 0.5f));
-                }
+                        positions.push_back(lerp(lerp(p1, p2, x), lerp(p4, p3, x), y));
+                        colors.push_back(lerp(lerp(red, green, x), lerp(blue, yellow, y), 0.5f));
+                    }
             }
 
         for (int i = 0; i < subdivisions - 1; i++) 
