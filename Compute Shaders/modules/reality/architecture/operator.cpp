@@ -160,7 +160,7 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkRect2D _scissor = getScissor(swapchain.extent);
         vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
-        vkCmdDraw(command_buffer, 3, 1, 0, 0);
+        vkCmdDraw(command_buffer, gateway->vertices.size(), 1, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 

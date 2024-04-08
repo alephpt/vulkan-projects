@@ -12,6 +12,7 @@ Gateway::Gateway()
         clear(); 
 
         report(LOGGER::DLINE, "\t .. Populating Vertices ..");
+        genesis::populateVertices(&vertices);
     }
 
 Gateway::~Gateway()
@@ -80,8 +81,6 @@ void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits
 Gateway& Gateway::shaders(VkDevice* logical_device)
     {
         report(LOGGER::DLINE, "\t .. Creating Shaders ..");
-
-        genesis::populateVertices(&vertices);
 
         std::vector<char> _vert_shader_code = genesis::loadFile(vert_shader);
         VkShaderModule _vert_shader_module;
