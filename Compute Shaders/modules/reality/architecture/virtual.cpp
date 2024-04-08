@@ -124,28 +124,6 @@ void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, ui
     };
 }
 
-static void logCreateInfo(VkSwapchainCreateInfoKHR* create_info) 
-    {
-        report(LOGGER::VLINE, "\t .. Logging SwapChain Create Info ..");
-
-        report(LOGGER::VLINE, "\t\t .. Surface: ", create_info->surface);
-        report(LOGGER::VLINE, "\t\t .. Min Image Count: ", create_info->minImageCount);
-        report(LOGGER::VLINE, "\t\t .. Image Format: ", create_info->imageFormat);
-        report(LOGGER::VLINE, "\t\t .. Image Color Space: ", create_info->imageColorSpace);
-        report(LOGGER::VLINE, "\t\t .. Image Extent: ", create_info->imageExtent.width, " x ", create_info->imageExtent.height);
-        report(LOGGER::VLINE, "\t\t .. Image Array Layers: ", create_info->imageArrayLayers);
-        report(LOGGER::VLINE, "\t\t .. Image Usage: ", create_info->imageUsage);
-        report(LOGGER::VLINE, "\t\t .. Image Sharing Mode: ", create_info->imageSharingMode);
-        report(LOGGER::VLINE, "\t\t .. Queue Family Index Count: ", create_info->queueFamilyIndexCount);
-        report(LOGGER::VLINE, "\t\t .. Pre Transform: ", create_info->preTransform);
-        report(LOGGER::VLINE, "\t\t .. Composite Alpha: ", create_info->compositeAlpha);
-        report(LOGGER::VLINE, "\t\t .. Present Mode: ", create_info->presentMode);
-        report(LOGGER::VLINE, "\t\t .. Clipped: ", create_info->clipped);
-        report(LOGGER::VLINE, "\t\t .. Old Swapchain: ", create_info->oldSwapchain);
-
-        return;
-    }
-
 void Architect::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
@@ -158,7 +136,6 @@ void Architect::constructSwapChain()
         //log();
         VkSwapchainCreateInfoKHR _create_info = {}; // TODO: This could be 1 line
         createSwapchainInfoKHR(&_create_info, _image_count);
-        //logCreateInfo(&_create_info);
 
         // Add Queue Family Sharing if Graphics and Present Queues are Different
         if (queues.indices.graphics_family != queues.indices.present_family)
@@ -231,7 +208,6 @@ void Architect::constructImageViews()
 
         return;
     }
-
 
     ///////////////////////////
     // FRAME BUFFER CREATION //

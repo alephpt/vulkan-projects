@@ -3,6 +3,12 @@
 #include "./atomic.h"
 
 
+/*
+    The Gateway class is a pipeline builder that allows for the creation of a graphics pipeline
+    and is responsible for the creation of the pipeline layout, shaders, and other pipeline related
+    configurations.
+*/
+
 class Gateway {
     public:
 	    Gateway();

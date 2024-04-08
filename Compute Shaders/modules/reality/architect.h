@@ -3,6 +3,7 @@
 #include "./architecture/gateway.h"
 #include "../../components/lexicon.h"
 
+
 class Architect {
     public:
         VkInstance instance;
@@ -28,7 +29,7 @@ class Architect {
 
         bool deviceProvisioned(VkPhysicalDevice);
         void createPhysicalDevice();
-        void createLogicalDevice();    
+        void createLogicalDevice();  
 
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
         void querySwapChainDetails();

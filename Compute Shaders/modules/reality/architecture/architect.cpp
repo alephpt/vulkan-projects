@@ -3,7 +3,6 @@
 #include <set>
 #include <string>
 
-
     // Get Current Frame
 FrameData& Architect::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
