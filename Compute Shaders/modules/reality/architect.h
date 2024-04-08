@@ -10,12 +10,13 @@ class Architect {
         VkDevice logical_device;
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
         VkSurfaceKHR surface;
-        VkExtent2D window_extent { 800, 600 };
         Queues queues;
         SwapChainContext swapchain;
         VkRenderPass render_pass;
         QueuePresentContext present;
         Gateway *gateway;
+
+        bool framebuffer_resized = false;
 
         Architect();
         ~Architect();
@@ -56,7 +57,6 @@ class Architect {
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         FrameData& current_frame();
         int _frame_ct = 0;
-        bool framebuffer_resized = false;
 
         void logQueues();
         void logSwapChain();

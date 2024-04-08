@@ -101,7 +101,7 @@ VkRenderPassBeginInfo Architect::getRenderPassInfo(size_t i)
                 .framebuffer = swapchain.framebuffers[i],
                 .renderArea = {
                     .offset = {0, 0},
-                    .extent = window_extent
+                    .extent = swapchain.extent
                 },
                 .clearValueCount = 1,
                 .pClearValues = &CLEAR_COLOR

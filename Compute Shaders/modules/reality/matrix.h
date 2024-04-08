@@ -19,6 +19,7 @@ class Reality {
     private:
         std::string _application_name;
         bool _suspended = false;
+        VkExtent2D _window_extent;
 
         struct SDL_Window* _window = nullptr;
         Architect* _architect;
@@ -30,4 +31,5 @@ class Reality {
         void _initGateway(std::future<void>&, std::promise<void>&);
         void _initCommands();
         void _initSyncStructures();
+        void _resizeWindow(int, int);
 };

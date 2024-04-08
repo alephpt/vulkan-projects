@@ -18,11 +18,12 @@ Architect::Architect()
 
 Architect::~Architect() 
     {
+        report(LOGGER::INFO, "Architect - Destroying Context ..");
         queues.deletion.flush();
 
         destroySwapChain();
 
-        report(LOGGER::INFO, "Reality - Destroying Semaphores, Fences and Command Pools ..");
+        report(LOGGER::DLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
@@ -33,16 +34,16 @@ Architect::~Architect()
 
         destroyGateway();
 
-        report(LOGGER::INFO, "Reality - Destroying Gateway and Render Pass ..");
+        report(LOGGER::DLINE, "\t .. Destroying Gateway and Render Pass ..");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
 
-        report(LOGGER::INFO, "Reality - Destroying Logical Device ..");
+        report(LOGGER::DLINE, "\t .. Destroying Logical Device ..");
         vkDestroyDevice(logical_device, nullptr);
 
-        report(LOGGER::INFO, "Reality - Destroying Surface ..");
+        report(LOGGER::DLINE, "\t .. Destroying Surface ..");
         vkDestroySurfaceKHR(instance, surface, nullptr);
 
-        report(LOGGER::INFO, "Reality - Destroying Instance ..");
+        report(LOGGER::DLINE, "\t .. Destroying Instance ..");
         vkDestroyInstance(instance, nullptr);
 
         _blankContext();
@@ -100,6 +101,8 @@ static SwapChainContext initSwapchain() {
 
 void Architect::_blankContext() 
     {
+        report(LOGGER::INFO, "Architect - No Context ..");
+
         instance = VK_NULL_HANDLE;
         physical_device = VK_NULL_HANDLE;
         logical_device = VK_NULL_HANDLE;
@@ -112,7 +115,6 @@ void Architect::_blankContext()
 // This should not be done like this
 void Architect::setWindowExtent(VkExtent2D extent) 
     {
-        window_extent = extent;
         swapchain.extent = extent;
         swapchain.details.extent = extent;
     }

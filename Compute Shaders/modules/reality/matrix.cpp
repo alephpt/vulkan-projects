@@ -13,29 +13,30 @@
 
 Reality::Reality(std::string name, VkExtent2D window_extent)
     {
-        report(LOGGER::INFO, "Reality - Welcome to the Matrix ..");
+        report(LOGGER::INFO, "Matrix - Welcome to Reality ..");
 
         // Set the application name and window extent
         _application_name = name;
+        _window_extent = window_extent;
         _architect = new Architect();
-        _architect->setWindowExtent(window_extent);
+        _architect->setWindowExtent(_window_extent);
 
         // Initialize SDL and create a window
         SDL_Init(SDL_INIT_VIDEO);
-        SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
+        SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 
         _window = SDL_CreateWindow(
             name.c_str(),
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            _architect->window_extent.width,
-            _architect->window_extent.height,
+            _window_extent.width,
+            _window_extent.height,
             window_flags
         );
 
         if (_window == nullptr) 
             {
-                report(LOGGER::ERROR, "Reality - Failed to create SDL window ..");
+                report(LOGGER::ERROR, "Matrix - Failed to create SDL window ..");
                 return;
             }
 
@@ -64,34 +65,38 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Now we can construct the Command Buffers 
         _initCommands();
         _initSyncStructures();
-        report(LOGGER::INFO, "Reality - Matrix Initialized ..");
+        report(LOGGER::INFO, "Matrix - Initialized ..");
     }
 
 Reality::~Reality() 
     {
-        report(LOGGER::INFO, "Reality - Deconstructing the Matrix ..");
+        report(LOGGER::INFO, "Matrix - Deconstructing ..");
         vkDeviceWaitIdle(_architect->logical_device);
 
-        report(LOGGER::INFO, "\t\t .. Destroying Debug Messenger ..");
         if (USE_VALIDATION_LAYERS) 
-            { destroyDebugUtilsMessengerEXT(_architect->instance, _debug_messenger, nullptr); }
-        
-        report(LOGGER::INFO, "\t\t .. Destroying Instance ..");
-        delete _architect;
+            { 
+                report(LOGGER::DLINE, "\t .. Destroying Debug Messenger ..");
+                destroyDebugUtilsMessengerEXT(_architect->instance, _debug_messenger, nullptr); 
+            }
 
-        report(LOGGER::INFO, "\t\t .. Destroying Window ..");
         if (initialized) 
-            { SDL_DestroyWindow(_window); }
+            {         
+                report(LOGGER::DLINE, "\t .. Destroying Architecture ..");
+                delete _architect;
 
-        SDL_Quit();
+                report(LOGGER::DLINE, "\t .. Destroying Window ..");
+                SDL_DestroyWindow(_window); 
+
+                SDL_Quit();
+            }
+        
+        report(LOGGER::INFO, "Matrix - Destroyed ..");
     }
 
 
     /////////////////////////
     // TOP LEVEL FUNCTIONS //
     /////////////////////////
-
-    // Main Loop
 
 void Reality::illuminate()
 //void Reality::illuminate(fnManifest fnManifest)
@@ -101,8 +106,6 @@ void Reality::illuminate()
         SDL_Event _e;
         bool _quit = false;
 
-        printf("Illuminating ..\n");
-
         while (!_quit) {
             while (SDL_PollEvent(&_e) != 0) 
                 {
@@ -111,8 +114,12 @@ void Reality::illuminate()
                     if (_e.window.event == SDL_WINDOWEVENT_RESTORED) { _suspended = false; }
 
                     if (_e.type == SDL_KEYDOWN) 
+                        { if (_e.key.keysym.sym == SDLK_ESCAPE) { _quit = !_quit; } }
+
+                    if (_e.type == SDL_WINDOWEVENT) 
                         {
-                            if (_e.key.keysym.sym == SDLK_ESCAPE) { _quit = !_quit; }
+                            if (_e.window.event == SDL_WINDOWEVENT_RESIZED) 
+                                { _resizeWindow(_e.window.data1, _e.window.data2); }
                         }
 
                     _architect->drawFrame();
@@ -194,4 +201,17 @@ void Reality::_initSyncStructures()
         return;
     }
 
+
+    ///////////////////
+    // RESIZE WINDOW //
+    ///////////////////
+
+void Reality::_resizeWindow(int w, int h)
+    {
+        report(LOGGER::INFO, "Matrix - Resizing Window ..");
+        _window_extent = { static_cast<uint32_t>(w), static_cast<uint32_t>(h) };
+        _architect->setWindowExtent(_window_extent);
+        _architect->framebuffer_resized = true;
+        return;
+    }   
 

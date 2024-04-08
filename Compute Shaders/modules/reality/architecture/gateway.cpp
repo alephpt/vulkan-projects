@@ -20,7 +20,7 @@ Gateway::~Gateway()
 
 void Gateway::clear()
     {
-        report(LOGGER::DLINE, "\t\t .. Clearing Gateway ..");
+        report(LOGGER::DLINE, "\t .. Clearing Gateway ..");
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };

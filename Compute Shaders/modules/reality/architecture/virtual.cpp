@@ -97,7 +97,7 @@ void Architect::querySwapChainDetails()
 
         selectSwapSurfaceFormat(swapchain.support.formats, &swapchain.details.surface_format);
         selectSwapPresentMode(swapchain.support.present_modes, &swapchain.details.present_mode);
-        selectSwapExtent(swapchain.support.capabilities, &window_extent);
+        selectSwapExtent(swapchain.support.capabilities, &swapchain.details.extent);
 
         return;
     }
@@ -148,7 +148,7 @@ static void logCreateInfo(VkSwapchainCreateInfoKHR* create_info)
 
 void Architect::constructSwapChain() 
     {
-        report(LOGGER::DLINE, "\t .. Constructing SwapChain ..");
+        report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
 
         uint32_t _image_count = swapchain.support.capabilities.minImageCount + 1;
 
@@ -217,7 +217,7 @@ VkImageViewCreateInfo Architect::createImageViewInfo(size_t image) {
 
 void Architect::constructImageViews()
     {
-        report(LOGGER::DLINE, "\t .. Constructing Image Views ..");
+        report(LOGGER::VLINE, "\t .. Constructing Image Views ..");
 
         swapchain.image_views.resize(swapchain.images.size());
 
@@ -239,7 +239,7 @@ void Architect::constructImageViews()
 
 void Architect::createFrameBuffers()
     {
-        report(LOGGER::DLINE, "\t .. Creating Frame Buffers ..");
+        report(LOGGER::VLINE, "Architect - Creating Frame Buffers ..");
 
         swapchain.framebuffers.resize(swapchain.image_views.size());
 
@@ -265,7 +265,7 @@ void Architect::createFrameBuffers()
 
 void Architect::destroySwapChain() 
     {
-        report(LOGGER::INFO, "Matrix - Destroying Swapchain ..");
+        report(LOGGER::VERBOSE, "Architect - Destroying Swapchain ..");
 
         for (const auto& _frame_buffers : swapchain.framebuffers) 
             { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
@@ -285,7 +285,7 @@ void Architect::destroySwapChain()
 
 void Architect::recreateSwapChain() 
     {
-        report(LOGGER::INFO, "Matrix - Recreating Swapchain ..");
+        report(LOGGER::VERBOSE, "Architect - Recreating Swapchain ..");
 
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();
