@@ -11,6 +11,6 @@ enum LOGGER {
     VERBOSE
 };
 
-static LOGGER LOG_LEVEL = LOGGER::DEBUG;
+static LOGGER LOG_LEVEL = LOGGER::INFO;
 
 void report(LOGGER log_level, const char* message, ...);
