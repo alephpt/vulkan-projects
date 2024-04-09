@@ -120,7 +120,7 @@ void Reality::illuminate()
                                 {
                                     case SDL_WINDOWEVENT_MINIMIZED: _suspended = true; break;
                                     case SDL_WINDOWEVENT_RESTORED: _suspended = false; break;
-                                    case SDL_WINDOWEVENT_RESIZED: _resizeWindow(_e.window.data1, _e.window.data2); break;
+                                    case SDL_WINDOWEVENT_RESIZED: _resizeWindow(); break;
                                 }
                         }
 
@@ -210,10 +210,17 @@ void Reality::_initSyncStructures()
     // RESIZE WINDOW //
     ///////////////////
 
-inline void Reality::_resizeWindow(int w, int h)
+inline void Reality::_resizeWindow()
     {
         report(LOGGER::VERBOSE, "Matrix - Resizing Window ..");
-        _window_extent = { static_cast<uint32_t>(w), static_cast<uint32_t>(h) };
+
+        int w, h;
+        SDL_Vulkan_GetDrawableSize(_window, &w, &h);
+        
+
+        _window_extent.width = w;
+        _window_extent.height = h;
+
         _architect->setWindowExtent(_window_extent);
         _architect->framebuffer_resized = true;
         return;

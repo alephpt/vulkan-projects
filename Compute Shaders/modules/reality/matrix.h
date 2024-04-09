@@ -30,5 +30,5 @@ class Reality {
         void _initGateway(std::future<void>&, std::promise<void>&);
         void _initBuffers();
         void _initSyncStructures();
-        void _resizeWindow(int, int);
+        void _resizeWindow();
 };

@@ -118,6 +118,7 @@ void Architect::setWindowExtent(VkExtent2D extent)
     {
         swapchain.extent = extent;
         swapchain.details.extent = extent;
+        framebuffer_resized = true;
     }
 
 

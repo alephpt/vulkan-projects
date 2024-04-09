@@ -116,8 +116,8 @@ void Architect::drawFrame()
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized)
             {
-                framebuffer_resized = false;
                 recreateSwapChain();
+                framebuffer_resized = false;
             }
         else if (result != VK_SUCCESS)
             {

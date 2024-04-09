@@ -30,6 +30,11 @@ SwapChainSupportDetails Architect::querySwapChainSupport(VkPhysicalDevice device
                 vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details.present_modes.data());
             }
 
+        details.capabilities.minImageExtent.width = details.capabilities.minImageExtent.width - 10;
+        details.capabilities.minImageExtent.height = details.capabilities.minImageExtent.height - 10;
+        details.capabilities.maxImageExtent.width = details.capabilities.maxImageExtent.width + 10;
+        details.capabilities.maxImageExtent.height = details.capabilities.maxImageExtent.height + 10;
+
         return details;
     }
 
@@ -158,6 +163,15 @@ void Architect::constructSwapChain()
                 _create_info.pQueueFamilyIndices =  nullptr;
             }
 
+        VkSwapchainPresentScalingCreateInfoEXT _scalability_info = {};
+        if (framebuffer_resized) 
+            {
+                report(LOGGER::VERBOSE, "\t .. Framebuffer Resized ..");
+                _scalability_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_SCALING_CREATE_INFO_EXT;
+                _scalability_info.scalingBehavior = VK_PRESENT_SCALING_ASPECT_RATIO_STRETCH_BIT_EXT;
+                _create_info.pNext = &_scalability_info;
+            }
+
         VK_TRY(vkCreateSwapchainKHR(logical_device, &_create_info, nullptr, &swapchain.instance));
 
         vkGetSwapchainImagesKHR(logical_device, swapchain.instance, &_image_count, nullptr);
@@ -269,10 +283,14 @@ void Architect::recreateSwapChain()
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();
 
+        if (framebuffer_resized) {
+            swapchain.support = querySwapChainSupport(physical_device);
+            querySwapChainDetails();
+        }
+
         constructSwapChain();
         constructImageViews();
         createFrameBuffers();
-
         return;
     }
 

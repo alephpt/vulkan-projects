@@ -17,7 +17,6 @@ class Architect {
         QueuePresentContext present;
         Gateway *gateway;
         VertexContext vertex;
-
         bool framebuffer_resized = false;
 
         Architect();
@@ -27,35 +26,19 @@ class Architect {
 
         void setWindowExtent(VkExtent2D);
 
-        bool deviceProvisioned(VkPhysicalDevice);
-        void createPhysicalDevice();
-        void createLogicalDevice();  
-
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
         void querySwapChainDetails();
+        void createPhysicalDevice();
+        void createLogicalDevice(); 
         void constructSwapChain();
-        void recreateSwapChain();
-        void destroySwapChain();
-        
-        void createRenderPass();
-
         void constructImageViews();
         void createFrameBuffers();
-
+        void createRenderPass();
         void createCommandPool();
+        void constructVertexBuffer();
         void createCommandBuffers();
         void createSyncObjects();
-        
-        void constructVertexBuffer();
-        void destroyVertexContext();
-
-        void resetCommandBuffers();
-        void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
-
-        void transitionImage();
-
         void constructGateway();
-        void destroyGateway();
         
         void drawFrame();
 
@@ -68,13 +51,21 @@ class Architect {
         void logSwapChain();
         void logFrameData();
         void _blankContext();
+        bool deviceProvisioned(VkPhysicalDevice);
         void getQueueFamilies(VkPhysicalDevice);
         void setQueueFamilyProperties(unsigned int);
-        void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*, uint32_t);
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
+        void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*, uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
+        void recreateSwapChain();
+        void destroySwapChain();
+        VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
         VkCommandBufferAllocateInfo createCommandBuffers(unsigned int);
-        VkRenderPassBeginInfo getRenderPassInfo(size_t);
+        void destroyVertexContext();
+        void resetCommandBuffers();
+        void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
+        void transitionImage();
+        void destroyGateway();
 };
 
