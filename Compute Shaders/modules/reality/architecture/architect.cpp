@@ -202,6 +202,7 @@ void Architect::setQueueFamilyProperties(unsigned int i) {
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
         { 
             queue_name += "{ Compute } "; 
+
             if (queues.indices.graphics_family.value() != i) 
                 {
                     queues.indices.compute_family = i;
@@ -209,9 +210,18 @@ void Architect::setQueueFamilyProperties(unsigned int i) {
                     report(LOGGER::VLINE, "\t\tCompute Family Set.");
                 }
         }
-        
+
     if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
-        { queue_name += "{ Transfer } "; }
+        { 
+            queue_name += "{ Transfer } "; 
+            
+            if (queues.indices.graphics_family.value() != i) 
+                {
+                    queues.indices.transfer_family = i;
+                    queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                    report(LOGGER::VLINE, "\t\tTransfer Family Set.");
+                }
+        }
 
     if (queue_family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
         { queue_name += "{ Sparse Binding } "; }
@@ -248,6 +258,14 @@ void Architect::getQueueFamilies(VkPhysicalDevice scanned_device)
                     }
 
                 setQueueFamilyProperties(i);
+            }
+
+        // Check if the queues are complete and set the transfer family to the graphics family if not set
+        if (!queues.indices.isComplete()) 
+            { 
+                report(LOGGER::VLINE, "\t\tQueue Families Incomplete. Setting Transfer Family to Graphics Family.");
+                queues.indices.transfer_family = queues.indices.graphics_family.value();
+                queues.indices.compute_family = queues.indices.graphics_family.value();
             }
     }
 

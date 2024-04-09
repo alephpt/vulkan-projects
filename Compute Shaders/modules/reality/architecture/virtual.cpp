@@ -1,4 +1,5 @@
 #include "../architect.h"
+#include <set>
 
     ///////////////////////////////
     //  Virtual Swapchain Layers //
@@ -137,14 +138,16 @@ void Architect::constructSwapChain()
         VkSwapchainCreateInfoKHR _create_info = {}; // TODO: This could be 1 line
         createSwapchainInfoKHR(&_create_info, _image_count);
 
-        // Add Queue Family Sharing if Graphics and Present Queues are Different
-        if (queues.indices.graphics_family != queues.indices.present_family)
+        std::set<uint32_t> _unique_queue_families = { queues.indices.graphics_family.value(), queues.indices.present_family.value(), queues.indices.transfer_family.value(), queues.indices.compute_family.value() };
+        std::vector<uint32_t> _queue_families(_unique_queue_families.begin(), _unique_queue_families.end());
+
+        if (_queue_families.size() > 1) 
             {
-                report(LOGGER::VLINE, "\t .. Concurrent Queue Families Achieved ..");
+                report(LOGGER::VLINE, "\t .. Multiple Queue Families Achieved ..");
 
                 _create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-                _create_info.queueFamilyIndexCount = queues.priorities.size();
-                _create_info.pQueueFamilyIndices = &queues.indices.graphics_family.value();
+                _create_info.queueFamilyIndexCount = static_cast<uint32_t>(_unique_queue_families.size());
+                _create_info.pQueueFamilyIndices = _queue_families.data();
             }
         else
             {
