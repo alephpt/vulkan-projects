@@ -45,7 +45,7 @@ void Architect::destroyGateway()
 
 static VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_index)
     {
-        report(LOGGER::DLINE, "\t .. Creating Command Pool Info ..");
+        report(LOGGER::VLINE, "\t .. Creating Command Pool Info ..");
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .pNext = nullptr,
@@ -57,7 +57,7 @@ static VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_i
 
 VkCommandBufferAllocateInfo Architect::createCommandBuffers(unsigned int n)
     {
-        report(LOGGER::DLINE, "\t .. Creating Command Buffer %d ..", n);
+        report(LOGGER::VLINE, "\t .. Creating Command Buffer %d ..", n);
 
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -70,7 +70,7 @@ VkCommandBufferAllocateInfo Architect::createCommandBuffers(unsigned int n)
 
 void Architect::createCommandPool() 
     {
-        report(LOGGER::DLINE, "\t .. Creating Command Pool ..");
+        report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
         VkCommandPoolCreateInfo _create_info = createCommandPoolInfo(queues.indices.graphics_family.value());
 
@@ -82,7 +82,7 @@ void Architect::createCommandPool()
 
 void Architect::createCommandBuffers() 
     {
-        report(LOGGER::DLINE, "\t .. Creating Command Buffers ..");
+        report(LOGGER::VLINE, "\t .. Creating Command Buffers ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
@@ -171,7 +171,7 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
 
 void Architect::resetCommandBuffers() 
     {
-        report(LOGGER::DLINE, "\t .. Resetting Command Buffers ..");
+        report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
@@ -189,7 +189,7 @@ void Architect::resetCommandBuffers()
 
 static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
     {
-        report(LOGGER::DLINE, "\t .. Creating Buffer Info ..");
+        report(LOGGER::VLINE, "\t .. Creating Buffer Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -205,7 +205,7 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
 
 static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::DLINE, "\t .. Finding Memory Type ..");
+        report(LOGGER::VLINE, "\t .. Finding Memory Type ..");
 
         VkPhysicalDeviceMemoryProperties mem_props;
         vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
@@ -220,7 +220,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
 
 static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physical_device, VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::DLINE, "\t .. Creating Memory Allocate Info ..");
+        report(LOGGER::VLINE, "\t .. Creating Memory Allocate Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -232,7 +232,7 @@ static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physi
 
 void Architect::constructVertexBuffer() 
     {
-        report(LOGGER::DLINE, "\t .. Creating Vertex Buffer ..");
+        report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
         VkBufferCreateInfo _buffer_info = getBufferInfo(sizeof(gateway->vertices[0]) * gateway->vertices.size());
         VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &vertex.buffer));
@@ -285,7 +285,7 @@ static VkFenceCreateInfo createFenceInfo()
 
 void Architect::createSyncObjects() 
     {
-        report(LOGGER::DLINE, "\t .. Creating Sync Objects ..");
+        report(LOGGER::VLINE, "\t .. Creating Sync Objects ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VkSemaphoreCreateInfo semaphore_info = createSemaphoreInfo();

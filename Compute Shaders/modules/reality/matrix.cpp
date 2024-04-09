@@ -75,16 +75,16 @@ Reality::~Reality()
 
         if (USE_VALIDATION_LAYERS) 
             { 
-                report(LOGGER::DLINE, "\t .. Destroying Debug Messenger ..");
+                report(LOGGER::VLINE, "\t .. Destroying Debug Messenger ..");
                 destroyDebugUtilsMessengerEXT(_architect->instance, _debug_messenger, nullptr); 
             }
 
         if (initialized) 
             {         
-                report(LOGGER::DLINE, "\t .. Destroying Architecture ..");
+                report(LOGGER::VLINE, "\t .. Destroying Architecture ..");
                 delete _architect;
 
-                report(LOGGER::DLINE, "\t .. Destroying Window ..");
+                report(LOGGER::VLINE, "\t .. Destroying Window ..");
                 SDL_DestroyWindow(_window); 
 
                 SDL_Quit();

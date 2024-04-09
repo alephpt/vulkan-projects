@@ -28,7 +28,7 @@ bool checkValidationLayerSupport()
 
 void createVulkanInstance(VkInstance *instance) 
     {
-        report(LOGGER::DLINE, "\t .. Instantiating Engine ..");
+        report(LOGGER::VLINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {
             .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
             .pApplicationName = "Vulkan Engine",
@@ -121,7 +121,7 @@ void createVulkanInstance(VkInstance *instance)
 void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
     {
         if (!USE_VALIDATION_LAYERS) return;
-        report(LOGGER::DLINE, "\t .. Creating Listening Agent ..");
+        report(LOGGER::VLINE, "\t .. Creating Listening Agent ..");
 
         VkDebugUtilsMessengerCreateInfoEXT create_info = {
             sType:              VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,

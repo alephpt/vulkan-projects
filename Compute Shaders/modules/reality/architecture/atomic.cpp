@@ -9,7 +9,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
                                                     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, 
                                                     void* pUserData) 
     {
-        report(LOGGER::VERBOSE, "[VALIDATION] - %s", pCallbackData->pMessage);
+        report(LOGGER::ERROR, "[VALIDATION] - %s", pCallbackData->pMessage);
 
         return VK_FALSE;
     }

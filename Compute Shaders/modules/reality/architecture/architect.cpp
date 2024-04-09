@@ -24,7 +24,7 @@ Architect::~Architect()
 
         destroyVertexContext();
 
-        report(LOGGER::DLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
+        report(LOGGER::VLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
@@ -35,16 +35,16 @@ Architect::~Architect()
 
         destroyGateway();
 
-        report(LOGGER::DLINE, "\t .. Destroying Gateway and Render Pass ..");
+        report(LOGGER::VLINE, "\t .. Destroying Gateway and Render Pass ..");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
 
-        report(LOGGER::DLINE, "\t .. Destroying Logical Device ..");
+        report(LOGGER::VLINE, "\t .. Destroying Logical Device ..");
         vkDestroyDevice(logical_device, nullptr);
 
-        report(LOGGER::DLINE, "\t .. Destroying Surface ..");
+        report(LOGGER::VLINE, "\t .. Destroying Surface ..");
         vkDestroySurfaceKHR(instance, surface, nullptr);
 
-        report(LOGGER::DLINE, "\t .. Destroying Instance ..");
+        report(LOGGER::VLINE, "\t .. Destroying Instance ..");
         vkDestroyInstance(instance, nullptr);
 
         _blankContext();
@@ -214,7 +214,7 @@ void Architect::setQueueFamilyProperties(unsigned int i) {
     if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
         { 
             queue_name += "{ Transfer } "; 
-            
+
             if (queues.indices.graphics_family.value() != i) 
                 {
                     queues.indices.transfer_family = i;
@@ -311,7 +311,7 @@ bool Architect::deviceProvisioned(VkPhysicalDevice scanned_device)
 
 void Architect::createPhysicalDevice() 
     {
-        report(LOGGER::DLINE, "\t .. Scanning for Physical Devices ..");
+        report(LOGGER::VLINE, "\t .. Scanning for Physical Devices ..");
 
         uint32_t device_count = 0;
         VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
@@ -367,7 +367,7 @@ VkDeviceQueueCreateInfo Architect::getQueueCreateInfo(uint32_t queue_family)
 
 void Architect::createLogicalDevice()
     {
-        report(LOGGER::DLINE, "\t .. Creating Logical Device ..");
+        report(LOGGER::VLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
