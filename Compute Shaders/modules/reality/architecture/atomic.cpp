@@ -9,7 +9,7 @@
     //////////////////
 
 // TODO: Come back and add sanity checks in the correct places for these types of errors
-std::unordered_set<std::string> ignorables = 
+static const std::unordered_set<std::string> ignorables = 
     {
         "VUID-VkFramebufferCreateInfo-flags-04533",
         "VUID-VkFramebufferCreateInfo-flags-04534",
