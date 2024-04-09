@@ -26,7 +26,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBits
         if (ignorables.find(pCallbackData->pMessageIdName) != ignorables.end()) 
             { return VK_FALSE; }
         
-        report(LOGGER::ERROR, "[VALIDATION] - %s", pCallbackData->pMessage);
+        report(LOGGER::INFO, "[VALIDATION] - %s", pCallbackData->pMessage);
 
         return VK_FALSE;
     }

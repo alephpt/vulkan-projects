@@ -294,12 +294,68 @@ void Architect::recreateSwapChain()
         return;
     }
 
-void Architect::destroyVertexContext() 
-    {
-        report(LOGGER::VERBOSE, "Architect - Destroying Vertex Context ..");
 
-        vkDestroyBuffer(logical_device, vertex.buffer, nullptr);
-        vkFreeMemory(logical_device, vertex.memory, nullptr);
+    /////////////////////
+    // BUFFER CREATION //
+    /////////////////////
+
+static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::VLINE, "\t .. Finding Memory Type ..");
+
+        VkPhysicalDeviceMemoryProperties mem_props;
+        vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
+
+        for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++)
+            { if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties)
+                    { return i; } }
+
+        VK_TRY(VK_ERROR_INITIALIZATION_FAILED);
+        return -1;
+    }
+
+static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physical_device, VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Memory Allocate Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .allocationSize = mem_reqs.size,
+            .memoryTypeIndex = findMemoryType(physical_device, mem_reqs.memoryTypeBits, properties)
+        };
+    }
+
+static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Buffer Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .size = size,
+            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = nullptr
+        };
+    }
+
+void Architect::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Buffer ..");
+
+        VkBufferCreateInfo _buffer_info = getBufferInfo(size);
+        VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &buffer));
+
+        VkMemoryRequirements _mem_reqs;
+        vkGetBufferMemoryRequirements(logical_device, buffer, &_mem_reqs);
+
+        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(physical_device, _mem_reqs, properties);
+        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
+
+        vkBindBufferMemory(logical_device, buffer, memory, 0);
 
         return;
     }

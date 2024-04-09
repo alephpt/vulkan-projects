@@ -7,7 +7,7 @@
 
 VkAttachmentDescription Architect::colorAttachment()
     {
-        report(LOGGER::DLINE, "\t\t .. Creating Color Attachment ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment ..");
 
         return {
             .flags = 0,
@@ -24,7 +24,7 @@ VkAttachmentDescription Architect::colorAttachment()
 
 static VkAttachmentReference colorAttachmentRef()
     {
-        report(LOGGER::DLINE, "\t\t .. Creating Color Attachment Reference ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Reference ..");
 
         return {
             .attachment = 0,
@@ -34,7 +34,7 @@ static VkAttachmentReference colorAttachmentRef()
 
 static VkSubpassDescription subpassDescription(VkAttachmentReference* color_attachment_ref)
     {
-        report(LOGGER::DLINE, "\t\t .. Creating Subpass Description");
+        report(LOGGER::VLINE, "\t\t .. Creating Subpass Description");
 
         return {
             .flags = 0,
@@ -46,7 +46,7 @@ static VkSubpassDescription subpassDescription(VkAttachmentReference* color_atta
 
 static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
     {
-        report(LOGGER::DLINE, "\t\t .. Creating Render Pass Info ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Render Pass Info ..");
 
 
         return {

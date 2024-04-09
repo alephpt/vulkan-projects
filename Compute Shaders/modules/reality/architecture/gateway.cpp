@@ -47,7 +47,7 @@ void Gateway::clear()
 
 static inline void createShaderModule(VkDevice* logical_device, std::vector<char>& code, VkShaderModule* shader_module)
     {
-        report(LOGGER::DLINE, "\t\t .. Creating Shader Module ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Shader Module ..");
 
         VkShaderModuleCreateInfo _create_info = {
                 .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -63,7 +63,7 @@ static inline void createShaderModule(VkDevice* logical_device, std::vector<char
 void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
     {
         std::string stage_name = stage == VK_SHADER_STAGE_VERTEX_BIT ? "Vertex" : "Fragment";
-        report(LOGGER::DLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
+        report(LOGGER::VLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
         _shader_modules.push_back(shader_module);
 
         VkPipelineShaderStageCreateInfo _shader_stage = {
