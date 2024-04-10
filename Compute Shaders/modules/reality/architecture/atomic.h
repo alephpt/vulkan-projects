@@ -37,9 +37,9 @@ struct FrameData
     {
         VkSemaphore image_available;
         VkSemaphore render_finished;
+        VkSemaphore transfer_finished;
+        VkSemaphore compute_finished;
         VkFence in_flight;
-        VkCommandBuffer command_buffer;
-        VkCommandPool command_pool;
         DeletionQueue deletion_queue;
     };
 
@@ -64,6 +64,14 @@ struct Queues
         VkQueue compute;
 
         DeletionQueue deletion;
+
+        VkCommandPool cmd_pool_gfx;
+        VkCommandPool cmd_pool_xfr;
+        VkCommandPool cmd_pool_cmp;
+
+        VkCommandBuffer cmd_buf_gfx;
+        VkCommandBuffer cmd_buf_xfr;
+        VkCommandBuffer cmd_buf_cmp;
 
         std::vector<VkQueueFamilyProperties> families;
         QueueFamilyIndices indices;

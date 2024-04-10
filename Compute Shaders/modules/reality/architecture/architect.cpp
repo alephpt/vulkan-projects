@@ -230,6 +230,7 @@ void Architect::setQueueFamilyProperties(unsigned int i) {
     if (queue_name.empty()) 
         { queue_name = "~ Unknown ~"; }
 
+
     report(LOGGER::VLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
     report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
 }

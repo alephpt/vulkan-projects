@@ -295,9 +295,9 @@ void Architect::recreateSwapChain()
     }
 
 
-    /////////////////////
-    // BUFFER CREATION //
-    /////////////////////
+    ////////////////////
+    // BUFFER OBJECTS //
+    ////////////////////
 
 static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
     {
@@ -358,4 +358,13 @@ void Architect::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
         vkBindBufferMemory(logical_device, buffer, memory, 0);
 
         return;
+    }
+
+// Copy data from one buffer to another using the Transfer Queue (if available)
+// Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
+// and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
+// and the Present Queue is used for presenting the swapchain images to the screen
+void Architect::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
+    {
+
     }

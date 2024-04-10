@@ -93,7 +93,7 @@ void Architect::drawFrame()
 
         report(LOGGER::VLINE, "\t .. Acquired Image Index: %d", _image_index);
 
-        VkCommandBuffer _command_buffer = current_frame().command_buffer;
+        VkCommandBuffer _command_buffer = queues.cmd_buf_gfx;
 
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
         VK_TRY(vkResetCommandBuffer(_command_buffer, 0));
