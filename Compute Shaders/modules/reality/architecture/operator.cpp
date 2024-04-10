@@ -1,7 +1,6 @@
 #include "../architect.h"
 
 #include <cstring>
-#include <string>
 
     ///////////////////////////////////
     // PIPELINE GATEWAY CONSTRUCTION //
@@ -44,9 +43,9 @@ void Architect::destroyGateway()
     // COMMAND BUFFERS //
     /////////////////////
 
-static inline VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_index, std::string name)
+static inline VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_index, char* name)
     {
-        report(LOGGER::VLINE, "\t .. Creating %s Command Pool Info ..", name);
+        report(LOGGER::VLINE, "\t\t .. Creating %s Command Pool Info ..", name);
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .pNext = nullptr,
@@ -60,20 +59,28 @@ void Architect::createCommandPool()
         report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = createCommandPoolInfo(queues.indices.graphics_family.value(), "Graphics " + std::to_string(i));
+            char name[32];
+            sprintf(name, "Graphics %d", i);
+            VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = createCommandPoolInfo(queues.indices.graphics_family.value(), name);
             VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd_pool));
         }
 
-        VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = createCommandPoolInfo(queues.indices.transfer_family.value(), "Transfer");
-        VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.cmd_pool_xfr));
+        {
+            char name[] = "Transfer";
+            VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = createCommandPoolInfo(queues.indices.transfer_family.value(), name);
+            VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.cmd_pool_xfr));
+        }
 
-        VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = createCommandPoolInfo(queues.indices.compute_family.value(), "Compute");
-        VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmd_pool_cmp));
+        {
+            char name[] = "Compute";
+            VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = createCommandPoolInfo(queues.indices.compute_family.value(), name);
+            VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmd_pool_cmp));
+        }
 
         return;
     }
 
-static inline VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool& cmd_pool, std::string name)
+static inline VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
     {
         report(LOGGER::VLINE, "\t\t .. Creating %s Command Buffer Info  ..", name);
 
@@ -91,15 +98,23 @@ void Architect::createCommandBuffers()
         report(LOGGER::VLINE, "\t .. Creating Command Buffers ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd_pool, "Graphics " + std::to_string(i));
+            char name[32];
+            sprintf(name, "Graphics %d", i);
+            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd_pool, name);
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd_buffer));
         }
 
-        VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_xfr, "Transfer");
-        VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.cmd_buf_xfr));
+        {
+            char name[] = "Transfer";
+            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_xfr, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.cmd_buf_xfr));
+        }
 
-        VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_cmp, "Compute");
-        VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &queues.cmd_buf_cmp));
+        {
+            char name[] = "Compute";
+            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_cmp, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &queues.cmd_buf_cmp));
+        }
 
         return;
     }
