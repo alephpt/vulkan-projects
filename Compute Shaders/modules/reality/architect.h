@@ -61,8 +61,9 @@ class Architect {
         void destroySwapChain();
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
-        VkCommandBufferAllocateInfo createCommandBuffers(unsigned int);
+        //VkCommandBufferAllocateInfo createCommandBuffers(VkCommandPool& cmd_pool, char* name);
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
+        void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
         void destroyVertexContext();
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 

@@ -360,6 +360,20 @@ void Architect::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
         return;
     }
 
+static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& cmd_pool, uint32_t count)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Command Buffers Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .commandPool = cmd_pool,
+            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+            .commandBufferCount = count
+        };
+    }
+
+
 // Copy data from one buffer to another using the Transfer Queue (if available)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering

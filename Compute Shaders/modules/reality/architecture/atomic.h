@@ -41,6 +41,8 @@ struct FrameData
         VkSemaphore compute_finished;
         VkFence in_flight;
         DeletionQueue deletion_queue;
+        VkCommandPool cmd_pool;
+        VkCommandBuffer cmd_buffer;
     };
 
 struct QueueFamilyIndices 
@@ -65,11 +67,9 @@ struct Queues
 
         DeletionQueue deletion;
 
-        VkCommandPool cmd_pool_gfx;
         VkCommandPool cmd_pool_xfr;
         VkCommandPool cmd_pool_cmp;
 
-        VkCommandBuffer cmd_buf_gfx;
         VkCommandBuffer cmd_buf_xfr;
         VkCommandBuffer cmd_buf_cmp;
 

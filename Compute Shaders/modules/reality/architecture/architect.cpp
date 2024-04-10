@@ -29,9 +29,14 @@ Architect::~Architect()
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
                 vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
+                vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
+                vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(logical_device, frames[i].command_pool, nullptr);
+                vkDestroyCommandPool(logical_device, frames[i].cmd_pool, nullptr);
             }
+
+        vkDestroyCommandPool(logical_device, queues.cmd_pool_xfr, nullptr);
+        vkDestroyCommandPool(logical_device, queues.cmd_pool_cmp, nullptr);
 
         destroyGateway();
 
@@ -129,14 +134,25 @@ void Architect::setWindowExtent(VkExtent2D extent)
 void Architect::logQueues() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Queues ..");
-        report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
-        report(LOGGER::DLINE, "\t\tPresent: %p", queues.present);
-        report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
         report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
-        report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
         report(LOGGER::DLINE, "\t\tPresent Family Index: %d", queues.indices.present_family.value());
+        report(LOGGER::DLINE, "\t\tPresent: %p", queues.present);
         report(LOGGER::DLINE, "\t\tGraphics Family Index: %d", queues.indices.graphics_family.value());
+        report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                report(LOGGER::DLINE, "\t\t\tCommand Pool (Graphics %d): %p", i, frames[i].cmd_pool);
+                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].cmd_buffer);
+            }
+        report(LOGGER::DLINE, "\t\tTransfer Family Index: %d", queues.indices.transfer_family.value());
+        report(LOGGER::DLINE, "\t\tTransfer: %p", queues.transfer);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.cmd_pool_xfr);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.cmd_buf_xfr);
         report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());
+        report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.cmd_pool_cmp);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Compute): %p", queues.cmd_buf_cmp);
+        report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
     }
 
 void Architect::logFrameData()
@@ -145,10 +161,10 @@ void Architect::logFrameData()
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
                 report(LOGGER::DLINE, "\t\tFrame %d", i);
-                report(LOGGER::DLINE, "\t\t\tCommand Pool: %p", frames[i].command_pool);
-                report(LOGGER::DLINE, "\t\t\tCommand Buffer: %p", frames[i].command_buffer);
                 report(LOGGER::DLINE, "\t\t\tImage Available: %p", frames[i].image_available);
                 report(LOGGER::DLINE, "\t\t\tRender Finished: %p", frames[i].render_finished);
+                report(LOGGER::DLINE, "\t\t\tTransfer Finished: %p", frames[i].transfer_finished);
+                report(LOGGER::DLINE, "\t\t\tComputer Finished: %p", frames[i].compute_finished);
                 report(LOGGER::DLINE, "\t\t\tIn Flight: %p", frames[i].in_flight);
             }
     
