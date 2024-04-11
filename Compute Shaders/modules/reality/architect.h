@@ -16,7 +16,7 @@ class Architect {
         VkRenderPass render_pass;
         QueuePresentContext present;
         Gateway *gateway;
-        VertexContext vertex;
+        BufferContext vertex;
         bool framebuffer_resized = false;
 
         Architect();
@@ -52,6 +52,7 @@ class Architect {
         void logFrameData();
         void _blankContext();
         bool deviceProvisioned(VkPhysicalDevice);
+        VkCommandBufferBeginInfo createBeginInfo();
         void getQueueFamilies(VkPhysicalDevice);
         void setQueueFamilyProperties(unsigned int);
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
@@ -64,6 +65,7 @@ class Architect {
         //VkCommandBufferAllocateInfo createCommandBuffers(VkCommandPool& cmd_pool, char* name);
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
+        void destroyBuffer(BufferContext*);
         void destroyVertexContext();
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 

@@ -119,15 +119,6 @@ void Architect::createCommandBuffers()
         return;
     }
 
-static VkCommandBufferBeginInfo createBeginInfo() {
-    return {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-            .pNext = nullptr,
-            .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
-            .pInheritanceInfo = nullptr
-        };
-}
-
 VkRenderPassBeginInfo Architect::getRenderPassInfo(size_t i)
     {
         return {
@@ -219,15 +210,24 @@ void Architect::constructVertexBuffer()
         report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
         VkDeviceSize _buffer_size = sizeof(gateway->vertices[0]) * gateway->vertices.size();
-        VkBufferUsageFlags _usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        VkMemoryPropertyFlags _properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        VkBufferUsageFlags _staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        VkMemoryPropertyFlags _staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-        createBuffer(_buffer_size, _usage, _properties, vertex.buffer, vertex.memory);
+        VkBufferUsageFlags _vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        VkMemoryPropertyFlags _vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+        BufferContext _staging;
+        createBuffer(_buffer_size, _staging_usage, _staging_properties, _staging.buffer, _staging.memory);
 
         void* data;
-        vkMapMemory(logical_device, vertex.memory, 0, _buffer_size, 0, &data);
-        std::memcpy(data, gateway->vertices.data(), (size_t) _buffer_size);
-        vkUnmapMemory(logical_device, vertex.memory);
+        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
+        memcpy(data, gateway->vertices.data(), (size_t)_buffer_size);
+        vkUnmapMemory(logical_device, _staging.memory);
+
+        createBuffer(_buffer_size, _vertex_usage, _vertex_properties, vertex.buffer, vertex.memory);
+        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size);
+
+        destroyBuffer(&_staging);
 
         return;
     }
@@ -236,8 +236,7 @@ void Architect::destroyVertexContext()
     {
         report(LOGGER::VERBOSE, "Architect - Destroying Vertex Context ..");
 
-        vkDestroyBuffer(logical_device, vertex.buffer, nullptr);
-        vkFreeMemory(logical_device, vertex.memory, nullptr);
+        destroyBuffer(&vertex);
 
         return;
     }

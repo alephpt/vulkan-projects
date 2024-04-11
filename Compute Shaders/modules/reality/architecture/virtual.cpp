@@ -283,6 +283,8 @@ void Architect::recreateSwapChain()
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();
 
+        // TODO: Try chasing this down without the validation layer bugs being blocked 
+        // to see if OUTOFDATE_KHR is the issue or if it is SUBOPTIMAL_KHR
         if (framebuffer_resized) {
             swapchain.support = querySwapChainSupport(physical_device);
             querySwapChainDetails();
@@ -326,7 +328,7 @@ static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physi
         };
     }
 
-static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
+static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageFlags usage)
     {
         report(LOGGER::VLINE, "\t .. Creating Buffer Info ..");
 
@@ -335,7 +337,7 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size)
             .pNext = nullptr,
             .flags = 0,
             .size = size,
-            .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            .usage = usage,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
             .queueFamilyIndexCount = 0,
             .pQueueFamilyIndices = nullptr
@@ -346,7 +348,7 @@ void Architect::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
     {
         report(LOGGER::VLINE, "\t .. Creating Buffer ..");
 
-        VkBufferCreateInfo _buffer_info = getBufferInfo(size);
+        VkBufferCreateInfo _buffer_info = getBufferInfo(size, usage);
         VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &buffer));
 
         VkMemoryRequirements _mem_reqs;
@@ -374,11 +376,69 @@ static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& c
     }
 
 
+VkCommandBufferBeginInfo Architect::createBeginInfo()
+    {
+        return {
+                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+                .pNext = nullptr,
+                .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
+                .pInheritanceInfo = nullptr
+            };
+    }
+
+static inline VkBufferCopy getBufferCopy(VkDeviceSize size)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Buffer Copy ..");
+
+        return {
+            .srcOffset = 0,
+            .dstOffset = 0,
+            .size = size
+        };
+    }
+
+// TODO: We can combine the 2 static types into a more generic wrapper maybe? 
+//       Or is this better?
+static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer) 
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .commandBufferCount = 1,
+            .pCommandBuffers = command_buffer,
+        };
+    }
+
 // Copy data from one buffer to another using the Transfer Queue (if available)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
 // and the Present Queue is used for presenting the swapchain images to the screen
 void Architect::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
+        VkCommandBufferAllocateInfo _cmd_buf_info = getCommandBuffersInfo(queues.cmd_pool_xfr, 1);
+        VkCommandBuffer _cmd_buffer;
+        VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmd_buf_info, &_cmd_buffer));
+        
+        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VK_TRY(vkBeginCommandBuffer(_cmd_buffer, &_begin_info));
 
+        VkBufferCopy _copy_region = getBufferCopy(size);
+        vkCmdCopyBuffer(_cmd_buffer, src_buffer, dst_buffer, 1, &_copy_region);
+
+        VK_TRY(vkEndCommandBuffer(_cmd_buffer));
+
+        VkSubmitInfo _submit_info = getSubmitInfo(&_cmd_buffer);
+        VK_TRY(vkQueueSubmit(queues.graphics, 1, &_submit_info, VK_NULL_HANDLE));
+        VK_TRY(vkQueueWaitIdle(queues.graphics));
+
+        vkFreeCommandBuffers(logical_device, queues.cmd_pool_xfr, 1, &_cmd_buffer);
+    }
+
+void Architect::destroyBuffer(BufferContext* buffer) 
+    {
+        report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
+
+        vkDestroyBuffer(logical_device, buffer->buffer, nullptr);
+        vkFreeMemory(logical_device, buffer->memory, nullptr);
+
+        return;
     }

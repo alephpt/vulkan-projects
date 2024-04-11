@@ -110,7 +110,7 @@ struct QueuePresentContext
         VkPresentInfoKHR present_info;
     };
 
-struct VertexContext 
+struct BufferContext 
     {
         VkBuffer buffer;
         VkDeviceMemory memory;
