@@ -79,51 +79,37 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
             }
         else 
             {
-
-
                 for (int i = 0; i < subdivisions; i++) 
                     {
+                        float t = (float) i / (subdivisions - 1);
+                        glm::vec3 a = lerp(p4, p1, t);
+                        glm::vec3 b = lerp(p3, p2, t);
+
                         for (int j = 0; j < subdivisions; j++) 
                             {
-                                float x = (float) i / (subdivisions - 1);
-                                float y = (float) j / (subdivisions - 1);
+                                // interpolate between a and b
+                                float s = (float) j / (subdivisions - 1);
+                                glm::vec3 p = lerp(a, b, s);
+                                positions.push_back(p);
+                                colors.push_back(randomColor());
 
-                                positions.push_back(lerp(lerp(p1, p2, x), lerp(p4, p3, x), y));
-                                glm::vec3 random_color_1 = randomColor();
-                                glm::vec3 random_color_2 = randomColor();
+                                // create indices for the quad
+                                int p0 = i * subdivisions + j;
+                                int p1 = p0 + 1;
+                                int p2 = (i + 1) * subdivisions + j + 1;
+                                int p3 = (i + 1) * subdivisions + j;
 
-                                int random_push_back = rand() % 2;
-                                if (random_push_back == 0) 
-                                    {
-                                        colors.push_back(lerp(lerp(red, random_color_1, x), lerp(green, random_color_2, y), 0.5f));
-                                    }
-                                else 
-                                    {
-                                        colors.push_back(lerp(lerp(random_color_1, green, x), lerp(blue, random_color_2, y), 0.5f));
-                                    }
+                                indices->push_back(p0);
+                                indices->push_back(p1);
+                                indices->push_back(p2);
+                                indices->push_back(p2);
+                                indices->push_back(p3);
+                                indices->push_back(p0);
                             }
                     }
 
-                for (int i = 0; i < subdivisions - 1; i++) 
-                    {
-                        for (int j = 0; j < subdivisions - 1; j++) 
-                            {
-                                vertices->push_back({positions[i * subdivisions + j], colors[i * subdivisions + j]});
-                                vertices->push_back({positions[i * subdivisions + j + 1], colors[i * subdivisions + j + 1]});
-                                vertices->push_back({positions[(i + 1) * subdivisions + j + 1], colors[(i + 1) * subdivisions + j + 1]});
-
-                                vertices->push_back({positions[i * subdivisions + j], colors[i * subdivisions + j]});
-                                vertices->push_back({positions[(i + 1) * subdivisions + j + 1], colors[(i + 1) * subdivisions + j + 1]});
-                                vertices->push_back({positions[(i + 1) * subdivisions + j], colors[(i + 1) * subdivisions + j]});
-
-                                indices->push_back(i * subdivisions + j);
-                                indices->push_back(i * subdivisions + j + 1);
-                                indices->push_back((i + 1) * subdivisions + j + 1);
-
-                                indices->push_back(i * subdivisions + j);
-                                indices->push_back((i + 1) * subdivisions + j + 1);
-                                indices->push_back((i + 1) * subdivisions + j);
-                            }
-                    }
+                // create vertices from positions and colors
+                for (int i = 0; i < positions.size(); i++) 
+                    { vertices->push_back({positions[i], colors[i]}); }
             }
     }

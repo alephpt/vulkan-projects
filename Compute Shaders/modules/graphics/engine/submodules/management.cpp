@@ -237,17 +237,18 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
-        VkBuffer _vertex_buffers[] = {vertex.buffer};
-        VkDeviceSize _offsets[] = {0};
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
-
         VkViewport _viewport = getViewport(swapchain.extent);
         vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
 
         VkRect2D _scissor = getScissor(swapchain.extent);
         vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
-        vkCmdDraw(command_buffer, pipeline->vertices.size(), 1, 0, 0);
+        VkBuffer _vertex_buffers[] = {vertex.buffer};
+        VkDeviceSize _offsets[] = {0};
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
+        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 
@@ -271,20 +272,24 @@ void GFXEngine::resetCommandBuffers()
     }
 
     
-    //////////////////////////
-    // VERTEX BUFFER OBJECT //
-    //////////////////////////
+    ////////////////////////////
+    // OBJECT BUFFER CREATION //
+    ////////////////////////////
+
+static const VkBufferUsageFlags _staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+static const VkMemoryPropertyFlags _staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+
+static const VkBufferUsageFlags _index_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+static const VkMemoryPropertyFlags _index_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        
+static const VkBufferUsageFlags _vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+static const VkMemoryPropertyFlags _vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
 void GFXEngine::constructVertexBuffer() 
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
         VkDeviceSize _buffer_size = sizeof(pipeline->vertices[0]) * pipeline->vertices.size();
-        VkBufferUsageFlags _staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-        VkMemoryPropertyFlags _staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-        VkBufferUsageFlags _vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        VkMemoryPropertyFlags _vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         BufferContext _staging;
         createBuffer(_buffer_size, _staging_usage, _staging_properties, _staging.buffer, _staging.memory);
@@ -302,6 +307,28 @@ void GFXEngine::constructVertexBuffer()
         return;
     }
 
+void GFXEngine::constructIndexBuffer() 
+    {
+        report(LOGGER::VLINE, "\t .. Creating Index Buffer ..");
+
+        VkDeviceSize _buffer_size = sizeof(pipeline->indices[0]) * pipeline->indices.size();
+
+        BufferContext _staging;
+        createBuffer(_buffer_size, _staging_usage, _staging_properties, _staging.buffer, _staging.memory);
+
+        void* data;
+        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
+        memcpy(data, pipeline->indices.data(), (size_t)_buffer_size);
+        vkUnmapMemory(logical_device, _staging.memory);
+
+        createBuffer(_buffer_size, _index_usage, _index_properties, index.buffer, index.memory);
+        copyBuffer(_staging.buffer, index.buffer, _buffer_size);
+
+        destroyBuffer(&_staging);
+
+        return;
+    }
+
 void GFXEngine::destroyVertexContext() 
     {
         report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
@@ -312,6 +339,14 @@ void GFXEngine::destroyVertexContext()
     }
 
 
+void GFXEngine::destroyIndexContext() 
+    {
+        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
+
+        destroyBuffer(&index);
+
+        return;
+    }
 
     /////////////////////
     // SYNC STRUCTURES //

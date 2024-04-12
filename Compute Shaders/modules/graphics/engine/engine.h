@@ -31,6 +31,7 @@ class GFXEngine {
         void createRenderPass();
         void createCommandPool();
         void constructVertexBuffer();
+        void constructIndexBuffer();
         void createCommandBuffers();
         void createSyncObjects();
         void constructPipeline();
@@ -70,6 +71,7 @@ class GFXEngine {
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
         void destroyBuffer(BufferContext*);
         void destroyVertexContext();
+        void destroyIndexContext();
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
         void transitionImage();
