@@ -246,7 +246,7 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
-        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT16);
 
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
 
