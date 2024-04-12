@@ -1,26 +1,21 @@
 #pragma once
-#include "./scaffolds.h"
-#include "./architecture/gateway.h"
-#include "../../components/lexicon.h"
+#include "./submodules/pipeline/pipeline.h"
+#include "../../../components/lexicon.h"
 
 
-class Architect {
+class GFXEngine {
     public:
         VkInstance instance;
         VkPhysicalDevice physical_device;
         VkDevice logical_device;
-        FrameData frames[MAX_FRAMES_IN_FLIGHT];
-        VkSurfaceKHR surface;
         Queues queues;
         SwapChainContext swapchain;
-        VkRenderPass render_pass;
-        QueuePresentContext present;
-        Gateway *gateway;
-        BufferContext vertex;
+        VkSurfaceKHR surface;
+
         bool framebuffer_resized = false;
 
-        Architect();
-        ~Architect();
+        GFXEngine(VkExtent2D);
+        ~GFXEngine();
 
         void log();
 
@@ -38,11 +33,17 @@ class Architect {
         void constructVertexBuffer();
         void createCommandBuffers();
         void createSyncObjects();
-        void constructGateway();
+        void constructPipeline();
         
         void drawFrame();
 
     private:
+        FrameData frames[MAX_FRAMES_IN_FLIGHT];
+        VkRenderPass render_pass;
+        QueuePresentContext present;
+        Pipeline *pipeline;
+        BufferContext vertex;
+        BufferContext index;
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         FrameData& current_frame();
         int _frame_ct = 0;
@@ -51,6 +52,8 @@ class Architect {
         void logSwapChain();
         void logFrameData();
         void _blankContext();
+        bool checkValidationLayerSupport();
+        void createVulkanInstance();
         bool deviceProvisioned(VkPhysicalDevice);
         VkCommandBufferBeginInfo createBeginInfo();
         void getQueueFamilies(VkPhysicalDevice);
@@ -70,6 +73,6 @@ class Architect {
         void resetCommandBuffers();
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
         void transitionImage();
-        void destroyGateway();
+        void destroyPipeline();
 };
 

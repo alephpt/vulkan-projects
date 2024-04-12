@@ -1,29 +1,29 @@
-#include "./gateway.h"
-#include "../../../components/genesis.h"
+#include "./pipeline.h"
+#include "../../../../components/genesis.h"
 
 
     ////////////////////////
     // GATEWAY DEFINITION //
     ////////////////////////
 
-Gateway::Gateway()
+Pipeline::Pipeline()
     { 
         report(LOGGER::VLINE, "\t .. Initializing Pipeline ..");
         clear(); 
 
         report(LOGGER::VLINE, "\t .. Populating Vertices ..");
-        genesis::populateVertices(&vertices);
+        genesis::createObjects(&vertices, &indices); // TODO: these need to exist on a higher level, but where?
     }
 
-Gateway::~Gateway()
+Pipeline::~Pipeline()
     { 
-        report(LOGGER::INFO, "Gateway - Deconstructing Pipeline ..");
+        report(LOGGER::INFO, "Pipeline - Deconstructing Pipeline ..");
         clear();
     }
 
-void Gateway::clear()
+void Pipeline::clear()
     {
-        report(LOGGER::VLINE, "\t .. Clearing Gateway ..");
+        report(LOGGER::VLINE, "\t .. Clearing Pipeline ..");
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
@@ -60,7 +60,7 @@ static inline void createShaderModule(VkDevice* logical_device, std::vector<char
         return;
     }
 
-void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
+void Pipeline::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
     {
         std::string stage_name = stage == VK_SHADER_STAGE_VERTEX_BIT ? "Vertex" : "Fragment";
         report(LOGGER::VLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
@@ -78,7 +78,7 @@ void Gateway::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits
         return;
     }
 
-Gateway& Gateway::shaders(VkDevice* logical_device)
+Pipeline& Pipeline::shaders(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Creating Shaders ..");
 
@@ -100,7 +100,7 @@ Gateway& Gateway::shaders(VkDevice* logical_device)
     // VERTEX INPUT //
     //////////////////
 
-Gateway& Gateway::vertexInput()
+Pipeline& Pipeline::vertexInput()
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Input State ..");
 
@@ -132,7 +132,7 @@ Gateway& Gateway::vertexInput()
     // INPUT ASSEMBLY //
     ////////////////////
 
-Gateway& Gateway::inputAssembly()
+Pipeline& Pipeline::inputAssembly()
     {
         report(LOGGER::VLINE, "\t .. Creating Input Assembly ..");
 
@@ -150,7 +150,7 @@ Gateway& Gateway::inputAssembly()
     // VIEWPORT STATE //
     ////////////////////
 
-Gateway& Gateway::viewportState()
+Pipeline& Pipeline::viewportState()
     {
         report(LOGGER::VLINE, "\t .. Creating Viewport State ..");
 
@@ -168,7 +168,7 @@ Gateway& Gateway::viewportState()
     // RASTERIZER //
     ////////////////
 
-Gateway& Gateway::rasterizer()
+Pipeline& Pipeline::rasterizer()
     {
         report(LOGGER::VLINE, "\t .. Creating Rasterizer ..");
 
@@ -196,7 +196,7 @@ Gateway& Gateway::rasterizer()
     // MULTISAMPLING //
     ///////////////////
 
-Gateway& Gateway::multisampling()
+Pipeline& Pipeline::multisampling()
     {
         report(LOGGER::VLINE, "\t .. Creating Multisampling ..");
 
@@ -220,7 +220,7 @@ Gateway& Gateway::multisampling()
     // DEPTH STENCIL //
     ///////////////////
 
-Gateway& Gateway::depthStencil()
+Pipeline& Pipeline::depthStencil()
     {
         report(LOGGER::VLINE, "\t .. Creating Depth Stencil ..");
 
@@ -259,7 +259,7 @@ static VkPipelineColorBlendAttachmentState colorBlendAttachment()
             };
     }
 
-Gateway& Gateway::colorBlending()
+Pipeline& Pipeline::colorBlending()
     {
         report(LOGGER::VLINE, "\t .. Creating Color Blend State ..");
 
@@ -294,7 +294,7 @@ Gateway& Gateway::colorBlending()
     // DYNAMIC STATE //
     ///////////////////
 
-Gateway& Gateway::dynamicState()
+Pipeline& Pipeline::dynamicState()
     {
         report(LOGGER::VLINE, "\t .. Creating Dynamic State ..");
 
@@ -312,7 +312,7 @@ Gateway& Gateway::dynamicState()
     // LAYOUT //
     ////////////
 
-Gateway& Gateway::layout(VkDevice* logical_device)
+Pipeline& Pipeline::layout(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Layout ..");
 
@@ -329,7 +329,7 @@ Gateway& Gateway::layout(VkDevice* logical_device)
         return *this;
     }
 
-Gateway& Gateway::pipe(VkRenderPass* render_pass)
+Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Create Info ..");
 
@@ -353,7 +353,7 @@ Gateway& Gateway::pipe(VkRenderPass* render_pass)
         return *this;
     }
 
-Gateway& Gateway::create(VkDevice* logical_device)
+Pipeline& Pipeline::create(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Constructing Pipeline ..");
         VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &pipeline));

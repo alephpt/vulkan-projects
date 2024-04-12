@@ -1,14 +1,10 @@
 #include "creation.h"
 
-#include <cassert>
-#include <functional>
-#include <SDL2/SDL_vulkan.h>
-
 Existence* _essence = nullptr;
 
 Existence::Existence() 
     {
-        report(LOGGER::INFO, "Existence - Constructing Reality ..");
+        report(LOGGER::INFO, "Existence - Constructing Graphics ..");
         assert(_essence == nullptr);
         
         _application_name = "Compute Shaders";
@@ -39,12 +35,13 @@ Existence* Existence::manifest()
         return _essence;
     }
 
+// TODO: this needs to be handled by a singleton
 Existence* Existence::realize() 
     {
-        // Initialize the Reality with Genesis 
-        report(LOGGER::INFO, "Existence - Reality Complete ..");
+        // Initialize the Graphics with Genesis 
+        report(LOGGER::INFO, "Existence - Graphics Complete ..");
 
-        _actuality = new Reality(_application_name, _window_extent);
+        _actuality = new Graphics(_application_name, _window_extent);
         _actuality->initialized = true;
 
         return this;

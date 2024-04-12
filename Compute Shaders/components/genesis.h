@@ -9,5 +9,5 @@ const std::string frag_shader = "/home/persist/z/Documents/repos/learning/Cpp/Vu
 
 namespace genesis {
     std::vector<char> loadFile(const std::string&);
-    void populateVertices(std::vector<Vertex>*);
+    void createObjects(std::vector<Vertex>*, std::vector<uint32_t>*);
 }

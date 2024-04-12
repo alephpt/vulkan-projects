@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../components/lexicon.h"
-#include "../../../components/vertex.h"
+#include "../../../../components/lexicon.h"
+#include "../../../../components/vertex.h"
 
 #include <optional>
 #include <vector>
@@ -116,10 +116,11 @@ struct BufferContext
         VkDeviceMemory memory;
     };
 
-    /////////////////////////
-    // DEBUGGER PROTOTYPES //
-    /////////////////////////
+    ////////////////////////
+    // DEBUGGER & LOGGING //
+    ////////////////////////
 
+void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger);
 void destroyDebugUtilsMessengerEXT(VkInstance, VkDebugUtilsMessengerEXT, const VkAllocationCallbacks*);
 VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT, 
                                                     VkDebugUtilsMessageTypeFlagsEXT, 

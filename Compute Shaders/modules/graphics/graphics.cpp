@@ -1,4 +1,4 @@
-#include "./matrix.h"
+#include "./graphics.h"
 
 #include <thread>
 #include <chrono>
@@ -11,16 +11,14 @@
     ///////////////////
 
 
-Reality::Reality(std::string name, VkExtent2D window_extent)
+Graphics::Graphics(std::string name, VkExtent2D window_extent)
     {
-        report(LOGGER::INFO, "Matrix - Welcome to Reality ..");
+        report(LOGGER::INFO, "Graphics - Instantiating ..");
 
         // Set the application name and window extent
         _application_name = name;
         _window_extent = window_extent;
-        _architect = new Architect();
-        _architect->setWindowExtent(_window_extent);
-
+        
         // Initialize SDL and create a window
         SDL_Init(SDL_INIT_VIDEO);
         SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
@@ -36,12 +34,12 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
 
         if (_window == nullptr) 
             {
-                report(LOGGER::ERROR, "Matrix - Failed to create SDL window ..");
+                report(LOGGER::ERROR, "Graphics - Failed to create SDL window ..");
                 return;
             }
 
-        // Initialize the Engine Device Context
-        _initFramework();
+        _architect = new GFXEngine(_window_extent);
+        _initFramework(); // Do we want to handle this in the GFXEngine?
 
         _architect->swapchain.support = _architect->querySwapChainSupport(_architect->physical_device);
         _architect->querySwapChainDetails();
@@ -49,13 +47,13 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();
-        std::promise<void> startGateway;
-        std::future<void> startingGateway = startGateway.get_future();
-        std::promise<void> waitForGateway; 
-        std::future<void> waitingForGateway = waitForGateway.get_future();
+        std::promise<void> startPipeline;
+        std::future<void> startingPipeline = startPipeline.get_future();
+        std::promise<void> waitForPipeline; 
+        std::future<void> waitingForPipeline = waitForPipeline.get_future();
 
-        std::thread _swapchain_thread(&Reality::_initSwapChain, this, std::ref(startGateway), std::ref(waitingForGateway), std::ref(waitForSwapchain));
-        std::thread _pipeline_thread(&Reality::_initGateway, this, std::ref(startingGateway), std::ref(waitForGateway));
+        std::thread _swapchain_thread(&Graphics::_initSwapChain, this, std::ref(startPipeline), std::ref(waitingForPipeline), std::ref(waitForSwapchain));
+        std::thread _pipeline_thread(&Graphics::_initPipeline, this, std::ref(startingPipeline), std::ref(waitForPipeline));
 
         _pipeline_thread.join();
         _swapchain_thread.join();
@@ -65,12 +63,12 @@ Reality::Reality(std::string name, VkExtent2D window_extent)
         // Now we can construct the Command Buffers 
         _initBuffers();
         _initSyncStructures();
-        report(LOGGER::INFO, "Matrix - Initialized ..");
+        report(LOGGER::INFO, "Graphics - Initialized ..");
     }
 
-Reality::~Reality() 
+Graphics::~Graphics() 
     {
-        report(LOGGER::INFO, "Matrix - Deconstructing ..");
+        report(LOGGER::INFO, "Graphics - Deconstructing ..");
         vkDeviceWaitIdle(_architect->logical_device);
 
         if (USE_VALIDATION_LAYERS) 
@@ -81,7 +79,7 @@ Reality::~Reality()
 
         if (initialized) 
             {         
-                report(LOGGER::VLINE, "\t .. Destroying Architecture ..");
+                report(LOGGER::VLINE, "\t .. Destroying GFXEngineure ..");
                 delete _architect;
 
                 report(LOGGER::VLINE, "\t .. Destroying Window ..");
@@ -90,7 +88,7 @@ Reality::~Reality()
                 SDL_Quit();
             }
         
-        report(LOGGER::INFO, "Matrix - Destroyed ..");
+        report(LOGGER::INFO, "Graphics - Destroyed ..");
     }
 
 
@@ -98,10 +96,10 @@ Reality::~Reality()
     // TOP LEVEL FUNCTIONS //
     /////////////////////////
 
-void Reality::illuminate()
-//void Reality::illuminate(fnManifest fnManifest)
+void Graphics::illuminate()
+//void Graphics::illuminate(fnManifest fnManifest)
     {
-        report(LOGGER::INFO, "Matrix - Illuminating ..");
+        report(LOGGER::INFO, "Graphics - Illuminating ..");
 
         SDL_Event _e;
         bool _quit = false;
@@ -144,11 +142,10 @@ void Reality::illuminate()
     // INITIALIZERS //
     //////////////////
 
-void Reality::_initFramework() 
+void Graphics::_initFramework() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Frameworks ..");
+        report(LOGGER::INFO, "Graphics - Initializing Frameworks ..");
 
-        createVulkanInstance(&_architect->instance);
         SDL_Vulkan_CreateSurface(_window, _architect->instance, &_architect->surface);
         createDebugMessenger(&_architect->instance, &_debug_messenger);
         _architect->createPhysicalDevice();
@@ -157,37 +154,37 @@ void Reality::_initFramework()
         return;
     }
 
-void Reality::_initSwapChain(std::promise<void>& startGateway, std::future<void>& waitingForGateway, std::promise<void>& waitForFrameBuffer) 
+void Graphics::_initSwapChain(std::promise<void>& startPipeline, std::future<void>& waitingForPipeline, std::promise<void>& waitForFrameBuffer) 
     {
-        report(LOGGER::INFO, "Matrix - Initializing SwapChain Buffers ..");
+        report(LOGGER::INFO, "Graphics - Initializing SwapChain Buffers ..");
 
         _architect->constructSwapChain();
         _architect->constructImageViews();
-        startGateway.set_value();
-        waitingForGateway.wait();
+        startPipeline.set_value();
+        waitingForPipeline.wait();
         _architect->createFrameBuffers();
         waitForFrameBuffer.set_value();
      
         return;
     }
 
-void Reality::_initGateway(std::future<void>& startingGateway, std::promise<void>& waitForGateway) 
+void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<void>& waitForPipeline) 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Graphics Pipeline ..");
+        report(LOGGER::INFO, "Graphics - Initializing Graphics Pipeline ..");
 
-        // abstract both of these as part of the Architect and rename _architect to Architect
+        // abstract both of these as part of the GFXEngine and rename _architect to GFXEngine
 
-        startingGateway.wait();
+        startingPipeline.wait();
         _architect->createRenderPass();
-        _architect->constructGateway();
-        waitForGateway.set_value();
+        _architect->constructPipeline();
+        waitForPipeline.set_value();
      
         return;
     }
 
-void Reality::_initBuffers() 
+void Graphics::_initBuffers() 
     {
-        report(LOGGER::INFO, "Matrix - Initializing Command Operator ..");
+        report(LOGGER::INFO, "Graphics - Initializing Command Operator ..");
 
         _architect->createCommandPool();
         _architect->constructVertexBuffer();
@@ -196,9 +193,9 @@ void Reality::_initBuffers()
         return;
     }
 
-void Reality::_initSyncStructures()
+void Graphics::_initSyncStructures()
     {
-        report(LOGGER::INFO, "Matrix - Initializing Synchronization Structures ..");
+        report(LOGGER::INFO, "Graphics - Initializing Synchronization Structures ..");
 
         _architect->createSyncObjects();
 
@@ -210,9 +207,9 @@ void Reality::_initSyncStructures()
     // RESIZE WINDOW //
     ///////////////////
 
-inline void Reality::_resizeWindow()
+inline void Graphics::_resizeWindow()
     {
-        report(LOGGER::VERBOSE, "Matrix - Resizing Window ..");
+        report(LOGGER::VERBOSE, "Graphics - Resizing Window ..");
 
         int w, h;
         SDL_Vulkan_GetDrawableSize(_window, &w, &h);

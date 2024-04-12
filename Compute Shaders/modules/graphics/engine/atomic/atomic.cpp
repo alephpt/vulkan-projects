@@ -40,3 +40,32 @@ void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
         else 
             { report(LOGGER::ERROR, "Vulkan: vkDestroyDebugUtilsMessengerEXT not available"); }
     }
+
+    /////////////////////
+    // DEBUG MESSENGER //
+    /////////////////////
+
+void createDebugMessenger(VkInstance *instance, VkDebugUtilsMessengerEXT *_debug_messenger) 
+    {
+        if (!USE_VALIDATION_LAYERS) return;
+        report(LOGGER::VLINE, "\t .. Creating Listening Agent ..");
+
+        VkDebugUtilsMessengerCreateInfoEXT create_info = {
+            sType:              VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+            messageSeverity:    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT,
+            messageType:        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+            pfnUserCallback: debugCallback
+        };
+
+        auto createDebugUtilsExt = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(*instance, "vkCreateDebugUtilsMessengerEXT");
+
+        if (createDebugUtilsExt != nullptr) 
+            { createDebugUtilsExt(*instance, &create_info, nullptr, _debug_messenger); } 
+        else 
+            { report(LOGGER::ERROR, "Vulkan: vkCreateDebugUtilsMessengerEXT not available\n"); }
+    }
+

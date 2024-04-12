@@ -1,202 +1,26 @@
-#include "../architect.h"
+#include "engine.h"
 
 #include <set>
 #include <string>
 
-    // Get Current Frame
-FrameData& Architect::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
-    ////////////////////////
-    //  INSTANCE CREATION //
-    ////////////////////////
+    //////////////////////
+    // VALIDATION LAYER //
+    //////////////////////
 
-Architect::Architect() 
+bool GFXEngine::checkValidationLayerSupport() 
     {
-        _blankContext();
-    }
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
-Architect::~Architect() 
-    {
-        report(LOGGER::INFO, "Architect - Destroying Context ..");
-        queues.deletion.flush();
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+        report(LOGGER::VERBOSE, "Checking for validation layers ..");
+        report(LOGGER::VLINE, "Vulkan: %d layers supported:", layerCount);
+        for (const auto& layer : availableLayers) 
+            { report(LOGGER::VLINE, "\t%s", layer.layerName); }
 
-        destroySwapChain();
-
-        destroyVertexContext();
-
-        report(LOGGER::VLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
-                vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(logical_device, frames[i].cmd_pool, nullptr);
-            }
-
-        vkDestroyCommandPool(logical_device, queues.cmd_pool_xfr, nullptr);
-        vkDestroyCommandPool(logical_device, queues.cmd_pool_cmp, nullptr);
-
-        destroyGateway();
-
-        report(LOGGER::VLINE, "\t .. Destroying Gateway and Render Pass ..");
-        vkDestroyRenderPass(logical_device, render_pass, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Logical Device ..");
-        vkDestroyDevice(logical_device, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Surface ..");
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Instance ..");
-        vkDestroyInstance(instance, nullptr);
-
-        _blankContext();
-        
-    }
-
-
-    ////////////////////////
-    //  CONTEXT CREATION  //
-    ////////////////////////
-
-static Queues initQueues() 
-    {
-        return {
-                .graphics = VK_NULL_HANDLE,
-                .present = VK_NULL_HANDLE,
-                .compute = VK_NULL_HANDLE,
-                .families = {},
-                .indices = {},
-                .priorities = {}
-            };
-    }
-
-static SwapChainSupportDetails initSwapChainSupport() 
-    {
-        return {
-                .capabilities = {},
-                .formats = {},
-                .present_modes = {}
-            };
-    }
-
-static SwapChainDetails initSwapChainDetails() 
-    {
-        return {
-                .surface_format = {},
-                .present_mode = {},
-                .extent = {}
-            };
-    }
-
-static SwapChainContext initSwapchain() {
-    return {
-            .instance = VK_NULL_HANDLE,
-            .images = {},
-            .image_views = {},
-            .framebuffers = {},
-            .format = VK_FORMAT_UNDEFINED,
-            .extent = {0, 0},
-            .support = initSwapChainSupport(),
-            .details = initSwapChainDetails()
-        };
-}
-
-
-void Architect::_blankContext() 
-    {
-        report(LOGGER::INFO, "Architect - No Context ..");
-
-        instance = VK_NULL_HANDLE;
-        physical_device = VK_NULL_HANDLE;
-        logical_device = VK_NULL_HANDLE;
-        surface = VK_NULL_HANDLE;
-        render_pass = VK_NULL_HANDLE;
-        queues = initQueues();
-        swapchain = initSwapchain();
-    }
-
-// This should not be done like this
-void Architect::setWindowExtent(VkExtent2D extent) 
-    {
-        swapchain.extent = extent;
-        swapchain.details.extent = extent;
-        framebuffer_resized = true;
-    }
-
-
-    /////////////
-    // LOGGING //
-    /////////////
-
-void Architect::logQueues() 
-    {
-        report(LOGGER::DEBUG, "\t .. Logging Queues ..");
-        report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
-        report(LOGGER::DLINE, "\t\tPresent Family Index: %d", queues.indices.present_family.value());
-        report(LOGGER::DLINE, "\t\tPresent: %p", queues.present);
-        report(LOGGER::DLINE, "\t\tGraphics Family Index: %d", queues.indices.graphics_family.value());
-        report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                report(LOGGER::DLINE, "\t\t\tCommand Pool (Graphics %d): %p", i, frames[i].cmd_pool);
-                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].cmd_buffer);
-            }
-        report(LOGGER::DLINE, "\t\tTransfer Family Index: %d", queues.indices.transfer_family.value());
-        report(LOGGER::DLINE, "\t\tTransfer: %p", queues.transfer);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.cmd_pool_xfr);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.cmd_buf_xfr);
-        report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());
-        report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.cmd_pool_cmp);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Compute): %p", queues.cmd_buf_cmp);
-        report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
-    }
-
-void Architect::logFrameData()
-    {
-        report(LOGGER::DEBUG, "\t .. Logging Frame Data ..");
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                report(LOGGER::DLINE, "\t\tFrame %d", i);
-                report(LOGGER::DLINE, "\t\t\tImage Available: %p", frames[i].image_available);
-                report(LOGGER::DLINE, "\t\t\tRender Finished: %p", frames[i].render_finished);
-                report(LOGGER::DLINE, "\t\t\tTransfer Finished: %p", frames[i].transfer_finished);
-                report(LOGGER::DLINE, "\t\t\tComputer Finished: %p", frames[i].compute_finished);
-                report(LOGGER::DLINE, "\t\t\tIn Flight: %p", frames[i].in_flight);
-            }
-    
-    }
-
-void Architect::logSwapChain() 
-    {
-        report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
-        report(LOGGER::DLINE, "\t\tSwapchain: %p", swapchain.instance);
-        report(LOGGER::DLINE, "\t\tImage Count: %d", swapchain.images.size());
-        report(LOGGER::DLINE, "\t\tImage Views: %d", swapchain.image_views.size());
-        report(LOGGER::DLINE, "\t\tFramebuffers: %d", swapchain.framebuffers.size());
-        report(LOGGER::DLINE, "\t\tImage Format: %d", swapchain.format);
-        report(LOGGER::DLINE, "\t\tSupport: %d Formats", swapchain.support.formats.size());
-        report(LOGGER::DLINE, "\t\tSupport: %d Present Modes", swapchain.support.present_modes.size());
-        report(LOGGER::DLINE, "\t\tDetails: %d Formats", swapchain.details.surface_format.format);
-        report(LOGGER::DLINE, "\t\tDetails: %d Present Modes", swapchain.details.present_mode);
-        report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
-    }
-
-void Architect::log() 
-    {
-        report(LOGGER::DEBUG, "\t .. Logging Context ..");
-        report(LOGGER::DLINE, "\t\tInstance: %p", instance);
-        report(LOGGER::DLINE, "\t\tPhysical Device: %p", physical_device);
-        report(LOGGER::DLINE, "\t\tLogical Device: %p", logical_device);
-        report(LOGGER::DLINE, "\t\tSurface: %p", surface);
-        logQueues();
-        logSwapChain();
-        report(LOGGER::DLINE, "\t\tRender Pass: %p", render_pass);
-        report(LOGGER::DLINE, "\t\tPresent Info: %p", &present);
-        logFrameData();
+        return false;
     }
 
 
@@ -204,7 +28,7 @@ void Architect::log()
     //  Device Queues //
     ////////////////////
 
-void Architect::setQueueFamilyProperties(unsigned int i) {
+void GFXEngine::setQueueFamilyProperties(unsigned int i) {
     VkQueueFamilyProperties* queue_family = &queues.families[i];
     std::string queue_name = "";
 
@@ -251,7 +75,7 @@ void Architect::setQueueFamilyProperties(unsigned int i) {
     report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
 }
 
-void Architect::getQueueFamilies(VkPhysicalDevice scanned_device) 
+void GFXEngine::getQueueFamilies(VkPhysicalDevice scanned_device) 
     {
         report(LOGGER::VLINE, "\t .. Acquiring Queue Families ..");
         uint32_t _queue_family_count = 0;
@@ -307,7 +131,7 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     //  DEVICE PROVISION  //
     ////////////////////////
 
-bool Architect::deviceProvisioned(VkPhysicalDevice scanned_device)
+bool GFXEngine::deviceProvisioned(VkPhysicalDevice scanned_device)
     {
         getQueueFamilies(scanned_device);
         bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
@@ -327,7 +151,7 @@ bool Architect::deviceProvisioned(VkPhysicalDevice scanned_device)
     // PHYSICAL DEVICE INFO //
     //////////////////////////
 
-void Architect::createPhysicalDevice() 
+void GFXEngine::createPhysicalDevice() 
     {
         report(LOGGER::VLINE, "\t .. Scanning for Physical Devices ..");
 
@@ -373,7 +197,7 @@ void Architect::createPhysicalDevice()
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-VkDeviceQueueCreateInfo Architect::getQueueCreateInfo(uint32_t queue_family)
+VkDeviceQueueCreateInfo GFXEngine::getQueueCreateInfo(uint32_t queue_family)
     {
         return {
                 sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -383,7 +207,7 @@ VkDeviceQueueCreateInfo Architect::getQueueCreateInfo(uint32_t queue_family)
             };
     }
 
-void Architect::createLogicalDevice()
+void GFXEngine::createLogicalDevice()
     {
         report(LOGGER::VLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};

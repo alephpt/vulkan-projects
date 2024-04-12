@@ -1,4 +1,4 @@
-#include "../architect.h"
+#include "./engine.h"
 
 static inline VkPresentInfoKHR getPresentInfoKHR(VkSemaphore* signal_semaphores, VkSwapchainKHR* swapchains, uint32_t* image_indices) 
     {
@@ -62,7 +62,7 @@ static inline VkSubmitInfo2 getSubmitInfo2(VkSemaphoreSubmitInfo* wait_info, VkC
         };
     }
 
-void Architect::drawFrame() 
+void GFXEngine::drawFrame() 
     {
         report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
@@ -135,6 +135,6 @@ void Architect::drawFrame()
     // TRANSITION IMAGE //
     //////////////////////
 
-void Architect::transitionImage() {
+void GFXEngine::transitionImage() {
     
 }

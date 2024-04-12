@@ -1,35 +1,36 @@
 #pragma once
-#include <vector>
-#include "./atomic.h"
+#include "../atomic/atomic.h"
 
+#include <vector>
 
 /*
-    The Gateway class is a pipeline builder that allows for the creation of a graphics pipeline
+    The Pipeline class is a builder that allows for the creation of a graphics pipeline
     and is responsible for the creation of the pipeline layout, shaders, and other pipeline related
     configurations.
 */
 
-class Gateway {
+class Pipeline {
     public:
-	    Gateway();
-        ~Gateway();
+	    Pipeline();
+        ~Pipeline();
 
         VkPipeline pipeline;
         VkPipelineLayout pipeline_layout;
         std::vector<Vertex> vertices = {};
+        std::vector<uint32_t> indices = {};
 
-        Gateway& shaders(VkDevice*);
-        Gateway& vertexInput();
-        Gateway& inputAssembly();
-        Gateway& viewportState();
-        Gateway& rasterizer();
-        Gateway& multisampling();
-        Gateway& depthStencil();
-        Gateway& colorBlending();
-        Gateway& dynamicState();
-        Gateway& layout(VkDevice*);
-        Gateway& pipe(VkRenderPass*);
-        Gateway& create(VkDevice*);
+        Pipeline& shaders(VkDevice*);
+        Pipeline& vertexInput();
+        Pipeline& inputAssembly();
+        Pipeline& viewportState();
+        Pipeline& rasterizer();
+        Pipeline& multisampling();
+        Pipeline& depthStencil();
+        Pipeline& colorBlending();
+        Pipeline& dynamicState();
+        Pipeline& layout(VkDevice*);
+        Pipeline& pipe(VkRenderPass*);
+        Pipeline& create(VkDevice*);
         void clear();
 
 

@@ -1,17 +1,18 @@
-#include "../architect.h"
+#include "./engine.h"
 
 #include <cstring>
 
-    ///////////////////////////////////
-    // PIPELINE GATEWAY CONSTRUCTION //
-    ///////////////////////////////////
 
-void Architect::constructGateway() 
+    //////////////////////
+    // PIPELINE GATEWAY //
+    //////////////////////
+
+void GFXEngine::constructPipeline() 
     {
-        report(LOGGER::DEBUG, "Operator - Constructing Gateway ..");
-        gateway = new Gateway();
+        report(LOGGER::DEBUG, "Operator - Constructing Pipeline ..");
+        pipeline = new Pipeline();
 
-        gateway->shaders(&logical_device)
+        pipeline->shaders(&logical_device)
                 .vertexInput()
                 .inputAssembly()
                 .viewportState()
@@ -24,18 +25,103 @@ void Architect::constructGateway()
                 .create(&logical_device);
     }
 
-
-    /////////////////////////
-    // GATEWAY DESTRUCTION //
-    /////////////////////////
-
-void Architect::destroyGateway()
+void GFXEngine::destroyPipeline()
     {
-        report(LOGGER::DEBUG, "Operator - Destroying Gateway ..");
-        vkDestroyPipeline(logical_device, gateway->pipeline, nullptr);
-        vkDestroyPipelineLayout(logical_device, gateway->pipeline_layout, nullptr);
-        delete gateway;
+        report(LOGGER::DEBUG, "Operator - Destroying Pipeline ..");
+        vkDestroyPipeline(logical_device, pipeline->pipeline, nullptr);
+        vkDestroyPipelineLayout(logical_device, pipeline->pipeline_layout, nullptr);
+        delete pipeline;
         return;
+    }
+
+
+    //////////////////////////
+    // RENDER PASS CREATION //
+    //////////////////////////
+
+VkAttachmentDescription GFXEngine::colorAttachment()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment ..");
+
+        return {
+            .flags = 0,
+            .format = swapchain.format,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        };
+    }
+
+static VkAttachmentReference colorAttachmentRef()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Reference ..");
+
+        return {
+            .attachment = 0,
+            .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+        };
+    }
+
+static VkSubpassDescription subpassDescription(VkAttachmentReference* color_attachment_ref)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Subpass Description");
+
+        return {
+            .flags = 0,
+            .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = color_attachment_ref
+        };
+    }
+
+static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Render Pass Info ..");
+
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+            .attachmentCount = 1,
+            .pAttachments = color_attachment,
+            .subpassCount = 1,
+            .pSubpasses = subpass_description
+        };
+    }
+
+void GFXEngine::createRenderPass()
+    {
+        report(LOGGER::VLINE, "\t .. Creating Render Pass ..");
+
+        //log();
+        VkAttachmentDescription _color_attachment = colorAttachment();
+        VkAttachmentReference _color_attachment_ref = colorAttachmentRef();
+        VkSubpassDescription _subpass_description = subpassDescription(&_color_attachment_ref);
+        VkRenderPassCreateInfo render_pass_info = renderPassInfo(&_color_attachment, &_subpass_description);
+        
+        VK_TRY(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
+
+        return;
+    }
+
+
+VkRenderPassBeginInfo GFXEngine::getRenderPassInfo(size_t i)
+    {
+        return {
+                .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+                .pNext = nullptr,
+                .renderPass = render_pass,
+                .framebuffer = swapchain.framebuffers[i],
+                .renderArea = {
+                    .offset = {0, 0},
+                    .extent = swapchain.extent
+                },
+                .clearValueCount = 1,
+                .pClearValues = &CLEAR_COLOR
+            };
     }
 
 
@@ -54,7 +140,7 @@ static inline VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_f
             };
     }
     
-void Architect::createCommandPool() 
+void GFXEngine::createCommandPool() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
@@ -93,7 +179,7 @@ static inline VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool
             };
     }
 
-void Architect::createCommandBuffers() 
+void GFXEngine::createCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Buffers ..");
 
@@ -119,22 +205,6 @@ void Architect::createCommandBuffers()
         return;
     }
 
-VkRenderPassBeginInfo Architect::getRenderPassInfo(size_t i)
-    {
-        return {
-                .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-                .pNext = nullptr,
-                .renderPass = render_pass,
-                .framebuffer = swapchain.framebuffers[i],
-                .renderArea = {
-                    .offset = {0, 0},
-                    .extent = swapchain.extent
-                },
-                .clearValueCount = 1,
-                .pClearValues = &CLEAR_COLOR
-            };
-    }
-
 static inline VkViewport getViewport(VkExtent2D extent)
     {
         return {
@@ -155,7 +225,7 @@ static inline VkRect2D getScissor(VkExtent2D extent)
         };
     }
 
-void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
+void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
         report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
 
@@ -165,7 +235,7 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
         vkCmdBeginRenderPass(command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, gateway->pipeline);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
 
         VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
@@ -177,7 +247,7 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkRect2D _scissor = getScissor(swapchain.extent);
         vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
-        vkCmdDraw(command_buffer, gateway->vertices.size(), 1, 0, 0);
+        vkCmdDraw(command_buffer, pipeline->vertices.size(), 1, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 
@@ -186,7 +256,7 @@ void Architect::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         return;
     }
 
-void Architect::resetCommandBuffers() 
+void GFXEngine::resetCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
@@ -205,11 +275,11 @@ void Architect::resetCommandBuffers()
     // VERTEX BUFFER OBJECT //
     //////////////////////////
 
-void Architect::constructVertexBuffer() 
+void GFXEngine::constructVertexBuffer() 
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
-        VkDeviceSize _buffer_size = sizeof(gateway->vertices[0]) * gateway->vertices.size();
+        VkDeviceSize _buffer_size = sizeof(pipeline->vertices[0]) * pipeline->vertices.size();
         VkBufferUsageFlags _staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
         VkMemoryPropertyFlags _staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
@@ -221,7 +291,7 @@ void Architect::constructVertexBuffer()
 
         void* data;
         vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
-        memcpy(data, gateway->vertices.data(), (size_t)_buffer_size);
+        memcpy(data, pipeline->vertices.data(), (size_t)_buffer_size);
         vkUnmapMemory(logical_device, _staging.memory);
 
         createBuffer(_buffer_size, _vertex_usage, _vertex_properties, vertex.buffer, vertex.memory);
@@ -232,9 +302,9 @@ void Architect::constructVertexBuffer()
         return;
     }
 
-void Architect::destroyVertexContext() 
+void GFXEngine::destroyVertexContext() 
     {
-        report(LOGGER::VERBOSE, "Architect - Destroying Vertex Context ..");
+        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
 
         destroyBuffer(&vertex);
 
@@ -269,7 +339,7 @@ static VkFenceCreateInfo createFenceInfo()
         };
     }
 
-void Architect::createSyncObjects() 
+void GFXEngine::createSyncObjects() 
     {
         report(LOGGER::VLINE, "\t .. Creating Sync Objects ..");
 

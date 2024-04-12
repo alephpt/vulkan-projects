@@ -56,19 +56,26 @@ static inline glm::vec3 randomColor()
             }
     }
 
-void genesis::populateVertices(std::vector<Vertex>* vertices) 
+void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
     {
         std::vector<glm::vec3> positions = {};
         std::vector<glm::vec3> colors = {};
 
         if (subdivisions <= 1) 
             {
-                vertices->push_back({p4, yellow});
+                vertices->push_back({p4, yellow}); 
                 vertices->push_back({p3, green});
                 vertices->push_back({p2, blue});
-                vertices->push_back({p4, yellow});
-                vertices->push_back({p2, blue});
                 vertices->push_back({p1, red});
+
+                // 4, 3, 2
+                // 4, 2, 1
+                indices->push_back(0);
+                indices->push_back(1);
+                indices->push_back(2);
+                indices->push_back(0);
+                indices->push_back(2);
+                indices->push_back(3);
             }
         else 
             {
@@ -108,6 +115,14 @@ void genesis::populateVertices(std::vector<Vertex>* vertices)
                                 vertices->push_back({positions[i * subdivisions + j], colors[i * subdivisions + j]});
                                 vertices->push_back({positions[(i + 1) * subdivisions + j + 1], colors[(i + 1) * subdivisions + j + 1]});
                                 vertices->push_back({positions[(i + 1) * subdivisions + j], colors[(i + 1) * subdivisions + j]});
+
+                                indices->push_back(i * subdivisions + j);
+                                indices->push_back(i * subdivisions + j + 1);
+                                indices->push_back((i + 1) * subdivisions + j + 1);
+
+                                indices->push_back(i * subdivisions + j);
+                                indices->push_back((i + 1) * subdivisions + j + 1);
+                                indices->push_back((i + 1) * subdivisions + j);
                             }
                     }
             }

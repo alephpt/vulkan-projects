@@ -1,11 +1,11 @@
-#include "../architect.h"
+#include "./engine.h"
 #include <set>
 
     ///////////////////////////////
     //  Virtual Swapchain Layers //
     ///////////////////////////////
 
-SwapChainSupportDetails Architect::querySwapChainSupport(VkPhysicalDevice device)
+SwapChainSupportDetails GFXEngine::querySwapChainSupport(VkPhysicalDevice device)
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
         
@@ -94,7 +94,7 @@ static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExt
     }
 
 
-void Architect::querySwapChainDetails()
+void GFXEngine::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
 
@@ -108,7 +108,7 @@ void Architect::querySwapChainDetails()
         return;
     }
 
-void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
+void GFXEngine::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
     {
     *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -130,7 +130,7 @@ void Architect::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, ui
     };
 }
 
-void Architect::constructSwapChain() 
+void GFXEngine::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
 
@@ -186,7 +186,7 @@ void Architect::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo Architect::createImageViewInfo(size_t image) {
+VkImageViewCreateInfo GFXEngine::createImageViewInfo(size_t image) {
     return {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image = swapchain.images[image],
@@ -209,7 +209,7 @@ VkImageViewCreateInfo Architect::createImageViewInfo(size_t image) {
 }
 
 
-void Architect::constructImageViews()
+void GFXEngine::constructImageViews()
     {
         report(LOGGER::VLINE, "\t .. Constructing Image Views ..");
 
@@ -230,9 +230,9 @@ void Architect::constructImageViews()
     // FRAME BUFFER CREATION //
     ///////////////////////////
 
-void Architect::createFrameBuffers()
+void GFXEngine::createFrameBuffers()
     {
-        report(LOGGER::VLINE, "Architect - Creating Frame Buffers ..");
+        report(LOGGER::VLINE, "GFXEngine - Creating Frame Buffers ..");
 
         swapchain.framebuffers.resize(swapchain.image_views.size());
 
@@ -256,9 +256,9 @@ void Architect::createFrameBuffers()
         return;
     }
 
-void Architect::destroySwapChain() 
+void GFXEngine::destroySwapChain() 
     {
-        report(LOGGER::VERBOSE, "Architect - Destroying Swapchain ..");
+        report(LOGGER::VERBOSE, "GFXEngine - Destroying Swapchain ..");
 
         for (const auto& _frame_buffers : swapchain.framebuffers) 
             { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
@@ -276,9 +276,9 @@ void Architect::destroySwapChain()
         return;
     }
 
-void Architect::recreateSwapChain() 
+void GFXEngine::recreateSwapChain() 
     {
-        report(LOGGER::VERBOSE, "Architect - Recreating Swapchain ..");
+        report(LOGGER::VERBOSE, "GFXEngine - Recreating Swapchain ..");
 
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();
@@ -344,7 +344,7 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageF
         };
     }
 
-void Architect::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+void GFXEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
     {
         report(LOGGER::VLINE, "\t .. Creating Buffer ..");
 
@@ -376,7 +376,7 @@ static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& c
     }
 
 
-VkCommandBufferBeginInfo Architect::createBeginInfo()
+VkCommandBufferBeginInfo GFXEngine::createBeginInfo()
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -412,7 +412,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
 // and the Present Queue is used for presenting the swapchain images to the screen
-void Architect::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
+void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
         VkCommandBufferAllocateInfo _cmd_buf_info = getCommandBuffersInfo(queues.cmd_pool_xfr, 1);
         VkCommandBuffer _cmd_buffer;
@@ -433,7 +433,7 @@ void Architect::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSiz
         vkFreeCommandBuffers(logical_device, queues.cmd_pool_xfr, 1, &_cmd_buffer);
     }
 
-void Architect::destroyBuffer(BufferContext* buffer) 
+void GFXEngine::destroyBuffer(BufferContext* buffer) 
     {
         report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
 

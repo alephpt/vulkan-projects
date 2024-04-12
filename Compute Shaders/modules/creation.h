@@ -1,5 +1,5 @@
 #pragma once
-#include "./reality/matrix.h"
+#include "./graphics/graphics.h"
 #include "../components/lexicon.h"
 #include <string>
 
@@ -12,12 +12,11 @@ class Existence {
 
         static void materialize();      // Draw
         void actualize();               // Run
-        void cease();                   // Cleanup
     
     private:
         std::string _application_name;
         VkExtent2D _window_extent;
-        Reality* _actuality;
+        Graphics* _actuality;
 
         Existence* realize();            // Init
 };
