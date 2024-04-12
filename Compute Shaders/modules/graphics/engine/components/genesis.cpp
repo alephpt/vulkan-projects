@@ -34,7 +34,7 @@ static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
 static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
 static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
 
-static int subdivisions = 32;
+static int subdivisions = 332;
 
 static inline glm::vec3 randomColor() 
     {
