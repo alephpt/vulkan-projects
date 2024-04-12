@@ -1,6 +1,6 @@
 #pragma once
 #include "./submodules/pipeline/pipeline.h"
-#include "../../../components/lexicon.h"
+#include "./components/lexicon.h"
 
 
 class GFXEngine {

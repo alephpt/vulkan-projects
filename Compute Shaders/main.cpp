@@ -17,7 +17,6 @@
  */
 #include <iostream>
 #include "modules/creation.h"
-#include "components/logger.h"
 
 int main(int argc, char* argv[]) {
     Existence* creation = Existence::manifest();    // Instantiate the World

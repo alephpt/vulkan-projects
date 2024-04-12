@@ -1,6 +1,6 @@
 #pragma once
-#include "../../../../components/lexicon.h"
-#include "../../../../components/vertex.h"
+#include "../../components/lexicon.h"
+#include "../../components/vertex.h"
 
 #include <optional>
 #include <vector>

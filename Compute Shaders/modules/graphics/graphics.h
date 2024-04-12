@@ -1,5 +1,4 @@
 #pragma once
-#include "../../components/lexicon.h"
 #include "./engine/engine.h"
 
 #include <string>

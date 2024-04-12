@@ -1,6 +1,5 @@
 #pragma once
 #include "./graphics/graphics.h"
-#include "../components/lexicon.h"
 #include <string>
 
 class Existence {
