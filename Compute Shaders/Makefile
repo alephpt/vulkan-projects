@@ -6,7 +6,7 @@ VK_EXP_PATH = /etc/vulkan/explicit_layer.d
 CFLAGS = -std=c++17 -I $(VULKAN_SDK_PATH) -I $(STB_PATH) -I $(TINYOBJ_PATH)
 LDFLAGS = -L $(VULKAN_SDK_PATH) -lSDL2 -lvulkan -ldl -pthread 
 DBFLAGS = -fsanitize=address,undefined --debug
-INCLUDES = ./components/*.cpp ./modules/*.cpp ./modules/graphics/*.cpp ./modules/graphics/architecture/*.cpp
+INCLUDES = ./components/*.cpp ./modules/*.cpp ./modules/graphics/*.cpp ./modules/graphics/engine/*.cpp ./modules/graphics/engine/atomic/*.cpp ./modules/graphics/engine/submodules/*.cpp ./modules/graphics/engine/submodules/pipeline/*.cpp 
 
 compute: main.cpp
 	g++ $(CFLAGS) -o ~/compute main.cpp $(LDFLAGS) $(INCLUDES)

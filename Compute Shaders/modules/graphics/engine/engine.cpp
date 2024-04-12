@@ -12,6 +12,7 @@ FrameData& GFXEngine::current_frame() { { return frames[_frame_ct % MAX_FRAMES_I
 GFXEngine::GFXEngine(VkExtent2D extent) 
     {
         _blankContext();
+        setWindowExtent(extent);
         createVulkanInstance();
         // TODO: Inline Initialization to be done here instead of the constructor of the top level
         // 
