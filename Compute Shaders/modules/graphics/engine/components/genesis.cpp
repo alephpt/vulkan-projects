@@ -34,7 +34,7 @@ static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
 static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
 static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
 
-static int subdivisions = 332;
+static int subdivisions = 32;
 
 static inline glm::vec3 randomColor() 
     {
@@ -93,18 +93,18 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
                                 positions.push_back(p);
                                 colors.push_back(randomColor());
 
-                                // create indices for the quad
-                                int p0 = i * subdivisions + j;
-                                int p1 = p0 + 1;
-                                int p2 = (i + 1) * subdivisions + j + 1;
-                                int p3 = (i + 1) * subdivisions + j;
+                                // add indices
+                                if (i < subdivisions - 1 && j < subdivisions - 1) 
+                                    {
+                                        int index = i * subdivisions + j;
+                                        indices->push_back(index);
+                                        indices->push_back(index + 1);
+                                        indices->push_back(index + subdivisions);
 
-                                indices->push_back(p0);
-                                indices->push_back(p1);
-                                indices->push_back(p2);
-                                indices->push_back(p2);
-                                indices->push_back(p3);
-                                indices->push_back(p0);
+                                        indices->push_back(index + 1);
+                                        indices->push_back(index + 1 + subdivisions);
+                                        indices->push_back(index + subdivisions);
+                                    }
                             }
                     }
 

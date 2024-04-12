@@ -304,7 +304,7 @@ void GFXEngine::recreateSwapChain()
 
 static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::VLINE, "\t .. Finding Memory Type ..");
+        report(LOGGER::VLINE, "\t\t .. Finding Memory Type ..");
 
         VkPhysicalDeviceMemoryProperties mem_props;
         vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
@@ -319,7 +319,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
 
 static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physical_device, VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::VLINE, "\t .. Creating Memory Allocate Info ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Memory Allocate Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -331,7 +331,7 @@ static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physi
 
 static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageFlags usage)
     {
-        report(LOGGER::VLINE, "\t .. Creating Buffer Info ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Buffer Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -345,20 +345,20 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageF
         };
     }
 
-void GFXEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+void GFXEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
     {
-        report(LOGGER::VLINE, "\t .. Creating Buffer ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Buffer ..");
 
         VkBufferCreateInfo _buffer_info = getBufferInfo(size, usage);
-        VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &buffer));
+        VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &buffer->buffer));
 
         VkMemoryRequirements _mem_reqs;
-        vkGetBufferMemoryRequirements(logical_device, buffer, &_mem_reqs);
+        vkGetBufferMemoryRequirements(logical_device, buffer->buffer, &_mem_reqs);
 
         VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(physical_device, _mem_reqs, properties);
-        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
+        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &buffer->memory));
 
-        vkBindBufferMemory(logical_device, buffer, memory, 0);
+        vkBindBufferMemory(logical_device, buffer->buffer, buffer->memory, 0);
 
         return;
     }
@@ -428,8 +428,8 @@ void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSiz
         VK_TRY(vkEndCommandBuffer(_cmd_buffer));
 
         VkSubmitInfo _submit_info = getSubmitInfo(&_cmd_buffer);
-        VK_TRY(vkQueueSubmit(queues.graphics, 1, &_submit_info, VK_NULL_HANDLE));
-        VK_TRY(vkQueueWaitIdle(queues.graphics));
+        VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
+        VK_TRY(vkQueueWaitIdle(queues.transfer));
 
         vkFreeCommandBuffers(logical_device, queues.cmd_pool_xfr, 1, &_cmd_buffer);
     }

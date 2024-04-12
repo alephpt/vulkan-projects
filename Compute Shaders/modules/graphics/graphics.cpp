@@ -188,6 +188,7 @@ void Graphics::_initBuffers()
 
         _architect->createCommandPool();
         _architect->constructVertexBuffer();
+        _architect->constructIndexBuffer();
         _architect->createCommandBuffers();
      
         return;

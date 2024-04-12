@@ -245,7 +245,7 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
-        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT16);
+        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
 
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
 
@@ -291,14 +291,16 @@ void GFXEngine::constructVertexBuffer()
         VkDeviceSize _buffer_size = sizeof(pipeline->vertices[0]) * pipeline->vertices.size();
 
         BufferContext _staging;
-        createBuffer(_buffer_size, _staging_usage, _staging_properties, _staging.buffer, _staging.memory);
+        createBuffer(_buffer_size, _staging_usage, _staging_properties, &_staging);
 
+        // We do this to copy the data from the CPU to the GPU
         void* data;
-        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
-        memcpy(data, pipeline->vertices.data(), (size_t)_buffer_size);
-        vkUnmapMemory(logical_device, _staging.memory);
+        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data); // This maps the memory to the CPU
+        memcpy(data, pipeline->vertices.data(), (size_t)_buffer_size);           // This copies the data to the memory
+        vkUnmapMemory(logical_device, _staging.memory);                          // This unmaps the memory from the CPU
 
-        createBuffer(_buffer_size, _vertex_usage, _vertex_properties, vertex.buffer, vertex.memory);
+        // We create the buffer that will be used by the GPU
+        createBuffer(_buffer_size, _vertex_usage, _vertex_properties, &vertex);
         copyBuffer(_staging.buffer, vertex.buffer, _buffer_size);
 
         destroyBuffer(&_staging);
@@ -311,16 +313,17 @@ void GFXEngine::constructIndexBuffer()
         report(LOGGER::VLINE, "\t .. Creating Index Buffer ..");
 
         VkDeviceSize _buffer_size = sizeof(pipeline->indices[0]) * pipeline->indices.size();
+        report(LOGGER::VLINE, "\t\t .. Buffer Size: %d", _buffer_size);
 
         BufferContext _staging;
-        createBuffer(_buffer_size, _staging_usage, _staging_properties, _staging.buffer, _staging.memory);
+        createBuffer(_buffer_size, _staging_usage, _staging_properties, &_staging);
 
         void* data;
         vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
         memcpy(data, pipeline->indices.data(), (size_t)_buffer_size);
         vkUnmapMemory(logical_device, _staging.memory);
 
-        createBuffer(_buffer_size, _index_usage, _index_properties, index.buffer, index.memory);
+        createBuffer(_buffer_size, _index_usage, _index_properties, &index);
         copyBuffer(_staging.buffer, index.buffer, _buffer_size);
 
         destroyBuffer(&_staging);

@@ -216,7 +216,8 @@ void GFXEngine::createLogicalDevice()
         std::set<uint32_t> _unique_queue_families = {
                 queues.indices.graphics_family.value(), 
                 queues.indices.present_family.value(),
-                queues.indices.compute_family.value()
+                queues.indices.compute_family.value(),
+                queues.indices.transfer_family.value()
             };
 
         report(LOGGER::VLINE, "\t .. Creating Queue Family ..");
@@ -247,6 +248,7 @@ void GFXEngine::createLogicalDevice()
         vkGetDeviceQueue(logical_device, queues.indices.graphics_family.value(), 0, &queues.graphics);
         vkGetDeviceQueue(logical_device, queues.indices.present_family.value(), 0, &queues.present);
         vkGetDeviceQueue(logical_device, queues.indices.compute_family.value(), 0, &queues.compute);
+        vkGetDeviceQueue(logical_device, queues.indices.transfer_family.value(), 0, &queues.transfer);
 
         //log();
     }

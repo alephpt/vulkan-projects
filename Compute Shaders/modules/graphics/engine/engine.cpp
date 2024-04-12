@@ -49,8 +49,8 @@ GFXEngine::~GFXEngine()
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
                 vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
+                //vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
+                //vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
                 vkDestroyCommandPool(logical_device, frames[i].cmd_pool, nullptr);
             }
@@ -179,7 +179,13 @@ static Queues initQueues()
         return {
                 .graphics = VK_NULL_HANDLE,
                 .present = VK_NULL_HANDLE,
+                .transfer = VK_NULL_HANDLE,
                 .compute = VK_NULL_HANDLE,
+                .deletion = {},
+                .cmd_pool_xfr = VK_NULL_HANDLE,
+                .cmd_pool_cmp = VK_NULL_HANDLE,
+                .cmd_buf_xfr = VK_NULL_HANDLE,
+                .cmd_buf_cmp = VK_NULL_HANDLE,
                 .families = {},
                 .indices = {},
                 .priorities = {}
@@ -229,6 +235,10 @@ void GFXEngine::_blankContext()
         render_pass = VK_NULL_HANDLE;
         queues = initQueues();
         swapchain = initSwapchain();
+        present = {};
+        pipeline = nullptr;
+        vertex = {};
+        index = {};
     }
 
 // This should not be done like this

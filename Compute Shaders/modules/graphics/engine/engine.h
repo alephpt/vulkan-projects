@@ -67,7 +67,7 @@ class GFXEngine {
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
         //VkCommandBufferAllocateInfo createCommandBuffers(VkCommandPool& cmd_pool, char* name);
-        void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, VkBuffer&, VkDeviceMemory&);
+        void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
         void destroyBuffer(BufferContext*);
         void destroyVertexContext();
