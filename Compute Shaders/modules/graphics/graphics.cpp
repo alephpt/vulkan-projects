@@ -88,7 +88,7 @@ Graphics::~Graphics()
 
         if (initialized) 
             {         
-                report(LOGGER::VLINE, "\t .. Destroying GFXEngineure ..");
+                report(LOGGER::VLINE, "\t .. Destroying GFXEngine ..");
                 delete _architect;
 
                 report(LOGGER::VLINE, "\t .. Destroying Window ..");
