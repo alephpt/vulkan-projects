@@ -29,9 +29,13 @@ class GFXEngine {
         void constructImageViews();
         void createFrameBuffers();
         void createRenderPass();
+        void createDescriptorSetLayout();
         void createCommandPool();
         void constructVertexBuffer();
         void constructIndexBuffer();
+        void constructUniformBuffer();
+        void constructDescriptorPool();
+        void createDescriptorSets();
         void createCommandBuffers();
         void createSyncObjects();
         void constructPipeline();
@@ -42,9 +46,12 @@ class GFXEngine {
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
         VkRenderPass render_pass;
         QueuePresentContext present;
+        DescriptorContext descriptor;
         Pipeline *pipeline;
         BufferContext vertex;
         BufferContext index;
+        std::vector<BufferContext> uniform;
+        std::vector<void*> uniform_data;
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
         FrameData& current_frame();
         int _frame_ct = 0;
@@ -52,29 +59,37 @@ class GFXEngine {
         void logQueues();
         void logSwapChain();
         void logFrameData();
+
         void _blankContext();
-        bool checkValidationLayerSupport();
         void createVulkanInstance();
-        bool deviceProvisioned(VkPhysicalDevice);
-        VkCommandBufferBeginInfo createBeginInfo();
+
+        bool checkValidationLayerSupport();
         void getQueueFamilies(VkPhysicalDevice);
-        void setQueueFamilyProperties(unsigned int);
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
+        void setQueueFamilyProperties(unsigned int);
+
         void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*, uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
+        void transitionImage();
         void recreateSwapChain();
-        void destroySwapChain();
+
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
-        //VkCommandBufferAllocateInfo createCommandBuffers(VkCommandPool& cmd_pool, char* name);
+        
+        VkCommandBufferBeginInfo createBeginInfo();
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
+        void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
+        void resetCommandBuffers();
+        void updateUniformBuffer(uint32_t);
+
+        bool deviceProvisioned(VkPhysicalDevice);
+        void destroySwapChain();
         void destroyBuffer(BufferContext*);
+        void destroyCommandContext();
         void destroyVertexContext();
         void destroyIndexContext();
-        void resetCommandBuffers();
-        void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
-        void transitionImage();
+        void destroyUniformContext();
         void destroyPipeline();
 };
 

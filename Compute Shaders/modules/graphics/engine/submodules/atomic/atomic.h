@@ -6,6 +6,7 @@
 #include <vector>
 #include <deque>
 #include <functional>
+#include <glm/glm.hpp>
 
 
 typedef void (*fnManifest)();
@@ -118,6 +119,21 @@ struct BufferContext
     {
         VkBuffer buffer;
         VkDeviceMemory memory;
+    };
+
+
+struct MVP 
+    {
+        glm::mat4 model; // The model matrix is the one that will be used to transform the vertices of the model
+        glm::mat4 view;  // The view matrix is the one that will be used to transform the vertices of the world
+        glm::mat4 proj;  // The projection matrix is the one that will be used to transform the vertices of the camera
+    };
+
+struct DescriptorContext
+    {
+        VkDescriptorSetLayout layout;
+        VkDescriptorPool pool;
+        std::vector<VkDescriptorSet> sets;
     };
 
     ////////////////////////

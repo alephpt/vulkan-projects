@@ -9,13 +9,14 @@
     configurations.
 */
 
+// TODO: Assert Singleton
 class Pipeline {
     public:
 	    Pipeline();
         ~Pipeline();
 
-        VkPipeline pipeline;
-        VkPipelineLayout pipeline_layout;
+        VkPipeline instance;
+        VkPipelineLayout layout;
         std::vector<Vertex> vertices = {};
         std::vector<uint32_t> indices = {};
 
@@ -28,7 +29,7 @@ class Pipeline {
         Pipeline& depthStencil();
         Pipeline& colorBlending();
         Pipeline& dynamicState();
-        Pipeline& layout(VkDevice*);
+        Pipeline& createLayout(VkDevice*);
         Pipeline& pipe(VkRenderPass*);
         Pipeline& create(VkDevice*);
         void clear();

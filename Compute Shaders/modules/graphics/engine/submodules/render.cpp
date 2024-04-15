@@ -1,5 +1,85 @@
 #include "../engine.h"
 
+
+
+    //////////////////////////////
+    // COMMAND BUFFER RECORDING //
+    //////////////////////////////
+
+static inline VkViewport getViewport(VkExtent2D extent)
+    {
+        return {
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(extent.width),
+            .height = static_cast<float>(extent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f
+        };
+    }
+
+static inline VkRect2D getScissor(VkExtent2D extent)
+    {
+        return {
+            .offset = {0, 0},
+            .extent = extent
+        };
+    }
+
+void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
+    {
+        report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
+
+        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));
+
+        VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
+        vkCmdBeginRenderPass(command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->instance);
+
+        VkViewport _viewport = getViewport(swapchain.extent);
+        vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
+
+        VkRect2D _scissor = getScissor(swapchain.extent);
+        vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
+
+        VkBuffer _vertex_buffers[] = {vertex.buffer};
+        VkDeviceSize _offsets[] = {0};
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
+        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout, 0, 1, &descriptor.sets[i], 0, nullptr);
+
+        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
+
+        vkCmdEndRenderPass(command_buffer);
+
+        VK_TRY(vkEndCommandBuffer(command_buffer));
+
+        return;
+    }
+
+void GFXEngine::resetCommandBuffers() 
+    {
+        report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VK_TRY(vkResetCommandBuffer(frames[i].cmd.buffer, 0));
+        }
+
+        VK_TRY(vkResetCommandBuffer(queues.xfr.buffer, 0));
+        VK_TRY(vkResetCommandBuffer(queues.cmp.buffer, 0));
+
+        return;
+    }
+
+
+
+
+    //////////////////////
+    // RENDER UTILITIES //
+    //////////////////////
+
 static inline VkPresentInfoKHR getPresentInfoKHR(VkSemaphore* signal_semaphores, VkSwapchainKHR* swapchains, uint32_t* image_indices) 
     {
         return {
@@ -62,9 +142,14 @@ static inline VkSubmitInfo2 getSubmitInfo2(VkSemaphoreSubmitInfo* wait_info, VkC
         };
     }
 
+
+    /////////////////
+    // ACTUAL DRAW //
+    /////////////////
+
 void GFXEngine::drawFrame() 
     {
-        report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
+        //report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
         current_frame().deletion_queue.flush();
@@ -91,9 +176,8 @@ void GFXEngine::drawFrame()
                 VK_TRY(result);
             }
 
-        report(LOGGER::VLINE, "\t .. Acquired Image Index: %d", _image_index);
-
         VkCommandBuffer _command_buffer = current_frame().cmd.buffer;
+        updateUniformBuffer(_frame_ct);
 
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
         VK_TRY(vkResetCommandBuffer(_command_buffer, 0));

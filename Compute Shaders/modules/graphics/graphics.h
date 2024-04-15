@@ -14,6 +14,9 @@ class Graphics {
         Graphics(std::string, VkExtent2D);
         ~Graphics();
 
+        // TODO: Determine Default Initializers 
+        
+
         void illuminate();
         //void illuminate(fnManifest);
 

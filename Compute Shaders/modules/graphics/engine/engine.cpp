@@ -40,24 +40,11 @@ GFXEngine::~GFXEngine()
         queues.deletion.flush();
 
         destroySwapChain();
-
+        destroyUniformContext();
+        vkDestroyDescriptorSetLayout(logical_device, descriptor_set_layout, nullptr);
         destroyVertexContext();
         destroyIndexContext();
-
-        report(LOGGER::VLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
-                //vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
-                //vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
-                vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(logical_device, frames[i].cmd.pool, nullptr);
-            }
-
-        vkDestroyCommandPool(logical_device, queues.xfr.pool, nullptr);
-        vkDestroyCommandPool(logical_device, queues.cmp.pool, nullptr);
-
+        destroyCommandContext();
         destroyPipeline();
 
         report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass ..");

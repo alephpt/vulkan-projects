@@ -24,6 +24,7 @@ Pipeline::~Pipeline()
 void Pipeline::clear()
     {
         report(LOGGER::VLINE, "\t .. Clearing Pipeline ..");
+        instance = VK_NULL_HANDLE;
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
         _viewport_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
@@ -34,7 +35,7 @@ void Pipeline::clear()
         _pipeline_info = { .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
         _dynamic_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
         _pipeline_layout_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-        pipeline_layout = {};
+        layout = {};
         _depth_stencil = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO }; // not used
         _render_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
         _shader_stages.clear();
@@ -312,7 +313,7 @@ Pipeline& Pipeline::dynamicState()
     // LAYOUT //
     ////////////
 
-Pipeline& Pipeline::layout(VkDevice* logical_device)
+Pipeline& Pipeline::createLayout(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Layout ..");
 
@@ -324,7 +325,7 @@ Pipeline& Pipeline::layout(VkDevice* logical_device)
                 .pPushConstantRanges = nullptr
             };
 
-        VK_TRY(vkCreatePipelineLayout(*logical_device, &_pipeline_layout_info, nullptr, &pipeline_layout));
+        VK_TRY(vkCreatePipelineLayout(*logical_device, &_pipeline_layout_info, nullptr, &layout));
 
         return *this;
     }
@@ -344,7 +345,7 @@ Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
                 .pMultisampleState = &_multisampling,
                 .pColorBlendState = &_color_blending,
                 .pDynamicState = &_dynamic_state,
-                .layout = pipeline_layout,
+                .layout = layout,
                 .renderPass = *render_pass,
                 .subpass = 0,
                 .basePipelineHandle = VK_NULL_HANDLE,
@@ -356,7 +357,7 @@ Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
 Pipeline& Pipeline::create(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Constructing Pipeline ..");
-        VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &pipeline));
+        VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &instance));
 
         report(LOGGER::VLINE, "\t .. Cleaning Up Shader Modules ..");
         for (auto shader_module : _shader_modules) 

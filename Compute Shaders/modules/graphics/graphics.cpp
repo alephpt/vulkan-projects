@@ -38,6 +38,15 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
                 return;
             }
 
+
+        // TODO: Wrap all of this into a subset of init functions 
+        //       that use proper fences and semaphores with the following order:
+        // Device()
+        // Presentation()
+        // Management()
+        // Scene()
+        // Render()
+
         _architect = new GFXEngine(_window_extent);
         _initFramework(); // Do we want to handle this in the GFXEngine?
 
@@ -176,6 +185,7 @@ void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<v
 
         startingPipeline.wait();
         _architect->createRenderPass();
+        _architect->createDescriptorSetLayout();
         _architect->constructPipeline();
         waitForPipeline.set_value();
      
@@ -189,6 +199,10 @@ void Graphics::_initBuffers()
         _architect->createCommandPool();
         _architect->constructVertexBuffer();
         _architect->constructIndexBuffer();
+        _architect->constructUniformBuffer();
+        // TODO: multithread Command Buffer to init as part of the Management Phase
+        _architect->constructDescriptorPool();
+        _architect->createDescriptorSets();
         _architect->createCommandBuffers();
      
         return;

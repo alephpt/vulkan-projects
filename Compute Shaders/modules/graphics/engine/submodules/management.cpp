@@ -1,5 +1,4 @@
 #include "../engine.h"
-#include <cstring>
 
 
     //////////////////////
@@ -19,7 +18,7 @@ void GFXEngine::constructPipeline()
                 .multisampling()
                 .colorBlending()
                 .dynamicState()
-                .layout(&logical_device)
+                .createLayout(&logical_device)
                 .pipe(&render_pass)
                 .create(&logical_device);
     }
@@ -27,8 +26,8 @@ void GFXEngine::constructPipeline()
 void GFXEngine::destroyPipeline()
     {
         report(LOGGER::DEBUG, "Operator - Destroying Pipeline ..");
-        vkDestroyPipeline(logical_device, pipeline->pipeline, nullptr);
-        vkDestroyPipelineLayout(logical_device, pipeline->pipeline_layout, nullptr);
+        vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
+        vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
         delete pipeline;
         return;
     }
@@ -123,6 +122,127 @@ VkRenderPassBeginInfo GFXEngine::getRenderPassInfo(size_t i)
             };
     }
 
+    ///////////////////////////
+    // DESCRIPTOR SET LAYOUT //
+    ///////////////////////////
+
+static inline VkDescriptorSetLayoutBinding _getLayoutBinding()
+    {
+        return {
+                binding: 0,
+                descriptorType: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                descriptorCount: 1,
+                stageFlags: VK_SHADER_STAGE_VERTEX_BIT,
+                pImmutableSamplers: nullptr
+            };
+    }
+
+static inline VkDescriptorSetLayoutCreateInfo _getLayoutInfo(VkDescriptorSetLayoutBinding* bindings)
+    {
+        return {
+                sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                bindingCount: 1,
+                pBindings: bindings
+            };
+    }
+
+void GFXEngine::createDescriptorSetLayout() 
+    {
+        report(LOGGER::VLINE, "\t .. Creating Descriptor Set Layout ..");
+
+        VkDescriptorSetLayoutBinding _layout_binding = _getLayoutBinding();
+        VkDescriptorSetLayoutCreateInfo _layout_info = _getLayoutInfo(&_layout_binding);
+
+        VK_TRY(vkCreateDescriptorSetLayout(logical_device, &_layout_info, nullptr, &descriptor.layout));
+
+        return;
+    }
+
+static inline VkDescriptorPoolSize getPoolSize(uint32_t ct)
+    {
+        return {
+            .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = ct
+        };
+    }
+
+static inline VkDescriptorPoolCreateInfo getPoolInfo(uint32_t ct, VkDescriptorPoolSize* size)
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = 0,
+            .maxSets = ct,
+            .poolSizeCount = 1,
+            .pPoolSizes = size
+        };
+    }
+
+void GFXEngine::constructDescriptorPool() 
+    {
+        report(LOGGER::VLINE, "\t .. Constructing Descriptor Pool ..");
+
+        VkDescriptorPoolSize _pool_size = getPoolSize(MAX_FRAMES_IN_FLIGHT);
+        VkDescriptorPoolCreateInfo _pool_info = getPoolInfo(MAX_FRAMES_IN_FLIGHT, &_pool_size);
+
+        VK_TRY(vkCreateDescriptorPool(logical_device, &_pool_info, nullptr, &descriptor.pool));
+
+        return;
+    }
+
+static inline VkDescriptorSetAllocateInfo getDescriptorSetAllocateInfo(uint32_t ct, VkDescriptorPool* pool, std::vector<VkDescriptorSetLayout>& layouts)
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .descriptorPool = *pool,
+            .descriptorSetCount = ct,
+            .pSetLayouts = layouts.data()
+        };
+    }
+
+static inline VkDescriptorBufferInfo getDescriptorBufferInfo(VkBuffer* buffer, VkDeviceSize size)
+    {
+        return {
+            .buffer = *buffer,
+            .offset = 0,
+            .range = size
+        };
+    }
+
+static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDescriptorBufferInfo* buffer_info)
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext = nullptr,
+            .dstSet = *set,
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .pImageInfo = nullptr,
+            .pBufferInfo = buffer_info,
+            .pTexelBufferView = nullptr
+        };
+    }
+
+void GFXEngine::createDescriptorSets() 
+    {
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptor.layout);
+        VkDescriptorSetAllocateInfo _alloc_info = getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT), &descriptor.pool, layouts);
+
+        descriptor.sets.resize(MAX_FRAMES_IN_FLIGHT);
+
+        VK_TRY(vkAllocateDescriptorSets(logical_device, &_alloc_info, descriptor.sets.data()));
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                VkDescriptorBufferInfo _buffer_info = getDescriptorBufferInfo(&uniform[i].buffer, sizeof(MVP));
+                VkWriteDescriptorSet _write_descriptor = getDescriptorWrite(&descriptor.sets[i], &_buffer_info);
+
+                vkUpdateDescriptorSets(logical_device, 1, &_write_descriptor, 0, nullptr);
+            }
+    }
 
     /////////////////////
     // COMMAND BUFFERS //
@@ -204,150 +324,21 @@ void GFXEngine::createCommandBuffers()
         return;
     }
 
-static inline VkViewport getViewport(VkExtent2D extent)
+ void GFXEngine::destroyCommandContext()
     {
-        return {
-            .x = 0.0f,
-            .y = 0.0f,
-            .width = static_cast<float>(extent.width),
-            .height = static_cast<float>(extent.height),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f
-        };
-    }
+        report(LOGGER::VLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
+                vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
+                //vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
+                //vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
+                vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
+                vkDestroyCommandPool(logical_device, frames[i].cmd.pool, nullptr);
+            }
 
-static inline VkRect2D getScissor(VkExtent2D extent)
-    {
-        return {
-            .offset = {0, 0},
-            .extent = extent
-        };
-    }
-
-void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
-    {
-        report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
-
-        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
-        VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));
-
-        VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
-        vkCmdBeginRenderPass(command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->pipeline);
-
-        VkViewport _viewport = getViewport(swapchain.extent);
-        vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
-
-        VkRect2D _scissor = getScissor(swapchain.extent);
-        vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
-
-        VkBuffer _vertex_buffers[] = {vertex.buffer};
-        VkDeviceSize _offsets[] = {0};
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
-        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
-
-        vkCmdEndRenderPass(command_buffer);
-
-        VK_TRY(vkEndCommandBuffer(command_buffer));
-
-        return;
-    }
-
-void GFXEngine::resetCommandBuffers() 
-    {
-        report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VK_TRY(vkResetCommandBuffer(frames[i].cmd.buffer, 0));
-        }
-
-        VK_TRY(vkResetCommandBuffer(queues.xfr.buffer, 0));
-        VK_TRY(vkResetCommandBuffer(queues.cmp.buffer, 0));
-
-        return;
-    }
-
-    
-    ////////////////////////////
-    // OBJECT BUFFER CREATION //
-    ////////////////////////////
-
-static const VkBufferUsageFlags _staging_usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-static const VkMemoryPropertyFlags _staging_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-
-static const VkBufferUsageFlags _index_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-static const VkMemoryPropertyFlags _index_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        
-static const VkBufferUsageFlags _vertex_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-static const VkMemoryPropertyFlags _vertex_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-void GFXEngine::constructVertexBuffer() 
-    {
-        report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
-
-        VkDeviceSize _buffer_size = sizeof(pipeline->vertices[0]) * pipeline->vertices.size();
-
-        BufferContext _staging;
-        createBuffer(_buffer_size, _staging_usage, _staging_properties, &_staging);
-
-        // We do this to copy the data from the CPU to the GPU
-        void* data;
-        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data); // This maps the memory to the CPU
-        memcpy(data, pipeline->vertices.data(), (size_t)_buffer_size);           // This copies the data to the memory
-        vkUnmapMemory(logical_device, _staging.memory);                          // This unmaps the memory from the CPU
-
-        // We create the buffer that will be used by the GPU
-        createBuffer(_buffer_size, _vertex_usage, _vertex_properties, &vertex);
-        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size);
-
-        destroyBuffer(&_staging);
-
-        return;
-    }
-
-void GFXEngine::constructIndexBuffer() 
-    {
-        report(LOGGER::VLINE, "\t .. Creating Index Buffer ..");
-
-        VkDeviceSize _buffer_size = sizeof(pipeline->indices[0]) * pipeline->indices.size();
-        report(LOGGER::VLINE, "\t\t .. Buffer Size: %d", _buffer_size);
-
-        BufferContext _staging;
-        createBuffer(_buffer_size, _staging_usage, _staging_properties, &_staging);
-
-        void* data;
-        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
-        memcpy(data, pipeline->indices.data(), (size_t)_buffer_size);
-        vkUnmapMemory(logical_device, _staging.memory);
-
-        createBuffer(_buffer_size, _index_usage, _index_properties, &index);
-        copyBuffer(_staging.buffer, index.buffer, _buffer_size);
-
-        destroyBuffer(&_staging);
-
-        return;
-    }
-
-void GFXEngine::destroyVertexContext() 
-    {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
-
-        destroyBuffer(&vertex);
-
-        return;
-    }
-
-
-void GFXEngine::destroyIndexContext() 
-    {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
-
-        destroyBuffer(&index);
-
-        return;
+        vkDestroyCommandPool(logical_device, queues.xfr.pool, nullptr);
+        vkDestroyCommandPool(logical_device, queues.cmp.pool, nullptr);
     }
 
     /////////////////////

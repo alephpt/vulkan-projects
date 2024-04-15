@@ -131,6 +131,7 @@ void GFXEngine::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, ui
     };
 }
 
+// TODO: Wrap this in a class where we can just delete and recreate the swapchain using a singleton wrapper
 void GFXEngine::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
