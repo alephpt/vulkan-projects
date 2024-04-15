@@ -415,7 +415,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // and the Present Queue is used for presenting the swapchain images to the screen
 void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
-        VkCommandBufferAllocateInfo _cmd_buf_info = getCommandBuffersInfo(queues.cmd_pool_xfr, 1);
+        VkCommandBufferAllocateInfo _cmd_buf_info = getCommandBuffersInfo(queues.xfr.pool, 1);
         VkCommandBuffer _cmd_buffer;
         VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmd_buf_info, &_cmd_buffer));
         
@@ -431,7 +431,7 @@ void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSiz
         VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
         VK_TRY(vkQueueWaitIdle(queues.transfer));
 
-        vkFreeCommandBuffers(logical_device, queues.cmd_pool_xfr, 1, &_cmd_buffer);
+        vkFreeCommandBuffers(logical_device, queues.xfr.pool, 1, &_cmd_buffer);
     }
 
 void GFXEngine::destroyBuffer(BufferContext* buffer) 

@@ -34,7 +34,7 @@ static inline VkCommandBufferSubmitInfo getCommandBufferSubmitInfo(VkCommandBuff
         };
     }
 
-static inline VkSubmitInfo getSubmitInfo(QueuePresentContext* present, VkCommandBuffer* command_buffer, VkSemaphore* _signal_semaphore, VkSemaphore* _wait_semaphore, VkPipelineStageFlags* _wait_stages) 
+static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSemaphore* _signal_semaphore, VkSemaphore* _wait_semaphore, VkPipelineStageFlags* _wait_stages) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
@@ -93,7 +93,7 @@ void GFXEngine::drawFrame()
 
         report(LOGGER::VLINE, "\t .. Acquired Image Index: %d", _image_index);
 
-        VkCommandBuffer _command_buffer = current_frame().cmd_buffer;
+        VkCommandBuffer _command_buffer = current_frame().cmd.buffer;
 
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
         VK_TRY(vkResetCommandBuffer(_command_buffer, 0));
@@ -104,7 +104,7 @@ void GFXEngine::drawFrame()
         VkSemaphore _wait_semaphores[] = { current_frame().image_available };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
         VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        present.submit_info = getSubmitInfo(&present, &_command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
+        present.submit_info = getSubmitInfo(&_command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
 
         VK_TRY(vkQueueSubmit(queues.graphics, 1, &present.submit_info, current_frame().in_flight));
 

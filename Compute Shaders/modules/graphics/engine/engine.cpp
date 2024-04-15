@@ -52,11 +52,11 @@ GFXEngine::~GFXEngine()
                 //vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
                 //vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(logical_device, frames[i].cmd_pool, nullptr);
+                vkDestroyCommandPool(logical_device, frames[i].cmd.pool, nullptr);
             }
 
-        vkDestroyCommandPool(logical_device, queues.cmd_pool_xfr, nullptr);
-        vkDestroyCommandPool(logical_device, queues.cmd_pool_cmp, nullptr);
+        vkDestroyCommandPool(logical_device, queues.xfr.pool, nullptr);
+        vkDestroyCommandPool(logical_device, queues.cmp.pool, nullptr);
 
         destroyPipeline();
 
@@ -182,10 +182,14 @@ static Queues initQueues()
                 .transfer = VK_NULL_HANDLE,
                 .compute = VK_NULL_HANDLE,
                 .deletion = {},
-                .cmd_pool_xfr = VK_NULL_HANDLE,
-                .cmd_pool_cmp = VK_NULL_HANDLE,
-                .cmd_buf_xfr = VK_NULL_HANDLE,
-                .cmd_buf_cmp = VK_NULL_HANDLE,
+                .xfr = {
+                    .pool = VK_NULL_HANDLE,
+                    .buffer = VK_NULL_HANDLE
+                },
+                .cmp = {
+                    .pool = VK_NULL_HANDLE,
+                    .buffer = VK_NULL_HANDLE
+                },
                 .families = {},
                 .indices = {},
                 .priorities = {}
@@ -264,17 +268,17 @@ void GFXEngine::logQueues()
         report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
-                report(LOGGER::DLINE, "\t\t\tCommand Pool (Graphics %d): %p", i, frames[i].cmd_pool);
-                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].cmd_buffer);
+                report(LOGGER::DLINE, "\t\t\tCommand Pool (Graphics %d): %p", i, frames[i].cmd.pool);
+                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].cmd.buffer);
             }
         report(LOGGER::DLINE, "\t\tTransfer Family Index: %d", queues.indices.transfer_family.value());
         report(LOGGER::DLINE, "\t\tTransfer: %p", queues.transfer);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.cmd_pool_xfr);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.cmd_buf_xfr);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.xfr.pool);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.xfr.buffer);
         report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());
         report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.cmd_pool_cmp);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Compute): %p", queues.cmd_buf_cmp);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.cmp.pool);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Compute): %p", queues.cmp.buffer);
         report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
     }
 

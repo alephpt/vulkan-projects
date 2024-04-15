@@ -147,19 +147,19 @@ void GFXEngine::createCommandPool()
             char name[32];
             sprintf(name, "Graphics %d", i);
             VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = createCommandPoolInfo(queues.indices.graphics_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd_pool));
+            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd.pool));
         }
 
         {
             char name[] = "Transfer";
             VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = createCommandPoolInfo(queues.indices.transfer_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.cmd_pool_xfr));
+            VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.xfr.pool));
         }
 
         {
             char name[] = "Compute";
             VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = createCommandPoolInfo(queues.indices.compute_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmd_pool_cmp));
+            VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmp.pool));
         }
 
         return;
@@ -185,20 +185,20 @@ void GFXEngine::createCommandBuffers()
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[32];
             sprintf(name, "Graphics %d", i);
-            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd_pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd_buffer));
+            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd.buffer));
         }
 
         {
             char name[] = "Transfer";
-            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_xfr, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.cmd_buf_xfr));
+            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
         }
 
         {
             char name[] = "Compute";
-            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmd_pool_cmp, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &queues.cmd_buf_cmp));
+            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmp.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &queues.cmp.buffer));
         }
 
         return;
@@ -261,11 +261,11 @@ void GFXEngine::resetCommandBuffers()
         report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VK_TRY(vkResetCommandBuffer(frames[i].cmd_buffer, 0));
+            VK_TRY(vkResetCommandBuffer(frames[i].cmd.buffer, 0));
         }
 
-        VK_TRY(vkResetCommandBuffer(queues.cmd_buf_xfr, 0));
-        VK_TRY(vkResetCommandBuffer(queues.cmd_buf_cmp, 0));
+        VK_TRY(vkResetCommandBuffer(queues.xfr.buffer, 0));
+        VK_TRY(vkResetCommandBuffer(queues.cmp.buffer, 0));
 
         return;
     }

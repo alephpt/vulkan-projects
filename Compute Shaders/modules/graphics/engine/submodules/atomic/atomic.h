@@ -33,6 +33,14 @@ struct DeletionQueue
         void flush() { for (auto it = deletors.rbegin(); it != deletors.rend(); it++) { (*it)(); } deletors.clear(); }
     };
 
+
+struct CommandContext
+    {
+        VkCommandPool pool;
+        VkCommandBuffer buffer;
+    };
+
+
 struct FrameData 
     {
         VkSemaphore image_available;
@@ -41,8 +49,7 @@ struct FrameData
         VkSemaphore compute_finished;
         VkFence in_flight;
         DeletionQueue deletion_queue;
-        VkCommandPool cmd_pool;
-        VkCommandBuffer cmd_buffer;
+        CommandContext cmd;
     };
 
 struct QueueFamilyIndices 
@@ -67,11 +74,8 @@ struct Queues
 
         DeletionQueue deletion;
 
-        VkCommandPool cmd_pool_xfr;
-        VkCommandPool cmd_pool_cmp;
-
-        VkCommandBuffer cmd_buf_xfr;
-        VkCommandBuffer cmd_buf_cmp;
+        CommandContext xfr;
+        CommandContext cmp;
 
         std::vector<VkQueueFamilyProperties> families;
         QueueFamilyIndices indices;
@@ -89,7 +93,7 @@ struct SwapChainDetails
     {
         VkSurfaceFormatKHR  surface_format;
         VkPresentModeKHR    present_mode;
-        VkExtent2D          extent;
+        VkExtent2D          extent; // TODO: Make 3D
     };
 
 struct SwapChainContext 
