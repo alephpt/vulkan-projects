@@ -41,7 +41,7 @@ GFXEngine::~GFXEngine()
 
         destroySwapChain();
         destroyUniformContext();
-        vkDestroyDescriptorSetLayout(logical_device, descriptor_set_layout, nullptr);
+        vkDestroyDescriptorSetLayout(logical_device, descriptor.layout, nullptr);
         destroyVertexContext();
         destroyIndexContext();
         destroyCommandContext();
