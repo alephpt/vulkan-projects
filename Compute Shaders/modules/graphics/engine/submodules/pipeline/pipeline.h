@@ -29,7 +29,7 @@ class Pipeline {
         Pipeline& depthStencil();
         Pipeline& colorBlending();
         Pipeline& dynamicState();
-        Pipeline& createLayout(VkDevice*);
+        Pipeline& createLayout(VkDevice*, VkDescriptorSetLayout*);
         Pipeline& pipe(VkRenderPass*);
         Pipeline& create(VkDevice*);
         void clear();

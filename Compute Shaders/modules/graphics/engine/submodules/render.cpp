@@ -28,7 +28,7 @@ static inline VkRect2D getScissor(VkExtent2D extent)
 
 void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
-        report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
+        //report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
 
         VkCommandBufferBeginInfo _begin_info = createBeginInfo();
         VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));
@@ -48,7 +48,7 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkDeviceSize _offsets[] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
         vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout, 0, 1, &descriptor.sets[i], 0, nullptr);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
 
         vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
 

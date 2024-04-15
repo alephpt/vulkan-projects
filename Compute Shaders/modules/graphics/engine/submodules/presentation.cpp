@@ -234,7 +234,7 @@ void GFXEngine::constructImageViews()
 
 void GFXEngine::createFrameBuffers()
     {
-        report(LOGGER::VLINE, "GFXEngine - Creating Frame Buffers ..");
+        report(LOGGER::VLINE, "Presentation - Creating Frame Buffers ..");
 
         swapchain.framebuffers.resize(swapchain.image_views.size());
 
@@ -260,7 +260,7 @@ void GFXEngine::createFrameBuffers()
 
 void GFXEngine::destroySwapChain() 
     {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Swapchain ..");
+        report(LOGGER::VERBOSE, "Presentation - Destroying Swapchain ..");
 
         for (const auto& _frame_buffers : swapchain.framebuffers) 
             { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
@@ -280,7 +280,7 @@ void GFXEngine::destroySwapChain()
 
 void GFXEngine::recreateSwapChain() 
     {
-        report(LOGGER::VERBOSE, "GFXEngine - Recreating Swapchain ..");
+        report(LOGGER::VERBOSE, "Presentation - Recreating Swapchain ..");
 
         vkDeviceWaitIdle(logical_device);
         destroySwapChain();

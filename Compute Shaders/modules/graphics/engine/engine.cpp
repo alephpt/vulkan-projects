@@ -41,6 +41,7 @@ GFXEngine::~GFXEngine()
 
         destroySwapChain();
         destroyUniformContext();
+        vkDestroyDescriptorPool(logical_device, descriptor.pool, nullptr);
         vkDestroyDescriptorSetLayout(logical_device, descriptor.layout, nullptr);
         destroyVertexContext();
         destroyIndexContext();
@@ -60,7 +61,6 @@ GFXEngine::~GFXEngine()
         vkDestroyInstance(instance, nullptr);
 
         _blankContext();
-        createVulkanInstance();
     }
 
 
@@ -230,6 +230,8 @@ void GFXEngine::_blankContext()
         pipeline = nullptr;
         vertex = {};
         index = {};
+        uniform = {};
+        uniform_data = {};
     }
 
 // This should not be done like this

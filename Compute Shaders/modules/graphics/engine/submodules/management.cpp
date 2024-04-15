@@ -7,7 +7,7 @@
 
 void GFXEngine::constructPipeline() 
     {
-        report(LOGGER::DEBUG, "Operator - Constructing Pipeline ..");
+        report(LOGGER::DEBUG, "Management - Constructing Pipeline ..");
         pipeline = new Pipeline();
 
         pipeline->shaders(&logical_device)
@@ -18,14 +18,14 @@ void GFXEngine::constructPipeline()
                 .multisampling()
                 .colorBlending()
                 .dynamicState()
-                .createLayout(&logical_device)
+                .createLayout(&logical_device, &descriptor.layout)
                 .pipe(&render_pass)
                 .create(&logical_device);
     }
 
 void GFXEngine::destroyPipeline()
     {
-        report(LOGGER::DEBUG, "Operator - Destroying Pipeline ..");
+        report(LOGGER::DEBUG, "Management - Destroying Pipeline ..");
         vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
         vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
         delete pipeline;
@@ -160,6 +160,8 @@ void GFXEngine::createDescriptorSetLayout()
 
 static inline VkDescriptorPoolSize getPoolSize(uint32_t ct)
     {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Size of %d ..", ct);
+
         return {
             .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
             .descriptorCount = ct
@@ -168,6 +170,8 @@ static inline VkDescriptorPoolSize getPoolSize(uint32_t ct)
 
 static inline VkDescriptorPoolCreateInfo getPoolInfo(uint32_t ct, VkDescriptorPoolSize* size)
     {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Info with size %d ..", size->descriptorCount);
+
         return {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
             .pNext = nullptr,
@@ -192,6 +196,8 @@ void GFXEngine::constructDescriptorPool()
 
 static inline VkDescriptorSetAllocateInfo getDescriptorSetAllocateInfo(uint32_t ct, VkDescriptorPool* pool, std::vector<VkDescriptorSetLayout>& layouts)
     {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Set Allocate Info ..");
+
         return {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
             .pNext = nullptr,
@@ -203,6 +209,8 @@ static inline VkDescriptorSetAllocateInfo getDescriptorSetAllocateInfo(uint32_t 
 
 static inline VkDescriptorBufferInfo getDescriptorBufferInfo(VkBuffer* buffer, VkDeviceSize size)
     {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Buffer Info ..");
+
         return {
             .buffer = *buffer,
             .offset = 0,
@@ -212,6 +220,8 @@ static inline VkDescriptorBufferInfo getDescriptorBufferInfo(VkBuffer* buffer, V
 
 static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDescriptorBufferInfo* buffer_info)
     {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Write ..");
+
         return {
             .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
             .pNext = nullptr,
@@ -228,6 +238,8 @@ static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDe
 
 void GFXEngine::createDescriptorSets() 
     {
+        report(LOGGER::VLINE, "\t .. Creating Descriptor Sets ..");
+
         std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptor.layout);
         VkDescriptorSetAllocateInfo _alloc_info = getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT), &descriptor.pool, layouts);
 
@@ -326,7 +338,7 @@ void GFXEngine::createCommandBuffers()
 
  void GFXEngine::destroyCommandContext()
     {
-        report(LOGGER::VLINE, "\t .. Destroying Semaphores, Fences and Command Pools ..");
+        report(LOGGER::VERBOSE, "Management - Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);

@@ -68,7 +68,7 @@ void GFXEngine::constructIndexBuffer()
 
 void GFXEngine::destroyVertexContext() 
     {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
+        report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context ..");
 
         destroyBuffer(&vertex);
 
@@ -78,7 +78,7 @@ void GFXEngine::destroyVertexContext()
 
 void GFXEngine::destroyIndexContext() 
     {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Vertex Context ..");
+        report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context ..");
 
         destroyBuffer(&index);
 
@@ -129,7 +129,7 @@ void GFXEngine::updateUniformBuffer(uint32_t current_frame)
 
 void GFXEngine::destroyUniformContext() 
     {
-        report(LOGGER::VERBOSE, "GFXEngine - Destroying Uniform Context ..");
+        report(LOGGER::VERBOSE, "Scene - Destroying Uniform Context ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             { destroyBuffer(&uniform[i]); }
