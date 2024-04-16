@@ -1,2 +1,2 @@
-glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/sq1.vert -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/sq1_v.spv
-glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/sq1.frag -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/components/shaders/sq1_f.spv
+glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/modules/graphics/engine/components/shaders/sq1.vert -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/modules/graphics/engine/components/shaders/sq1_v.spv
+glslc ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/modules/graphics/engine/components/shaders/sq1.frag -o ~/z/Documents/repos/learning/Cpp/Vulkan/Compute\ Shaders/modules/graphics/engine/components/shaders/sq1_f.spv

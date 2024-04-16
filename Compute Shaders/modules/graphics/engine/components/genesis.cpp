@@ -29,32 +29,23 @@ static const glm::vec3 green = glm::vec3(0.0f, 1.0f, 0.0f);
 static const glm::vec3 blue = glm::vec3(0.0f, 0.0f, 1.0f);
 static const glm::vec3 yellow = glm::vec3(1.0f, 1.0f, 0.0f);
 
-static const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.0f);
-static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.0f);
-static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.0f);
-static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.0f);
+static const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.5f);   // top left front
+static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.5f);    // top right front
+static const glm::vec3 p3 = glm::vec3(0.5f, -0.5f, 0.5f);   // bottom right front
+static const glm::vec3 p4 = glm::vec3(-0.5f, -0.5f, 0.5f);  // bottom left front
+static const glm::vec3 p5 = glm::vec3(-0.5f, 0.5f, -0.5f);  // top left back
+static const glm::vec3 p6 = glm::vec3(0.5f, 0.5f, -0.5f);   // top right back
+static const glm::vec3 p7 = glm::vec3(0.5f, -0.5f, -0.5f);  // bottom right back
+static const glm::vec3 p8 = glm::vec3(-0.5f, -0.5f, -0.5f); // bottom left back
 
-static int subdivisions = 3;
+        //      /P5------P6
+        //    P1------P2/ |
+        //    | |      |  |
+        //    | P8_____|_P7
+        //    P4/_____P3/
 
-static inline glm::vec3 randomColor() 
-    {
-        // picks a random color from the predefined colors (red, green, blue, yellow)
-        int random = rand() % 4;
+static int subdivisions = 1;
 
-        switch (random) 
-            {
-                case 0:
-                    return red;
-                case 1:
-                    return green;
-                case 2:
-                    return blue;
-                case 3:
-                    return yellow;
-                default:
-                    return red;
-            }
-    }
 
 void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
     {
@@ -67,49 +58,58 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
                 vertices->push_back({p3, green});
                 vertices->push_back({p2, blue});
                 vertices->push_back({p1, red});
+                vertices->push_back({p8, yellow});
+                vertices->push_back({p7, green});
+                vertices->push_back({p6, blue});
+                vertices->push_back({p5, red});
 
-                // 4, 3, 2
-                // 4, 2, 1
-                indices->push_back(0);
-                indices->push_back(1);
-                indices->push_back(2);
-                indices->push_back(0);
-                indices->push_back(2);
-                indices->push_back(3);
-            }
-        else 
-            {
-                for (int i = 0; i < subdivisions; i++) 
-                    {
-                        float t = (float) i / (subdivisions - 1);
-                        glm::vec3 a = lerp(p4, p1, t);
-                        glm::vec3 b = lerp(p3, p2, t);
+                // front
+                indices->push_back(0);  // front bottom left
+                indices->push_back(1);  // front bottom right
+                indices->push_back(2);  // front top right
+                indices->push_back(0);  // front bottom left
+                indices->push_back(2);  // front top right
+                indices->push_back(3);  // front top left
 
-                        for (int j = 0; j < subdivisions; j++) 
-                            {
-                                // interpolate between a and b
-                                float s = (float) j / (subdivisions - 1);
-                                glm::vec3 p = lerp(a, b, s);
-                                positions.push_back(p);
-                                colors.push_back(randomColor());
+                // back
+                indices->push_back(4);  // back bottom left
+                indices->push_back(5);  // back bottom right
+                indices->push_back(6);  // back top right
+                indices->push_back(4);  // back bottom left
+                indices->push_back(6);  // back top right
+                indices->push_back(7);  // back top left
 
-                                // add indices
-                                if (i < subdivisions - 1 && j < subdivisions - 1) 
-                                    {
-                                        int index = i * subdivisions + j;
-                                        indices->push_back(index);
-                                        indices->push_back(index + 1);
-                                        indices->push_back(index + subdivisions);
+                // bottom
+                indices->push_back(0);  // front bottom left
+                indices->push_back(4);  // back bottom left
+                indices->push_back(5);  // back bottom right
+                indices->push_back(0);  // front bottom left
+                indices->push_back(5);  // back bottom right
+                indices->push_back(1);  // front bottom right
 
-                                        indices->push_back(index + 1);
-                                        indices->push_back(index + 1 + subdivisions);
-                                        indices->push_back(index + subdivisions);
-                                    }
-                            }
-                    }
+                // right
+                indices->push_back(1);  // front bottom right
+                indices->push_back(5);  // back bottom right
+                indices->push_back(6);  // back top right
+                indices->push_back(1);  // front bottom right
+                indices->push_back(6);  // back top right
+                indices->push_back(2);  // front top right
 
-                // create vertices from positions and colors
-                for (int i = 0; i < positions.size(); i++) 
-                    { vertices->push_back({positions[i], colors[i]}); }
+                // top
+                indices->push_back(2);  // front top right
+                indices->push_back(6);  // back top right
+                indices->push_back(7);  // back top left
+                indices->push_back(2);  // front top right
+                indices->push_back(7);  // back top left
+                indices->push_back(3);  // front top left
+
+                // left
+                indices->push_back(3);  // front top left
+                indices->push_back(7);  // back top left
+                indices->push_back(4);  // back bottom left
+                indices->push_back(3);  // front top left
+                indices->push_back(4);  // back bottom left
+                indices->push_back(0);  // front bottom left
+
             }
     }

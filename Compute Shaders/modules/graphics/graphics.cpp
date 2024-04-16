@@ -114,7 +114,7 @@ void Graphics::illuminate()
         bool _quit = false;
 
         while (!_quit) {
-            while (SDL_PollEvent(&_e) != 0) 
+            while (SDL_PollEvent(&_e)) 
                 {
                     if (_e.type == SDL_QUIT) { _quit = !_quit; }
                     
@@ -131,14 +131,15 @@ void Graphics::illuminate()
                                 }
                         }
 
-                    _architect->drawFrame();
                 }
-
+            
             if (_suspended) 
                 {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                     continue;
                 }
+            else 
+                { _architect->drawFrame(); }
 
             //fnManifest();
         }
