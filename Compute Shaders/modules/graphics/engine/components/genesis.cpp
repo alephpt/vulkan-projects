@@ -44,15 +44,47 @@ static const glm::vec3 p8 = glm::vec3(-0.5f, -0.5f, -0.5f); // bottom left back
         //    | P8_____|_P7
         //    P4/_____P3/
 
-static int subdivisions = 1;
+static int subdivisions = 2;
 
+static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
+    {
+        for (int i = 0; i < subdivisions; i++) 
+            {
+                glm::vec3 ab = lerp(a, b, (float) i / subdivisions);
+                glm::vec3 bc = lerp(b, c, (float) i / subdivisions);
+                glm::vec3 cd = lerp(c, d, (float) i / subdivisions);
+                glm::vec3 da = lerp(d, a, (float) i / subdivisions);
+
+                for (int j = 0; j < subdivisions; j++) 
+                    {
+                        glm::vec3 ab_bc = lerp(ab, bc, (float) j / subdivisions);
+                        glm::vec3 bc_cd = lerp(bc, cd, (float) j / subdivisions);
+                        glm::vec3 cd_da = lerp(cd, da, (float) j / subdivisions);
+                        glm::vec3 da_ab = lerp(da, ab, (float) j / subdivisions);
+
+                        glm::vec3 mid = lerp(ab_bc, bc_cd, 0.5f);
+
+                        vertices->push_back({ab_bc, yellow});
+                        vertices->push_back({bc_cd, green});
+                        vertices->push_back({cd_da, blue});
+                        vertices->push_back({da_ab, red});
+
+                        indices->push_back(vertices->size() - 4);
+                        indices->push_back(vertices->size() - 3);
+                        indices->push_back(vertices->size() - 2);
+                        indices->push_back(vertices->size() - 4);
+                        indices->push_back(vertices->size() - 2);
+                        indices->push_back(vertices->size() - 1);
+                    }
+            }
+    }
 
 void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
     {
         std::vector<glm::vec3> positions = {};
         std::vector<glm::vec3> colors = {};
 
-        if (subdivisions <= 1) 
+        if (subdivisions < 1) 
             {
                 vertices->push_back({p4, yellow}); 
                 vertices->push_back({p3, green});
@@ -112,4 +144,21 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
                 indices->push_back(0);  // front bottom left
 
             }
+        else {
+            for (int sides = 0; sides < 6; sides++) 
+                {
+                    glm::vec3 a, b, c, d;
+                    switch (sides) 
+                        {
+                            case 0: a = p4; b = p3; c = p2; d = p1; break; // front
+                            case 1: a = p8; b = p7; c = p6; d = p5; break; // back
+                            case 2: a = p1; b = p2; c = p6; d = p5; break; // top
+                            case 3: a = p4; b = p3; c = p7; d = p8; break; // bottom
+                            case 4: a = p1; b = p4; c = p8; d = p5; break; // left
+                            case 5: a = p2; b = p3; c = p7; d = p6; break; // right
+                        }
+
+                    subdivide(a, b, c, d, vertices, indices);
+                }
+        }
     }
