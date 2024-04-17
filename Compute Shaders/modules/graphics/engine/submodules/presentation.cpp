@@ -6,7 +6,7 @@
     //  Virtual Swapchain Layers //
     ///////////////////////////////
 
-SwapChainSupportDetails GFXEngine::querySwapChainSupport(VkPhysicalDevice device)
+SwapChainSupportDetails Nova::querySwapChainSupport(VkPhysicalDevice device)
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
         
@@ -95,7 +95,7 @@ static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExt
     }
 
 
-void GFXEngine::querySwapChainDetails()
+void Nova::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
 
@@ -109,7 +109,7 @@ void GFXEngine::querySwapChainDetails()
         return;
     }
 
-void GFXEngine::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
+void Nova::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
     {
     *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -132,7 +132,7 @@ void GFXEngine::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, ui
 }
 
 // TODO: Wrap this in a class where we can just delete and recreate the swapchain using a singleton wrapper
-void GFXEngine::constructSwapChain() 
+void Nova::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
 
@@ -188,7 +188,7 @@ void GFXEngine::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo GFXEngine::createImageViewInfo(size_t image) {
+VkImageViewCreateInfo Nova::createImageViewInfo(size_t image) {
     return {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image = swapchain.images[image],
@@ -211,7 +211,7 @@ VkImageViewCreateInfo GFXEngine::createImageViewInfo(size_t image) {
 }
 
 
-void GFXEngine::constructImageViews()
+void Nova::constructImageViews()
     {
         report(LOGGER::VLINE, "\t .. Constructing Image Views ..");
 
@@ -232,7 +232,7 @@ void GFXEngine::constructImageViews()
     // FRAME BUFFER CREATION //
     ///////////////////////////
 
-void GFXEngine::createFrameBuffers()
+void Nova::createFrameBuffers()
     {
         report(LOGGER::VLINE, "Presentation - Creating Frame Buffers ..");
 
@@ -258,7 +258,7 @@ void GFXEngine::createFrameBuffers()
         return;
     }
 
-void GFXEngine::destroySwapChain() 
+void Nova::destroySwapChain() 
     {
         report(LOGGER::VERBOSE, "Presentation - Destroying Swapchain ..");
 
@@ -278,7 +278,7 @@ void GFXEngine::destroySwapChain()
         return;
     }
 
-void GFXEngine::recreateSwapChain() 
+void Nova::recreateSwapChain() 
     {
         report(LOGGER::VERBOSE, "Presentation - Recreating Swapchain ..");
 
@@ -318,7 +318,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
         return -1;
     }
 
-VkMemoryAllocateInfo GFXEngine::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+VkMemoryAllocateInfo Nova::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Memory Allocate Info ..");
 
@@ -346,7 +346,7 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageF
         };
     }
 
-void GFXEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
+void Nova::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Buffer ..");
 
@@ -378,7 +378,7 @@ static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& c
     }
 
 
-VkCommandBufferBeginInfo GFXEngine::createBeginInfo()
+VkCommandBufferBeginInfo Nova::createBeginInfo()
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -414,17 +414,18 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
 // and the Present Queue is used for presenting the swapchain images to the screen
-void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
+void Nova::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
-        VkCommandBuffer _cmd_buffer = createEphemeralCommand(queues.xfr.pool);
+        createEphemeralCommand(&queues.xfr);
 
         VkBufferCopy _copy_region = getBufferCopy(size);
-        vkCmdCopyBuffer(_cmd_buffer, src_buffer, dst_buffer, 1, &_copy_region);
+        vkCmdCopyBuffer(queues.xfr.buffer, src_buffer, dst_buffer, 1, &_copy_region);
 
-        flushCommandBuffer(&queues.xfr, "Copy Buffer");
+        char _cmd_name[] = "Copy Buffer";
+        flushCommandBuffer(&queues.xfr, _cmd_name);
     }
 
-void GFXEngine::destroyBuffer(BufferContext* buffer) 
+void Nova::destroyBuffer(BufferContext* buffer) 
     {
         report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
 

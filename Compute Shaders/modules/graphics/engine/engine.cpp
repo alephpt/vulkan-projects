@@ -3,13 +3,13 @@
 #include <SDL2/SDL_vulkan.h>
 
     // Get Current Frame
-FrameData& GFXEngine::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+FrameData& Nova::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
     ////////////////////////
     //  INSTANCE CREATION //
     ////////////////////////
 
-GFXEngine::GFXEngine(VkExtent2D extent) 
+Nova::Nova(VkExtent2D extent) 
     {
         _blankContext();
         setWindowExtent(extent);
@@ -34,9 +34,9 @@ GFXEngine::GFXEngine(VkExtent2D extent)
         // setWindowExtent(extent);
     }
 
-GFXEngine::~GFXEngine() 
+Nova::~Nova() 
     {
-        report(LOGGER::INFO, "GFXEngine - Destroying Context ..");
+        report(LOGGER::INFO, "Nova - Destroying Context ..");
         queues.deletion.flush();
 
         destroySwapChain();
@@ -47,7 +47,7 @@ GFXEngine::~GFXEngine()
         destroyIndexContext();
         destroyCommandContext();
         destroyPipeline(graphics_pipeline);
-        destroyPipeline(compute_pipeline);
+        //destroyPipeline(compute_pipeline);
 
         report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass ..");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
@@ -70,7 +70,7 @@ GFXEngine::~GFXEngine()
     // VULKAN INSTANCE //
     /////////////////////
 
-void GFXEngine::createVulkanInstance() 
+void Nova::createVulkanInstance() 
     {
         report(LOGGER::VLINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {
@@ -216,9 +216,9 @@ static SwapChainContext initSwapchain() {
 }
 
 
-void GFXEngine::_blankContext() 
+void Nova::_blankContext() 
     {
-        report(LOGGER::INFO, "GFXEngine - No Context ..");
+        report(LOGGER::INFO, "Nova - No Context ..");
 
         instance = VK_NULL_HANDLE;
         physical_device = VK_NULL_HANDLE;
@@ -237,7 +237,7 @@ void GFXEngine::_blankContext()
     }
 
 // This should not be done like this
-void GFXEngine::setWindowExtent(VkExtent2D extent) 
+void Nova::setWindowExtent(VkExtent2D extent) 
     {
         swapchain.extent = extent;
         //swapchain.details.extent = extent;
@@ -249,7 +249,7 @@ void GFXEngine::setWindowExtent(VkExtent2D extent)
     // LOGGING //
     /////////////
 
-void GFXEngine::logQueues() 
+void Nova::logQueues() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Queues ..");
         report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
@@ -273,7 +273,7 @@ void GFXEngine::logQueues()
         report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
     }
 
-void GFXEngine::logFrameData()
+void Nova::logFrameData()
     {
         report(LOGGER::DEBUG, "\t .. Logging Frame Data ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -288,7 +288,7 @@ void GFXEngine::logFrameData()
     
     }
 
-void GFXEngine::logSwapChain() 
+void Nova::logSwapChain() 
     {
         report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
         report(LOGGER::DLINE, "\t\tSwapchain: %p", swapchain.instance);
@@ -303,7 +303,7 @@ void GFXEngine::logSwapChain()
         report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
     }
 
-void GFXEngine::log() 
+void Nova::log() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Context ..");
         report(LOGGER::DLINE, "\t\tInstance: %p", instance);

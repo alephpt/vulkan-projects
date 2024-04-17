@@ -47,8 +47,8 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
         // Scene()
         // Render()
 
-        _architect = new GFXEngine(_window_extent);
-        _initFramework(); // Do we want to handle this in the GFXEngine?
+        _architect = new Nova(_window_extent);
+        _initFramework(); // Do we want to handle this in the Nova?
 
         _architect->swapchain.support = _architect->querySwapChainSupport(_architect->physical_device);
         _architect->querySwapChainDetails();
@@ -88,7 +88,7 @@ Graphics::~Graphics()
 
         if (initialized) 
             {         
-                report(LOGGER::VLINE, "\t .. Destroying GFXEngine ..");
+                report(LOGGER::VLINE, "\t .. Destroying Nova ..");
                 delete _architect;
 
                 report(LOGGER::VLINE, "\t .. Destroying Window ..");
@@ -182,7 +182,7 @@ void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<v
     {
         report(LOGGER::INFO, "Graphics - Initializing Graphics Pipeline ..");
 
-        // abstract both of these as part of the GFXEngine and rename _architect to GFXEngine
+        // abstract both of these as part of the Nova and rename _architect to Nova
 
         startingPipeline.wait();
         _architect->createRenderPass();

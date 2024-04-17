@@ -7,7 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../components/extern/stb_image.h"
+#include "../../components/extern/stb_image.h"
 const char* TEXTURE_PATH = "/home/persist/z/Ancillary/Big Stick Studios/repos/learning/Cpp/Vulkan/Compute Shaders/modules/graphics/engine/components/extern/texture.png";
 
 // Do we need to move this to the graphics pipeline?
@@ -27,7 +27,7 @@ static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         
 
-void GFXEngine::constructVertexBuffer() 
+void Nova::constructVertexBuffer() 
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
@@ -51,7 +51,7 @@ void GFXEngine::constructVertexBuffer()
         return;
     }
 
-void GFXEngine::constructIndexBuffer() 
+void Nova::constructIndexBuffer() 
     {
         report(LOGGER::VLINE, "\t .. Creating Index Buffer ..");
 
@@ -74,10 +74,10 @@ void GFXEngine::constructIndexBuffer()
         return;
     }
 
-void GFXEngine::destroyVertexContext() 
+void Nova::destroyVertexContext() 
     { report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context .."); destroyBuffer(&vertex); return; }
 
-void GFXEngine::destroyIndexContext() 
+void Nova::destroyIndexContext() 
     { report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context .."); destroyBuffer(&index); return; }
 
     /////////////////////////////
@@ -87,7 +87,7 @@ void GFXEngine::destroyIndexContext()
 static const VkBufferUsageFlags _uniform_usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 static const VkMemoryPropertyFlags _uniform_properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 
-void GFXEngine::constructUniformBuffer() 
+void Nova::constructUniformBuffer() 
     {
         report(LOGGER::VLINE, "\t .. Creating Uniform Buffer ..");
 
@@ -104,7 +104,7 @@ void GFXEngine::constructUniformBuffer()
             }
     }
 
-void GFXEngine::updateUniformBuffer(uint32_t current_frame)
+void Nova::updateUniformBuffer(uint32_t current_frame)
     {
         static auto _s_t = std::chrono::high_resolution_clock::now();
 
@@ -122,7 +122,7 @@ void GFXEngine::updateUniformBuffer(uint32_t current_frame)
         memcpy(uniform_data[current_frame], &_mvp, sizeof(MVP));
     }
 
-void GFXEngine::destroyUniformContext() 
+void Nova::destroyUniformContext() 
     {
         report(LOGGER::VERBOSE, "Scene - Destroying Uniform Context ..");
 
@@ -175,9 +175,9 @@ static inline VkImageMemoryBarrier getMemoryBarrier(VkImage& image, VkImageLayou
         };
     }
 
-inline void GFXEngine::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) 
+inline void Nova::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) 
     {
-        VkCommandBuffer _ephemeral_command = createEphemeralCommand(queues.xfr.pool);
+        createEphemeralCommand(&queues.xfr);
         VkImageMemoryBarrier _barrier = getMemoryBarrier(image, old_layout, new_layout);
         VkPipelineStageFlags _src_stage, _dst_stage;
 
@@ -201,7 +201,7 @@ inline void GFXEngine::transitionImageLayout(VkImage image, VkFormat format, VkI
             { report(LOGGER::ERROR, "Scene - Unsupported Layout Transition .."); return; }
 
         vkCmdPipelineBarrier(
-            _ephemeral_command, 
+            queues.xfr.buffer, 
             _src_stage, 
             _dst_stage, 
             0, 
@@ -213,7 +213,8 @@ inline void GFXEngine::transitionImageLayout(VkImage image, VkFormat format, VkI
             &_barrier
         );
 
-        flushCommandBuffer(&queues.xfr, "Transition Image Layout");
+        char _msg[] = "Transition Image Layout";
+        flushCommandBuffer(&queues.xfr, _msg);
     }
 
 static inline VkBufferImageCopy getImageCopyRegion(uint32_t width, uint32_t height) 
@@ -228,19 +229,22 @@ static inline VkBufferImageCopy getImageCopyRegion(uint32_t width, uint32_t heig
         };
     }
 
-inline void GFXEngine::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t& width, uint32_t& height) 
+inline void Nova::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height) 
     {
         report(LOGGER::VLINE, "\t .. Copying Buffer to Image ..");
 
-        VkCommandBuffer _ephemeral_command = createEphemeralCommand(queues.xfr.pool);
+        createEphemeralCommand(&queues.xfr);
+
         VkBufferImageCopy _region = getImageCopyRegion(width, height);
-        vkCmdCopyBufferToImage(_ephemeral_command, buffer, image, _IMAGE_LAYOUT_BIT, 1, &_region);
-        flushCommandBuffer(&queues.xfr, "Copy Buffer");
+        vkCmdCopyBufferToImage(queues.xfr.buffer, buffer, image, _IMAGE_LAYOUT_BIT, 1, &_region);
+
+        char _msg[] = "Copy Buffer";
+        flushCommandBuffer(&queues.xfr, _msg);
 
         return;
     }
 
-void GFXEngine::createTextureImage() 
+void Nova::createTextureImage() 
     {
         report(LOGGER::VLINE, "\t .. Creating Texture Buffer ..");
 

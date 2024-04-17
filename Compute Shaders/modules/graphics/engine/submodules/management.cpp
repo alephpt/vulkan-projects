@@ -1,16 +1,26 @@
 #include "../engine.h"
 
 
-    //////////////////////
-    // PIPELINE GATEWAY //
-    //////////////////////
+    ///////////////////////////
+    // PIPELINE CONSTRUCTION //
+    ///////////////////////////
 
-void GFXEngine::constructPipeline(Pipeline* pipeline) 
+void Nova::destroyPipeline(Pipeline* pipeline)
     {
-        report(LOGGER::DEBUG, "Management - Constructing Pipeline ..");
-        pipeline = new Pipeline();
+        report(LOGGER::DEBUG, "Management - Destroying Pipeline ..");
+        vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
+        vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
+        delete pipeline;
+        return;
+    }
 
-        pipeline->shaders(&logical_device)
+void Nova::constructGraphicsPipeline()
+    { 
+        report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); 
+        
+        graphics_pipeline = new Pipeline();
+
+        graphics_pipeline->shaders(&logical_device)
                 .vertexInput()
                 .inputAssembly()
                 .viewportState()
@@ -21,29 +31,22 @@ void GFXEngine::constructPipeline(Pipeline* pipeline)
                 .createLayout(&logical_device, &descriptor.layout)
                 .pipe(&render_pass)
                 .create(&logical_device);
-    }
 
-void GFXEngine::destroyPipeline(Pipeline* pipeline)
-    {
-        report(LOGGER::DEBUG, "Management - Destroying Pipeline ..");
-        vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
-        vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
-        delete pipeline;
-        return;
+        return; 
     }
-
-void GFXEngine::constructGraphicsPipeline()
-    { report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); constructPipeline(graphics_pipeline); return; }
     
-void GFXEngine::constructComputePipeline()
-    { report(LOGGER::DEBUG, "Management - Constructing Compute Pipeline .."); constructPipeline(compute_pipeline); return; }
-
+void Nova::constructComputePipeline()
+    { 
+        report(LOGGER::DEBUG, "Management - Constructing Compute Pipeline .."); 
+        
+        return; 
+    }
 
     //////////////////////////
     // RENDER PASS CREATION //
     //////////////////////////
 
-VkAttachmentDescription GFXEngine::colorAttachment()
+VkAttachmentDescription Nova::colorAttachment()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Attachment ..");
 
@@ -96,7 +99,7 @@ static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_atta
         };
     }
 
-void GFXEngine::createRenderPass()
+void Nova::createRenderPass()
     {
         report(LOGGER::VLINE, "\t .. Creating Render Pass ..");
 
@@ -112,7 +115,7 @@ void GFXEngine::createRenderPass()
     }
 
 
-VkRenderPassBeginInfo GFXEngine::getRenderPassInfo(size_t i)
+VkRenderPassBeginInfo Nova::getRenderPassInfo(size_t i)
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -152,7 +155,7 @@ static inline VkDescriptorSetLayoutCreateInfo _getLayoutInfo(VkDescriptorSetLayo
             };
     }
 
-void GFXEngine::createDescriptorSetLayout() 
+void Nova::createDescriptorSetLayout() 
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Set Layout ..");
 
@@ -188,7 +191,7 @@ static inline VkDescriptorPoolCreateInfo getPoolInfo(uint32_t ct, VkDescriptorPo
         };
     }
 
-void GFXEngine::constructDescriptorPool() 
+void Nova::constructDescriptorPool() 
     {
         report(LOGGER::VLINE, "\t .. Constructing Descriptor Pool ..");
 
@@ -242,7 +245,7 @@ static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDe
         };
     }
 
-void GFXEngine::createDescriptorSets() 
+void Nova::createDescriptorSets() 
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Sets ..");
 
@@ -277,7 +280,7 @@ static inline VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_f
             };
     }
     
-void GFXEngine::createCommandPool() 
+void Nova::createCommandPool() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
@@ -303,7 +306,7 @@ void GFXEngine::createCommandPool()
         return;
     }
 
-inline VkCommandBufferAllocateInfo GFXEngine::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
+inline VkCommandBufferAllocateInfo Nova::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
     {
         report(LOGGER::VLINE, "\t\t .. Creating %s Command Buffer Info  ..", name);
 
@@ -316,7 +319,7 @@ inline VkCommandBufferAllocateInfo GFXEngine::createCommandBuffersInfo(VkCommand
             };
     }
 
-void GFXEngine::createCommandBuffers() 
+void Nova::createCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Buffers ..");
 
@@ -327,11 +330,12 @@ void GFXEngine::createCommandBuffers()
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd.buffer));
         }
 
-        {
-            char name[] = "Transfer";
-            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
-        }
+        // We want to reserve a command buffer for transfer operations and ephemeral commands
+        // {
+        //     char name[] = "Transfer";
+        //     VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
+        //     VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
+        // }
 
         {
             char name[] = "Compute";
@@ -343,19 +347,17 @@ void GFXEngine::createCommandBuffers()
     }
 
 
-VkCommandBuffer GFXEngine::createEphemeralCommand(VkCommandPool& pool) 
+void Nova::createEphemeralCommand(CommandContext* cmd) 
     {
         report(LOGGER::VLINE, "\t .. Creating Ephemeral Command Buffer ..");
 
-        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(pool, "Ephemeral");
-        VkCommandBuffer _ephemeral_cmd;
+        char name[] = "Ephemeral";
+        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(cmd->pool, name);
 
-        VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &_ephemeral_cmd));
+        VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &cmd->buffer));
 
         VkCommandBufferBeginInfo _begin_info = createBeginInfo();
-        VK_TRY(vkBeginCommandBuffer(_ephemeral_cmd, &_begin_info));
-
-        return _ephemeral_cmd;
+        VK_TRY(vkBeginCommandBuffer(cmd->buffer, &_begin_info));
     }
 
 static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
@@ -375,7 +377,7 @@ static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
         };
     }
 
-inline void GFXEngine::flushCommandBuffer(CommandContext* cmd, char* name) 
+void Nova::flushCommandBuffer(CommandContext* cmd, char* name) 
     {
         report(LOGGER::VLINE, "\t .. Ending %s Command Buffer ..", name);
 
@@ -392,7 +394,7 @@ inline void GFXEngine::flushCommandBuffer(CommandContext* cmd, char* name)
         return;
     }
 
-void GFXEngine::destroyCommandContext()
+void Nova::destroyCommandContext()
     {
         report(LOGGER::VERBOSE, "Management - Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -435,7 +437,7 @@ static VkFenceCreateInfo createFenceInfo()
         };
     }
 
-void GFXEngine::createSyncObjects() 
+void Nova::createSyncObjects() 
     {
         report(LOGGER::VLINE, "\t .. Creating Sync Objects ..");
 

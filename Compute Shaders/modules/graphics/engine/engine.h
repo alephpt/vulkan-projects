@@ -3,7 +3,7 @@
 #include "./components/lexicon.h"
 
 
-class GFXEngine {
+class Nova {
     public:
         VkInstance instance;
         VkPhysicalDevice physical_device;
@@ -14,8 +14,8 @@ class GFXEngine {
 
         bool framebuffer_resized = false;
 
-        GFXEngine(VkExtent2D);
-        ~GFXEngine();
+        Nova(VkExtent2D);
+        ~Nova();
 
         void log();
 
@@ -85,7 +85,7 @@ class GFXEngine {
 
         VkCommandBufferBeginInfo createBeginInfo();
         VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
-        VkCommandBuffer createEphemeralCommand(VkCommandPool&);
+        void createEphemeralCommand(CommandContext*);
         void flushCommandBuffer(CommandContext*, char*);
 
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
@@ -95,7 +95,7 @@ class GFXEngine {
         void updateUniformBuffer(uint32_t);
 
         void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout);
-        void copyBufferToImage(VkBuffer&, VkImage&, uint32_t&, uint32_t&);
+        void copyBufferToImage(VkBuffer&, VkImage&, uint32_t, uint32_t);
 
         bool deviceProvisioned(VkPhysicalDevice);
         void destroySwapChain();

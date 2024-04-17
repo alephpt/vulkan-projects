@@ -8,7 +8,7 @@
     // VALIDATION LAYER //
     //////////////////////
 
-bool GFXEngine::checkValidationLayerSupport() 
+bool Nova::checkValidationLayerSupport() 
     {
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -28,7 +28,7 @@ bool GFXEngine::checkValidationLayerSupport()
     //  Device Queues //
     ////////////////////
 
-void GFXEngine::setQueueFamilyProperties(unsigned int i) {
+void Nova::setQueueFamilyProperties(unsigned int i) {
     VkQueueFamilyProperties* queue_family = &queues.families[i];
     std::string queue_name = "";
 
@@ -75,7 +75,7 @@ void GFXEngine::setQueueFamilyProperties(unsigned int i) {
     report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
 }
 
-void GFXEngine::getQueueFamilies(VkPhysicalDevice scanned_device) 
+void Nova::getQueueFamilies(VkPhysicalDevice scanned_device) 
     {
         report(LOGGER::VLINE, "\t .. Acquiring Queue Families ..");
         uint32_t _queue_family_count = 0;
@@ -131,7 +131,7 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     //  DEVICE PROVISION  //
     ////////////////////////
 
-bool GFXEngine::deviceProvisioned(VkPhysicalDevice scanned_device)
+bool Nova::deviceProvisioned(VkPhysicalDevice scanned_device)
     {
         getQueueFamilies(scanned_device);
         bool extensions_supported = checkDeviceExtensionSupport(scanned_device);
@@ -151,7 +151,7 @@ bool GFXEngine::deviceProvisioned(VkPhysicalDevice scanned_device)
     // PHYSICAL DEVICE INFO //
     //////////////////////////
 
-void GFXEngine::createPhysicalDevice() 
+void Nova::createPhysicalDevice() 
     {
         report(LOGGER::VLINE, "\t .. Scanning for Physical Devices ..");
 
@@ -197,7 +197,7 @@ void GFXEngine::createPhysicalDevice()
     // LOGICAL DEVICE INFO //
     /////////////////////////
 
-VkDeviceQueueCreateInfo GFXEngine::getQueueCreateInfo(uint32_t queue_family)
+VkDeviceQueueCreateInfo Nova::getQueueCreateInfo(uint32_t queue_family)
     {
         return {
                 sType: VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -207,7 +207,7 @@ VkDeviceQueueCreateInfo GFXEngine::getQueueCreateInfo(uint32_t queue_family)
             };
     }
 
-void GFXEngine::createLogicalDevice()
+void Nova::createLogicalDevice()
     {
         report(LOGGER::VLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};

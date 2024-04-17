@@ -25,7 +25,7 @@ class Graphics {
         bool _suspended = false;
         VkExtent2D _window_extent;
         struct SDL_Window* _window = nullptr;
-        GFXEngine* _architect;
+        Nova* _architect;
 
         VkDebugUtilsMessengerEXT _debug_messenger;
 

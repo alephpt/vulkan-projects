@@ -26,7 +26,7 @@ static inline VkRect2D getScissor(VkExtent2D extent)
         };
     }
 
-void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
+void Nova::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
         //report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
 
@@ -59,7 +59,7 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         return;
     }
 
-void GFXEngine::resetCommandBuffers() 
+void Nova::resetCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
@@ -132,7 +132,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSema
     // ACTUAL DRAW //
     /////////////////
 
-void GFXEngine::drawFrame() 
+void Nova::drawFrame() 
     {
         //report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
@@ -204,6 +204,6 @@ void GFXEngine::drawFrame()
     // TRANSITION IMAGE //
     //////////////////////
 
-void GFXEngine::transitionImage() {
+void Nova::transitionImage() {
     
 }
