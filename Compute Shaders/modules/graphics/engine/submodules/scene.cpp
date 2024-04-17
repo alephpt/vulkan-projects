@@ -1,10 +1,14 @@
 #include "../engine.h"
 #include <cstring>
 #include <chrono>
+
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../components/extern/stb_image.h"
+const char* TEXTURE_PATH = "/home/persist/z/Ancillary/Big Stick Studios/repos/learning/Cpp/Vulkan/Compute Shaders/modules/graphics/engine/components/extern/texture.png";
 
     ////////////////////////////
     // OBJECT BUFFER CREATION //
@@ -23,7 +27,7 @@ void GFXEngine::constructVertexBuffer()
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Buffer ..");
 
-        VkDeviceSize _buffer_size = sizeof(pipeline->vertices[0]) * pipeline->vertices.size();
+        VkDeviceSize _buffer_size = sizeof(graphics_pipeline->vertices[0]) * graphics_pipeline->vertices.size();
 
         BufferContext _staging;
         createBuffer(_buffer_size, _staging_usage, _staging_properties, &_staging);
@@ -31,7 +35,7 @@ void GFXEngine::constructVertexBuffer()
         // We do this to copy the data from the CPU to the GPU
         void* data;
         vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data); // This maps the memory to the CPU
-        memcpy(data, pipeline->vertices.data(), (size_t)_buffer_size);           // This copies the data to the memory
+        memcpy(data, graphics_pipeline->vertices.data(), (size_t)_buffer_size);           // This copies the data to the memory
         vkUnmapMemory(logical_device, _staging.memory);                          // This unmaps the memory from the CPU
 
         // We create the buffer that will be used by the GPU
@@ -47,7 +51,7 @@ void GFXEngine::constructIndexBuffer()
     {
         report(LOGGER::VLINE, "\t .. Creating Index Buffer ..");
 
-        VkDeviceSize _buffer_size = sizeof(pipeline->indices[0]) * pipeline->indices.size();
+        VkDeviceSize _buffer_size = sizeof(graphics_pipeline->indices[0]) * graphics_pipeline->indices.size();
         report(LOGGER::VLINE, "\t\t .. Buffer Size: %d", _buffer_size);
 
         BufferContext _staging;
@@ -55,35 +59,22 @@ void GFXEngine::constructIndexBuffer()
 
         void* data;
         vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);
-        memcpy(data, pipeline->indices.data(), (size_t)_buffer_size);
+        memcpy(data, graphics_pipeline->indices.data(), (size_t)_buffer_size);
         vkUnmapMemory(logical_device, _staging.memory);
 
         createBuffer(_buffer_size, _index_usage, _index_properties, &index);
         copyBuffer(_staging.buffer, index.buffer, _buffer_size);
-
+ 
         destroyBuffer(&_staging);
 
         return;
     }
 
 void GFXEngine::destroyVertexContext() 
-    {
-        report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context ..");
-
-        destroyBuffer(&vertex);
-
-        return;
-    }
-
+    { report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context .."); destroyBuffer(&vertex); return; }
 
 void GFXEngine::destroyIndexContext() 
-    {
-        report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context ..");
-
-        destroyBuffer(&index);
-
-        return;
-    }
+    { report(LOGGER::VERBOSE, "Scene - Destroying Vertex Context .."); destroyBuffer(&index); return; }
 
     /////////////////////////////
     // UNIFORM BUFFER CREATION //
@@ -133,4 +124,43 @@ void GFXEngine::destroyUniformContext()
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             { destroyBuffer(&uniform[i]); }
+    }
+
+    /////////////////////////////
+    // TEXTURE BUFFER CREATION //
+    /////////////////////////////
+
+static const VkBufferUsageFlags _texture_usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+static const VkMemoryPropertyFlags _texture_properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+static inline VkImageCreateInfo createImageInfo(int w, int h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) 
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+            .flags = 0,
+            .imageType = VK_IMAGE_TYPE_2D,
+            .format = format,
+            .extent = { .width = (uint32_t)w, .height = (uint32_t)h, .depth = 1 },
+            .mipLevels = 1,
+            .arrayLayers = 1,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .tiling = tiling,
+            .usage = usage,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        };
+    }
+
+void GFXEngine::createTextureImage() 
+    {
+        report(LOGGER::VLINE, "\t .. Creating Texture Buffer ..");
+
+        int _tex_width, _tex_height, _tex_channels;
+        stbi_uc* _pixels = stbi_load(TEXTURE_PATH, &_tex_width, &_tex_height, &_tex_channels, STBI_rgb_alpha);
+        VkDeviceSize _image_size = _tex_width * _tex_height * 4;
+
+        if (!_pixels) 
+            { report(LOGGER::ERROR, "Scene - Failed to load texture image .."); return; }
+
+        return;
     }

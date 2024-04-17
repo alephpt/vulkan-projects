@@ -36,7 +36,7 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkRenderPassBeginInfo _render_pass_info = getRenderPassInfo(i);
         vkCmdBeginRenderPass(command_buffer, &_render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->instance);
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->instance);
 
         VkViewport _viewport = getViewport(swapchain.extent);
         vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
@@ -48,9 +48,9 @@ void GFXEngine::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i
         VkDeviceSize _offsets[] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
         vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
 
-        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(pipeline->indices.size()), 1, 0, 0, 0);
+        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(graphics_pipeline->indices.size()), 1, 0, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 

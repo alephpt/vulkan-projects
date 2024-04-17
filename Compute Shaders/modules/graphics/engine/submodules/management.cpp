@@ -5,7 +5,7 @@
     // PIPELINE GATEWAY //
     //////////////////////
 
-void GFXEngine::constructPipeline() 
+void GFXEngine::constructPipeline(Pipeline* pipeline) 
     {
         report(LOGGER::DEBUG, "Management - Constructing Pipeline ..");
         pipeline = new Pipeline();
@@ -23,7 +23,7 @@ void GFXEngine::constructPipeline()
                 .create(&logical_device);
     }
 
-void GFXEngine::destroyPipeline()
+void GFXEngine::destroyPipeline(Pipeline* pipeline)
     {
         report(LOGGER::DEBUG, "Management - Destroying Pipeline ..");
         vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
@@ -31,6 +31,12 @@ void GFXEngine::destroyPipeline()
         delete pipeline;
         return;
     }
+
+void GFXEngine::constructGraphicsPipeline()
+    { report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); constructPipeline(graphics_pipeline); return; }
+    
+void GFXEngine::constructComputePipeline()
+    { report(LOGGER::DEBUG, "Management - Constructing Compute Pipeline .."); constructPipeline(compute_pipeline); return; }
 
 
     //////////////////////////

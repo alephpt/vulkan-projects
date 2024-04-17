@@ -187,7 +187,8 @@ void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<v
         startingPipeline.wait();
         _architect->createRenderPass();
         _architect->createDescriptorSetLayout();
-        _architect->constructPipeline();
+        _architect->constructGraphicsPipeline();
+        //_architect->constructComputePipeline();
         waitForPipeline.set_value();
      
         return;
@@ -197,10 +198,11 @@ void Graphics::_initBuffers()
     {
         report(LOGGER::INFO, "Graphics - Initializing Command Operator ..");
 
-        _architect->createCommandPool();
+        _architect->createCommandPool(); 
+        _architect->createTextureImage(); 
         _architect->constructVertexBuffer();
-        _architect->constructIndexBuffer();
-        _architect->constructUniformBuffer();
+        _architect->constructIndexBuffer(); 
+        _architect->constructUniformBuffer(); 
         // TODO: multithread Command Buffer to init as part of the Management Phase
         _architect->constructDescriptorPool();
         _architect->createDescriptorSets();

@@ -31,6 +31,7 @@ class GFXEngine {
         void createRenderPass();
         void createDescriptorSetLayout();
         void createCommandPool();
+        void createTextureImage();
         void constructVertexBuffer();
         void constructIndexBuffer();
         void constructUniformBuffer();
@@ -38,7 +39,8 @@ class GFXEngine {
         void createDescriptorSets();
         void createCommandBuffers();
         void createSyncObjects();
-        void constructPipeline();
+        void constructGraphicsPipeline();
+        void constructComputePipeline();
         
         void drawFrame();
 
@@ -47,7 +49,8 @@ class GFXEngine {
         VkRenderPass render_pass;
         QueuePresentContext present;
         DescriptorContext descriptor;
-        Pipeline *pipeline;
+        Pipeline *graphics_pipeline;
+        Pipeline *compute_pipeline;
         BufferContext vertex;
         BufferContext index;
         std::vector<BufferContext> uniform;
@@ -75,7 +78,9 @@ class GFXEngine {
 
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
-        
+
+        void constructPipeline(Pipeline*);
+
         VkCommandBufferBeginInfo createBeginInfo();
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
@@ -90,6 +95,6 @@ class GFXEngine {
         void destroyVertexContext();
         void destroyIndexContext();
         void destroyUniformContext();
-        void destroyPipeline();
+        void destroyPipeline(Pipeline*);
 };
 
