@@ -71,6 +71,8 @@ class GFXEngine {
         VkDeviceQueueCreateInfo getQueueCreateInfo(uint32_t);
         void setQueueFamilyProperties(unsigned int);
 
+        VkMemoryAllocateInfo getMemoryAllocateInfo(VkMemoryRequirements, VkMemoryPropertyFlags);
+
         void createSwapchainInfoKHR(VkSwapchainCreateInfoKHR*, uint32_t);
         VkImageViewCreateInfo createImageViewInfo(size_t);
         void transitionImage();
@@ -82,11 +84,18 @@ class GFXEngine {
         void constructPipeline(Pipeline*);
 
         VkCommandBufferBeginInfo createBeginInfo();
+        VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
+        VkCommandBuffer createEphemeralCommand(VkCommandPool&);
+        void flushCommandBuffer(CommandContext*, char*);
+
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
         void resetCommandBuffers();
         void updateUniformBuffer(uint32_t);
+
+        void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout);
+        void copyBufferToImage(VkBuffer&, VkImage&, uint32_t&, uint32_t&);
 
         bool deviceProvisioned(VkPhysicalDevice);
         void destroySwapChain();

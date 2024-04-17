@@ -39,6 +39,11 @@ void Pipeline::clear()
         _depth_stencil = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO }; // not used
         _render_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
         _shader_stages.clear();
+        _shader_modules.clear();
+        vertices.clear();
+        indices.clear();
+        texture_image = VK_NULL_HANDLE;
+        texture_image_memory = VK_NULL_HANDLE;
     }
 
 

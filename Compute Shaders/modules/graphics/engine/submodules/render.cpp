@@ -128,21 +128,6 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSema
         };
     }
 
-static inline VkSubmitInfo2 getSubmitInfo2(VkSemaphoreSubmitInfo* wait_info, VkCommandBufferSubmitInfo* command_info, VkSemaphoreSubmitInfo* signal_info) 
-    {
-        return {
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
-            .pNext = nullptr,
-            .waitSemaphoreInfoCount = 1,
-            .pWaitSemaphoreInfos = wait_info,
-            .commandBufferInfoCount = 1,
-            .pCommandBufferInfos = command_info,
-            .signalSemaphoreInfoCount = 1,
-            .pSignalSemaphoreInfos = signal_info
-        };
-    }
-
-
     /////////////////
     // ACTUAL DRAW //
     /////////////////

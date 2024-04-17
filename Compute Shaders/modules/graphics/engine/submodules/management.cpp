@@ -303,7 +303,7 @@ void GFXEngine::createCommandPool()
         return;
     }
 
-static inline VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
+inline VkCommandBufferAllocateInfo GFXEngine::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
     {
         report(LOGGER::VLINE, "\t\t .. Creating %s Command Buffer Info  ..", name);
 
@@ -342,7 +342,57 @@ void GFXEngine::createCommandBuffers()
         return;
     }
 
- void GFXEngine::destroyCommandContext()
+
+VkCommandBuffer GFXEngine::createEphemeralCommand(VkCommandPool& pool) 
+    {
+        report(LOGGER::VLINE, "\t .. Creating Ephemeral Command Buffer ..");
+
+        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(pool, "Ephemeral");
+        VkCommandBuffer _ephemeral_cmd;
+
+        VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &_ephemeral_cmd));
+
+        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VK_TRY(vkBeginCommandBuffer(_ephemeral_cmd, &_begin_info));
+
+        return _ephemeral_cmd;
+    }
+
+static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Submit Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+            .pNext = nullptr,
+            .waitSemaphoreCount = 0,
+            .pWaitSemaphores = nullptr,
+            .pWaitDstStageMask = nullptr,
+            .commandBufferCount = 1,
+            .pCommandBuffers = cmd,
+            .signalSemaphoreCount = 0,
+            .pSignalSemaphores = nullptr
+        };
+    }
+
+inline void GFXEngine::flushCommandBuffer(CommandContext* cmd, char* name) 
+    {
+        report(LOGGER::VLINE, "\t .. Ending %s Command Buffer ..", name);
+
+        VK_TRY(vkEndCommandBuffer(cmd->buffer));
+
+        // Submit the command buffer
+        VkSubmitInfo _submit_info = createSubmitInfo(&cmd->buffer);
+        VK_TRY(vkQueueSubmit(queues.graphics, 1, &_submit_info, VK_NULL_HANDLE));
+        VK_TRY(vkQueueWaitIdle(queues.graphics));
+
+        // Free the command buffer
+        vkFreeCommandBuffers(logical_device, cmd->pool, 1, &cmd->buffer);
+
+        return;
+    }
+
+void GFXEngine::destroyCommandContext()
     {
         report(LOGGER::VERBOSE, "Management - Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 

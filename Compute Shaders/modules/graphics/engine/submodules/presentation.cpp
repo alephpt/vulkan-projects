@@ -318,7 +318,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
         return -1;
     }
 
-static inline VkMemoryAllocateInfo getMemoryAllocateInfo(VkPhysicalDevice& physical_device, VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+VkMemoryAllocateInfo GFXEngine::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Memory Allocate Info ..");
 
@@ -356,7 +356,7 @@ void GFXEngine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemo
         VkMemoryRequirements _mem_reqs;
         vkGetBufferMemoryRequirements(logical_device, buffer->buffer, &_mem_reqs);
 
-        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(physical_device, _mem_reqs, properties);
+        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(_mem_reqs, properties);
         VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &buffer->memory));
 
         vkBindBufferMemory(logical_device, buffer->buffer, buffer->memory, 0);
@@ -416,23 +416,12 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // and the Present Queue is used for presenting the swapchain images to the screen
 void GFXEngine::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
-        VkCommandBufferAllocateInfo _cmd_buf_info = getCommandBuffersInfo(queues.xfr.pool, 1);
-        VkCommandBuffer _cmd_buffer;
-        VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmd_buf_info, &_cmd_buffer));
-        
-        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
-        VK_TRY(vkBeginCommandBuffer(_cmd_buffer, &_begin_info));
+        VkCommandBuffer _cmd_buffer = createEphemeralCommand(queues.xfr.pool);
 
         VkBufferCopy _copy_region = getBufferCopy(size);
         vkCmdCopyBuffer(_cmd_buffer, src_buffer, dst_buffer, 1, &_copy_region);
 
-        VK_TRY(vkEndCommandBuffer(_cmd_buffer));
-
-        VkSubmitInfo _submit_info = getSubmitInfo(&_cmd_buffer);
-        VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
-        VK_TRY(vkQueueWaitIdle(queues.transfer));
-
-        vkFreeCommandBuffers(logical_device, queues.xfr.pool, 1, &_cmd_buffer);
+        flushCommandBuffer(&queues.xfr, "Copy Buffer");
     }
 
 void GFXEngine::destroyBuffer(BufferContext* buffer) 
