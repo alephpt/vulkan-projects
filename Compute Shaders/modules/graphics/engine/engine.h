@@ -85,8 +85,8 @@ class Nova {
 
         VkCommandBufferBeginInfo createBeginInfo();
         VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
-        void createEphemeralCommand(CommandContext*);
-        void flushCommandBuffer(CommandContext*, char*);
+        VkCommandBuffer createEphemeralCommand(VkCommandPool&);
+        void flushCommandBuffer(VkCommandBuffer&, char*);
 
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);

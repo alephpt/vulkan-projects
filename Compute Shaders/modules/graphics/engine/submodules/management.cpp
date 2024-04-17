@@ -308,7 +308,7 @@ void Nova::createCommandPool()
 
 inline VkCommandBufferAllocateInfo Nova::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating %s Command Buffer Info  ..", name);
+        report(LOGGER::VLINE, "\t\t\t\t .. Creating %s Command Buffer Info  ..", name);
 
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -330,12 +330,11 @@ void Nova::createCommandBuffers()
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd.buffer));
         }
 
-        // We want to reserve a command buffer for transfer operations and ephemeral commands
-        // {
-        //     char name[] = "Transfer";
-        //     VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
-        //     VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
-        // }
+        {
+            char name[] = "Transfer";
+            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
+        }
 
         {
             char name[] = "Compute";
@@ -347,17 +346,21 @@ void Nova::createCommandBuffers()
     }
 
 
-void Nova::createEphemeralCommand(CommandContext* cmd) 
+VkCommandBuffer Nova::createEphemeralCommand(VkCommandPool& pool) 
     {
-        report(LOGGER::VLINE, "\t .. Creating Ephemeral Command Buffer ..");
+        report(LOGGER::VLINE, "\t\t\t .. Creating Ephemeral Command Buffer ..");
+
+        VkCommandBuffer _buffer;
 
         char name[] = "Ephemeral";
-        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(cmd->pool, name);
+        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(pool, name);
 
-        VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &cmd->buffer));
+        VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &_buffer));
 
         VkCommandBufferBeginInfo _begin_info = createBeginInfo();
-        VK_TRY(vkBeginCommandBuffer(cmd->buffer, &_begin_info));
+        VK_TRY(vkBeginCommandBuffer(_buffer, &_begin_info));
+
+        return _buffer;
     }
 
 static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
@@ -377,19 +380,19 @@ static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
         };
     }
 
-void Nova::flushCommandBuffer(CommandContext* cmd, char* name) 
+void Nova::flushCommandBuffer(VkCommandBuffer& buf, char* name) 
     {
         report(LOGGER::VLINE, "\t .. Ending %s Command Buffer ..", name);
 
-        VK_TRY(vkEndCommandBuffer(cmd->buffer));
+        VK_TRY(vkEndCommandBuffer(buf));
 
         // Submit the command buffer
-        VkSubmitInfo _submit_info = createSubmitInfo(&cmd->buffer);
-        VK_TRY(vkQueueSubmit(queues.graphics, 1, &_submit_info, VK_NULL_HANDLE));
-        VK_TRY(vkQueueWaitIdle(queues.graphics));
+        VkSubmitInfo _submit_info = createSubmitInfo(&buf);
+        VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
+        VK_TRY(vkQueueWaitIdle(queues.transfer));
 
         // Free the command buffer
-        vkFreeCommandBuffers(logical_device, cmd->pool, 1, &cmd->buffer);
+        vkFreeCommandBuffers(logical_device, queues.xfr.pool, 1, &buf);
 
         return;
     }

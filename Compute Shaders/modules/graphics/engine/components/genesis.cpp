@@ -44,7 +44,7 @@ static const glm::vec3 p8 = glm::vec3(-0.5f, -0.5f, -0.5f); // bottom left back
         //    | P8_____|_P7
         //    P4/_____P3/
 
-static int subdivisions = 2;
+static int subdivisions = 0;
 
 static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
     {
@@ -69,12 +69,13 @@ static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::v
                         vertices->push_back({cd_da, blue});
                         vertices->push_back({da_ab, red});
 
-                        indices->push_back(vertices->size() - 4);
-                        indices->push_back(vertices->size() - 3);
-                        indices->push_back(vertices->size() - 2);
-                        indices->push_back(vertices->size() - 4);
-                        indices->push_back(vertices->size() - 2);
-                        indices->push_back(vertices->size() - 1);
+                        uint32_t offset = vertices->size() - 4;
+                        indices->push_back(offset);
+                        indices->push_back(offset + 1);
+                        indices->push_back(offset + 2);
+                        indices->push_back(offset);
+                        indices->push_back(offset + 2);
+                        indices->push_back(offset + 3);
                     }
             }
     }

@@ -177,7 +177,8 @@ static inline VkImageMemoryBarrier getMemoryBarrier(VkImage& image, VkImageLayou
 
 inline void Nova::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) 
     {
-        createEphemeralCommand(&queues.xfr);
+        report(LOGGER::VLINE, "\t .. Transitioning Image Layout ..");
+        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
         VkImageMemoryBarrier _barrier = getMemoryBarrier(image, old_layout, new_layout);
         VkPipelineStageFlags _src_stage, _dst_stage;
 
@@ -201,7 +202,7 @@ inline void Nova::transitionImageLayout(VkImage image, VkFormat format, VkImageL
             { report(LOGGER::ERROR, "Scene - Unsupported Layout Transition .."); return; }
 
         vkCmdPipelineBarrier(
-            queues.xfr.buffer, 
+            _ephemeral_cmd, 
             _src_stage, 
             _dst_stage, 
             0, 
@@ -214,7 +215,7 @@ inline void Nova::transitionImageLayout(VkImage image, VkFormat format, VkImageL
         );
 
         char _msg[] = "Transition Image Layout";
-        flushCommandBuffer(&queues.xfr, _msg);
+        flushCommandBuffer(_ephemeral_cmd, _msg);
     }
 
 static inline VkBufferImageCopy getImageCopyRegion(uint32_t width, uint32_t height) 
@@ -233,13 +234,13 @@ inline void Nova::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t w
     {
         report(LOGGER::VLINE, "\t .. Copying Buffer to Image ..");
 
-        createEphemeralCommand(&queues.xfr);
+        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
 
         VkBufferImageCopy _region = getImageCopyRegion(width, height);
-        vkCmdCopyBufferToImage(queues.xfr.buffer, buffer, image, _IMAGE_LAYOUT_BIT, 1, &_region);
+        vkCmdCopyBufferToImage(_ephemeral_cmd, buffer, image, _IMAGE_LAYOUT_BIT, 1, &_region);
 
         char _msg[] = "Copy Buffer";
-        flushCommandBuffer(&queues.xfr, _msg);
+        flushCommandBuffer(_ephemeral_cmd, _msg);
 
         return;
     }

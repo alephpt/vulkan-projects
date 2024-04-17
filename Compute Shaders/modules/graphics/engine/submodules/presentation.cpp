@@ -305,7 +305,7 @@ void Nova::recreateSwapChain()
 
 static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::VLINE, "\t\t .. Finding Memory Type ..");
+        report(LOGGER::VLINE, "\t\t\t\t .. Finding Memory Type ..");
 
         VkPhysicalDeviceMemoryProperties mem_props;
         vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
@@ -320,7 +320,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
 
 VkMemoryAllocateInfo Nova::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating Memory Allocate Info ..");
+        report(LOGGER::VLINE, "\t\t\t .. Creating Memory Allocate Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -332,7 +332,7 @@ VkMemoryAllocateInfo Nova::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, 
 
 static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageFlags usage)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating Buffer Info ..");
+        report(LOGGER::VLINE, "\t\t\t .. Creating Buffer Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -416,13 +416,14 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // and the Present Queue is used for presenting the swapchain images to the screen
 void Nova::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
-        createEphemeralCommand(&queues.xfr);
+        report(LOGGER::VLINE, "\t\t .. Copying Buffer ..");
+        VkCommandBuffer _ephemeral_buffer = createEphemeralCommand(queues.xfr.pool);
 
         VkBufferCopy _copy_region = getBufferCopy(size);
-        vkCmdCopyBuffer(queues.xfr.buffer, src_buffer, dst_buffer, 1, &_copy_region);
+        vkCmdCopyBuffer(_ephemeral_buffer, src_buffer, dst_buffer, 1, &_copy_region);
 
         char _cmd_name[] = "Copy Buffer";
-        flushCommandBuffer(&queues.xfr, _cmd_name);
+        flushCommandBuffer(_ephemeral_buffer, _cmd_name);
     }
 
 void Nova::destroyBuffer(BufferContext* buffer) 
