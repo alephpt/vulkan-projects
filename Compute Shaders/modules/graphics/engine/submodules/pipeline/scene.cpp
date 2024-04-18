@@ -25,7 +25,7 @@ static const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE
 static const VkImageLayout _IMAGE_LAYOUT_BIT = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        
+static const VkFormat _SRGB_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
 
 void Nova::constructVertexBuffer() 
     {
@@ -273,31 +273,110 @@ void Nova::createTextureImage()
         stbi_image_free(_pixels);
 
         // Create the image
-        const VkFormat _FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
         const VkImageTiling _TILING = VK_IMAGE_TILING_OPTIMAL;
 
-        VkImageCreateInfo _image_info = createImageInfo(_tex_width, _tex_height, _FORMAT, _TILING, _IMAGE_SAMPLED_BIT);
-        VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &graphics_pipeline->texture_image));
+        VkImageCreateInfo _image_info = createImageInfo(_tex_width, _tex_height, _SRGB_FORMAT, _TILING, _IMAGE_SAMPLED_BIT);
+        VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &texture.image));
 
         VkMemoryRequirements _mem_reqs;
-        vkGetImageMemoryRequirements(logical_device, graphics_pipeline->texture_image, &_mem_reqs);
+        vkGetImageMemoryRequirements(logical_device, texture.image, &_mem_reqs);
 
         VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(_mem_reqs, _LOCAL_DEVICE_BIT);
-        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &graphics_pipeline->texture_image_memory));
+        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &texture.memory));
 
-        vkBindImageMemory(logical_device, graphics_pipeline->texture_image, graphics_pipeline->texture_image_memory, 0);
+        vkBindImageMemory(logical_device, texture.image, texture.memory, 0);
 
         // Transition the image to a layout that is optimal for copying data to
-        transitionImageLayout(graphics_pipeline->texture_image, _FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_BIT);
-        copyBufferToImage(_staging.buffer, graphics_pipeline->texture_image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height));
-        transitionImageLayout(graphics_pipeline->texture_image, _FORMAT, _IMAGE_LAYOUT_BIT, _IMAGE_LAYOUT_READ_ONLY);
+        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_BIT);
+        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height));
+        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_BIT, _IMAGE_LAYOUT_READ_ONLY);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
-        queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, graphics_pipeline->texture_image, nullptr); });
-        queues.deletion.push_fn([=]() { vkFreeMemory(logical_device, graphics_pipeline->texture_image_memory, nullptr); });
+        queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });
+        queues.deletion.push_fn([=]() { vkFreeMemory(logical_device, texture.memory, nullptr); });
 
         // Clean up the staging buffer
         destroyBuffer(&_staging);
 
         return;
+    }
+
+    /////////////////////////////////
+    // TEXTURE IMAGE VIEW CREATION //
+    /////////////////////////////////
+
+// TODO: Look into other view types
+static inline VkImageViewCreateInfo getImageViewInfo(VkImage& image, VkFormat format) 
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image = image,
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            .format = format,
+            .subresourceRange = { 
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, 
+                .baseMipLevel = 0, 
+                .levelCount = 1, 
+                .baseArrayLayer = 0, 
+                .layerCount = 1 
+            }
+        };
+    }
+
+// TODO: Allow this to pass in dynamic image views
+void Nova::createTextureImageView() 
+    {
+        report(LOGGER::VLINE, "\t .. Creating Texture Image View ..");
+
+        VkImageViewCreateInfo _view_info = getImageViewInfo(texture.image, _SRGB_FORMAT);
+        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &texture.view));
+    }
+
+
+
+    //////////////////////////////
+    // TEXTURE SAMPLER CREATION //
+    //////////////////////////////
+
+static inline VkSamplerCreateInfo getSamplerInfo(VkPhysicalDeviceProperties& props) 
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+            .magFilter = VK_FILTER_LINEAR,
+            .minFilter = VK_FILTER_LINEAR,
+            .mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR,
+            .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+            .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+            .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+            .mipLodBias = 0.0f,
+            .anisotropyEnable = VK_TRUE,
+            .maxAnisotropy = props.limits.maxSamplerAnisotropy,
+            .compareEnable = VK_FALSE,
+            .compareOp = VK_COMPARE_OP_ALWAYS,
+            .minLod = 0.0f,
+            .maxLod = 0.0f,
+            .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
+            .unnormalizedCoordinates = VK_FALSE,
+        };
+    } 
+
+void Nova::constructTextureSampler() {
+    report(LOGGER::VLINE, "\t .. Creating Texture Sampler ..");
+
+    VkPhysicalDeviceProperties _props;
+    vkGetPhysicalDeviceProperties(physical_device, &_props);
+    VkSamplerCreateInfo _sampler_info = getSamplerInfo(_props);
+
+    VK_TRY(vkCreateSampler(logical_device, &_sampler_info, nullptr, &texture.sampler));
+}
+
+
+
+void Nova::destroyTextureContext() 
+    {
+        report(LOGGER::VERBOSE, "Scene - Destroying Texture Context ..");
+
+        vkDestroySampler(logical_device, texture.sampler, nullptr);
+        vkDestroyImageView(logical_device, texture.view, nullptr);
+
     }

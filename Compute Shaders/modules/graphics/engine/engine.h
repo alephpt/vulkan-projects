@@ -32,6 +32,8 @@ class Nova {
         void createDescriptorSetLayout();
         void createCommandPool();
         void createTextureImage();
+        void createTextureImageView();
+        void constructTextureSampler();
         void constructVertexBuffer();
         void constructIndexBuffer();
         void constructUniformBuffer();
@@ -48,11 +50,12 @@ class Nova {
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
         VkRenderPass render_pass;
         QueuePresentContext present;
-        DescriptorContext descriptor;
-        Pipeline *graphics_pipeline;
+        DescriptorContext descriptor;   // TODO: Create a createNewDescriptor function (and combine with uniform?)
+        Pipeline *graphics_pipeline;    // TODO: Dynamically allocate pipelines with a createNewPipeline function that takes a type and/or shader file
         Pipeline *compute_pipeline;
-        BufferContext vertex;
-        BufferContext index;
+        BufferContext vertex;           // TODO: Combine vertex and index into a single Object Buffer
+        BufferContext index;            //       and create a createNewObject function
+        TextureContext texture;         // TODO: Create a createNewTexture function
         std::vector<BufferContext> uniform;
         std::vector<void*> uniform_data;
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
@@ -103,5 +106,6 @@ class Nova {
         void destroyIndexContext();
         void destroyUniformContext();
         void destroyPipeline(Pipeline*);
+        void destroyTextureContext();
 };
 

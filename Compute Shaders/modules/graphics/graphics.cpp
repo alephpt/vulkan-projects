@@ -199,9 +199,14 @@ void Graphics::_initBuffers()
         report(LOGGER::INFO, "Graphics - Initializing Command Operator ..");
 
         _architect->createCommandPool(); 
-        _architect->createTextureImage(); 
+        // TODO: Combine Texture  Phases
+        _architect->createTextureImage();
+        _architect->createTextureImageView();
+        _architect->constructTextureSampler();
+        // TODO: Combine Object Phases
         _architect->constructVertexBuffer();
         _architect->constructIndexBuffer(); 
+        // TODO: multithread UBO into the Presentation Phase
         _architect->constructUniformBuffer(); 
         // TODO: multithread Command Buffer to init as part of the Management Phase
         _architect->constructDescriptorPool();

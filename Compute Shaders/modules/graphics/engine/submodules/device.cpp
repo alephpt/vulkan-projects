@@ -144,7 +144,10 @@ bool Nova::deviceProvisioned(VkPhysicalDevice scanned_device)
                 swap_chain_adequate = !swap_chain_support.formats.empty() && !swap_chain_support.present_modes.empty();
             }
 
-        return queues.indices.isComplete() && extensions_supported && swap_chain_adequate;
+        VkPhysicalDeviceFeatures supported_features;
+        vkGetPhysicalDeviceFeatures(scanned_device, &supported_features);
+
+        return queues.indices.isComplete() && extensions_supported && swap_chain_adequate && supported_features.samplerAnisotropy;
     }
 
 
@@ -212,6 +215,7 @@ void Nova::createLogicalDevice()
     {
         report(LOGGER::VLINE, "\t .. Creating Logical Device ..");
         VkPhysicalDeviceFeatures _device_features = {};
+        _device_features.samplerAnisotropy = VK_TRUE;
 
         std::vector<VkDeviceQueueCreateInfo> _queue_create_infos;
         std::set<uint32_t> _unique_queue_families = {

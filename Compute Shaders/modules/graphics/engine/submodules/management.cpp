@@ -7,7 +7,7 @@
 
 void Nova::destroyPipeline(Pipeline* pipeline)
     {
-        report(LOGGER::DEBUG, "Management - Destroying Pipeline ..");
+        report(LOGGER::DEBUG, "Management - Destroying Pipeline.");
         vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
         vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
         delete pipeline;

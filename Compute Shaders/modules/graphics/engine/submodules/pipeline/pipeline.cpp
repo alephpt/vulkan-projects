@@ -42,8 +42,6 @@ void Pipeline::clear()
         _shader_modules.clear();
         vertices.clear();
         indices.clear();
-        texture_image = VK_NULL_HANDLE;
-        texture_image_memory = VK_NULL_HANDLE;
     }
 
 

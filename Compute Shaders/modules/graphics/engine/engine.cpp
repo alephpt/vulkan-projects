@@ -37,9 +37,10 @@ Nova::Nova(VkExtent2D extent)
 Nova::~Nova() 
     {
         report(LOGGER::INFO, "Nova - Destroying Context ..");
-        queues.deletion.flush();
 
         destroySwapChain();
+        destroyTextureContext();
+        queues.deletion.flush();
         destroyUniformContext();
         vkDestroyDescriptorPool(logical_device, descriptor.pool, nullptr);
         vkDestroyDescriptorSetLayout(logical_device, descriptor.layout, nullptr);
@@ -49,16 +50,16 @@ Nova::~Nova()
         destroyPipeline(graphics_pipeline);
         //destroyPipeline(compute_pipeline);
 
-        report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass ..");
+        report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass.");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
 
-        report(LOGGER::VLINE, "\t .. Destroying Logical Device ..");
+        report(LOGGER::VLINE, "\t .. Destroying Logical Device.");
         vkDestroyDevice(logical_device, nullptr);
 
-        report(LOGGER::VLINE, "\t .. Destroying Surface ..");
+        report(LOGGER::VLINE, "\t .. Destroying Surface.");
         vkDestroySurfaceKHR(instance, surface, nullptr);
 
-        report(LOGGER::VLINE, "\t .. Destroying Instance ..");
+        report(LOGGER::VLINE, "\t .. Destroying Instance.");
         vkDestroyInstance(instance, nullptr);
 
         _blankContext();

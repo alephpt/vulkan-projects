@@ -19,8 +19,6 @@ class Pipeline {
         VkPipelineLayout layout;
         std::vector<Vertex> vertices = {};
         std::vector<uint32_t> indices = {};
-        VkImage texture_image;
-        VkDeviceMemory texture_image_memory;
 
         Pipeline& shaders(VkDevice*);
         Pipeline& vertexInput();

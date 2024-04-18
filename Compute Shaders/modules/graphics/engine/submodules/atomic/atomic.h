@@ -136,6 +136,15 @@ struct DescriptorContext
         std::vector<VkDescriptorSet> sets;
     };
 
+struct TextureContext
+    {
+        VkImage image;
+        VkDeviceMemory memory;
+        VkImageView view;
+        VkSampler sampler;
+    };
+
+
     ////////////////////////
     // DEBUGGER & LOGGING //
     ////////////////////////
