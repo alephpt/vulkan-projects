@@ -1,5 +1,6 @@
 #include "../engine.h"
 
+#include <array>
 
     ///////////////////////////
     // PIPELINE CONSTRUCTION //
@@ -135,7 +136,7 @@ VkRenderPassBeginInfo Nova::getRenderPassInfo(size_t i)
     // DESCRIPTOR SET LAYOUT //
     ///////////////////////////
 
-static inline VkDescriptorSetLayoutBinding _getLayoutBinding()
+static inline VkDescriptorSetLayoutBinding _getVertexLayoutBinding()
     {
         return {
                 binding: 0,
@@ -146,12 +147,23 @@ static inline VkDescriptorSetLayoutBinding _getLayoutBinding()
             };
     }
 
-static inline VkDescriptorSetLayoutCreateInfo _getLayoutInfo(VkDescriptorSetLayoutBinding* bindings)
+static inline VkDescriptorSetLayoutBinding _getFragmentLayoutBinding()
+    {
+        return {
+                binding: 1,
+                descriptorType: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                descriptorCount: 1,
+                stageFlags: VK_SHADER_STAGE_FRAGMENT_BIT,
+                pImmutableSamplers: nullptr
+            };
+    }
+
+static inline VkDescriptorSetLayoutCreateInfo _getLayoutInfo(std::array<VkDescriptorSetLayoutBinding, 2>& bindings)
     {
         return {
                 sType: VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                bindingCount: 1,
-                pBindings: bindings
+                bindingCount: static_cast<uint32_t>(bindings.size()),
+                pBindings: bindings.data()
             };
     }
 
@@ -159,15 +171,18 @@ void Nova::createDescriptorSetLayout()
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Set Layout ..");
 
-        VkDescriptorSetLayoutBinding _layout_binding = _getLayoutBinding();
-        VkDescriptorSetLayoutCreateInfo _layout_info = _getLayoutInfo(&_layout_binding);
+        VkDescriptorSetLayoutBinding _ubo_layout_binding = _getVertexLayoutBinding();
+        VkDescriptorSetLayoutBinding _sampler_layout_binding = _getFragmentLayoutBinding();
+
+        std::array<VkDescriptorSetLayoutBinding, 2> _layout_binding = {_ubo_layout_binding, _sampler_layout_binding};
+        VkDescriptorSetLayoutCreateInfo _layout_info = _getLayoutInfo(_layout_binding);
 
         VK_TRY(vkCreateDescriptorSetLayout(logical_device, &_layout_info, nullptr, &descriptor.layout));
 
         return;
     }
 
-static inline VkDescriptorPoolSize getPoolSize(uint32_t ct)
+static inline VkDescriptorPoolSize _getUniformPoolSize(uint32_t ct)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Size of %d ..", ct);
 
@@ -177,17 +192,27 @@ static inline VkDescriptorPoolSize getPoolSize(uint32_t ct)
         };
     }
 
-static inline VkDescriptorPoolCreateInfo getPoolInfo(uint32_t ct, VkDescriptorPoolSize* size)
+static inline VkDescriptorPoolSize _getSamplerPoolSize(uint32_t ct)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Info with size %d ..", size->descriptorCount);
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Size of %d ..", ct);
+
+        return {
+            .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount = ct
+        };
+    }
+
+static inline VkDescriptorPoolCreateInfo _getPoolInfo(uint32_t ct, std::array<VkDescriptorPoolSize, 2>& sizes)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pools Info with size %d ..", sizes.size());
 
         return {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
             .pNext = nullptr,
             .flags = 0,
             .maxSets = ct,
-            .poolSizeCount = 1,
-            .pPoolSizes = size
+            .poolSizeCount = static_cast<uint32_t>(sizes.size()),
+            .pPoolSizes = sizes.data()
         };
     }
 
@@ -195,15 +220,19 @@ void Nova::constructDescriptorPool()
     {
         report(LOGGER::VLINE, "\t .. Constructing Descriptor Pool ..");
 
-        VkDescriptorPoolSize _pool_size = getPoolSize(MAX_FRAMES_IN_FLIGHT);
-        VkDescriptorPoolCreateInfo _pool_info = getPoolInfo(MAX_FRAMES_IN_FLIGHT, &_pool_size);
+        std::array<VkDescriptorPoolSize, 2> _pool_size = {
+            _getUniformPoolSize(MAX_FRAMES_IN_FLIGHT),
+            _getSamplerPoolSize(MAX_FRAMES_IN_FLIGHT)
+        };
+
+        VkDescriptorPoolCreateInfo _pool_info = _getPoolInfo(MAX_FRAMES_IN_FLIGHT, _pool_size);
 
         VK_TRY(vkCreateDescriptorPool(logical_device, &_pool_info, nullptr, &descriptor.pool));
 
         return;
     }
 
-static inline VkDescriptorSetAllocateInfo getDescriptorSetAllocateInfo(uint32_t ct, VkDescriptorPool* pool, std::vector<VkDescriptorSetLayout>& layouts)
+static inline VkDescriptorSetAllocateInfo _getDescriptorSetAllocateInfo(uint32_t ct, VkDescriptorPool* pool, std::vector<VkDescriptorSetLayout>& layouts)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Set Allocate Info ..");
 
@@ -216,7 +245,7 @@ static inline VkDescriptorSetAllocateInfo getDescriptorSetAllocateInfo(uint32_t 
         };
     }
 
-static inline VkDescriptorBufferInfo getDescriptorBufferInfo(VkBuffer* buffer, VkDeviceSize size)
+static inline VkDescriptorBufferInfo _getDescriptorBufferInfo(VkBuffer* buffer, VkDeviceSize size)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Buffer Info ..");
 
@@ -227,7 +256,18 @@ static inline VkDescriptorBufferInfo getDescriptorBufferInfo(VkBuffer* buffer, V
         };
     }
 
-static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDescriptorBufferInfo* buffer_info)
+static inline VkDescriptorImageInfo _getDescriptorImageInfo(TextureContext* texture)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Image Info ..");
+
+        return {
+            .sampler = texture->sampler,
+            .imageView = texture->view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        };
+    }
+
+static inline VkWriteDescriptorSet _getUniformDescriptorWrite(VkDescriptorSet* set, VkDescriptorBufferInfo* buffer_info)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Write ..");
 
@@ -245,12 +285,30 @@ static inline VkWriteDescriptorSet getDescriptorWrite(VkDescriptorSet* set, VkDe
         };
     }
 
+static inline VkWriteDescriptorSet _getSamplerDescriptorWrite(VkDescriptorSet* set, VkDescriptorImageInfo* image_info)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Write ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .pNext = nullptr,
+            .dstSet = *set,
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .pImageInfo = image_info,
+            .pBufferInfo = nullptr,
+            .pTexelBufferView = nullptr
+        };
+    }
+
 void Nova::createDescriptorSets() 
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Sets ..");
 
         std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptor.layout);
-        VkDescriptorSetAllocateInfo _alloc_info = getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT), &descriptor.pool, layouts);
+        VkDescriptorSetAllocateInfo _alloc_info = _getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT), &descriptor.pool, layouts);
 
         descriptor.sets.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -258,10 +316,15 @@ void Nova::createDescriptorSets()
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
-                VkDescriptorBufferInfo _buffer_info = getDescriptorBufferInfo(&uniform[i].buffer, sizeof(MVP));
-                VkWriteDescriptorSet _write_descriptor = getDescriptorWrite(&descriptor.sets[i], &_buffer_info);
+                VkDescriptorBufferInfo _buffer_info = _getDescriptorBufferInfo(&uniform[i].buffer, sizeof(MVP));
+                VkDescriptorImageInfo _image_info = _getDescriptorImageInfo(&texture);
+                
+                std::array<VkWriteDescriptorSet, 2> _write_descriptor = {
+                    _getUniformDescriptorWrite(&descriptor.sets[i], &_buffer_info),
+                    _getSamplerDescriptorWrite(&descriptor.sets[i], &_image_info)
+                };
 
-                vkUpdateDescriptorSets(logical_device, 1, &_write_descriptor, 0, nullptr);
+                vkUpdateDescriptorSets(logical_device, static_cast<uint32_t>(_write_descriptor.size()), _write_descriptor.data(), 0, nullptr);
             }
     }
 
@@ -269,7 +332,7 @@ void Nova::createDescriptorSets()
     // COMMAND BUFFERS //
     /////////////////////
 
-static inline VkCommandPoolCreateInfo createCommandPoolInfo(unsigned int queue_family_index, char* name)
+static inline VkCommandPoolCreateInfo _createCommandPoolInfo(unsigned int queue_family_index, char* name)
     {
         report(LOGGER::VLINE, "\t\t .. Creating %s Command Pool Info ..", name);
         return {
@@ -287,19 +350,19 @@ void Nova::createCommandPool()
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[32];
             sprintf(name, "Graphics %d", i);
-            VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = createCommandPoolInfo(queues.indices.graphics_family.value(), name);
+            VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.graphics_family.value(), name);
             VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd.pool));
         }
 
         {
             char name[] = "Transfer";
-            VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = createCommandPoolInfo(queues.indices.transfer_family.value(), name);
+            VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.transfer_family.value(), name);
             VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.xfr.pool));
         }
 
         {
             char name[] = "Compute";
-            VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = createCommandPoolInfo(queues.indices.compute_family.value(), name);
+            VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.compute_family.value(), name);
             VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmp.pool));
         }
 
@@ -363,7 +426,7 @@ VkCommandBuffer Nova::createEphemeralCommand(VkCommandPool& pool)
         return _buffer;
     }
 
-static inline VkSubmitInfo createSubmitInfo(VkCommandBuffer* cmd)
+static inline VkSubmitInfo _createSubmitInfo(VkCommandBuffer* cmd)
     {
         report(LOGGER::VLINE, "\t .. Creating Submit Info ..");
 
@@ -387,7 +450,7 @@ void Nova::flushCommandBuffer(VkCommandBuffer& buf, char* name)
         VK_TRY(vkEndCommandBuffer(buf));
 
         // Submit the command buffer
-        VkSubmitInfo _submit_info = createSubmitInfo(&buf);
+        VkSubmitInfo _submit_info = _createSubmitInfo(&buf);
         VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
         VK_TRY(vkQueueWaitIdle(queues.transfer));
 

@@ -52,7 +52,7 @@ class Pipeline {
         VkPipelineColorBlendStateCreateInfo _color_blending;
         std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
         VkVertexInputBindingDescription _binding_description;
-        std::array<VkVertexInputAttributeDescription, 2UL> _attribute_descriptions;
+        std::array<VkVertexInputAttributeDescription, 3> _attribute_descriptions;
        
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
 };

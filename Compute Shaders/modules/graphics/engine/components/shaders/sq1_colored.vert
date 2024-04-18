@@ -2,10 +2,8 @@
 
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 iColor;
-layout(location = 2) in vec2 uv;
 
 layout(location = 0) out vec3 oColor;
-layout(location = 1) out vec2 frag_uv;
 
 layout(binding = 0) uniform MVP {
     mat4 model;
@@ -13,11 +11,8 @@ layout(binding = 0) uniform MVP {
     mat4 projection;
 } ubo;
 
-layout(binding = 1) uniform sampler2D tex;
-
 void main()
 {
     gl_Position = ubo.projection * ubo.view * ubo.model * vec4(position, 1.0);
-    oColor = texture(tex, uv);
-    frag_uv = uv;
+    oColor = iColor;
 }
