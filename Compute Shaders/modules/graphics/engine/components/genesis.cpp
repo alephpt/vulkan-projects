@@ -38,15 +38,12 @@ static const glm::vec3 p6 = glm::vec3(0.5f, 0.5f, -0.5f);   // top right back
 static const glm::vec3 p7 = glm::vec3(0.5f, -0.5f, -0.5f);  // bottom right back
 static const glm::vec3 p8 = glm::vec3(-0.5f, -0.5f, -0.5f); // bottom left back
 
-        //      /P5------P6
-        //    P1------P2/ |
-        //    | |      |  |
-        //    | P8_____|_P7
-        //    P4/_____P3/
 
-static int subdivisions = 0;
+static int subdivisions = 3;
 
-static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
+static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, 
+                        glm::vec3 e, glm::vec3 f, glm::vec3 g, glm::vec3 h,
+                        std::vector<Vertex>* vertices, std::vector<uint32_t>* indices) 
     {
         for (int i = 0; i < subdivisions; i++) 
             {
@@ -55,6 +52,11 @@ static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::v
                 glm::vec3 cd = lerp(c, d, (float) i / subdivisions);
                 glm::vec3 da = lerp(d, a, (float) i / subdivisions);
 
+                glm::vec3 ef = lerp(e, f, (float) i / subdivisions);
+                glm::vec3 fg = lerp(f, g, (float) i / subdivisions);
+                glm::vec3 gh = lerp(g, h, (float) i / subdivisions);
+                glm::vec3 he = lerp(h, e, (float) i / subdivisions);
+
                 for (int j = 0; j < subdivisions; j++) 
                     {
                         glm::vec3 ab_bc = lerp(ab, bc, (float) j / subdivisions);
@@ -62,20 +64,23 @@ static void subdivide(glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, std::v
                         glm::vec3 cd_da = lerp(cd, da, (float) j / subdivisions);
                         glm::vec3 da_ab = lerp(da, ab, (float) j / subdivisions);
 
-                        glm::vec3 mid = lerp(ab_bc, bc_cd, 0.5f);
+                        glm::vec3 ef_fg = lerp(ef, fg, (float) j / subdivisions);
+                        glm::vec3 fg_gh = lerp(fg, gh, (float) j / subdivisions);
+                        glm::vec3 gh_he = lerp(gh, he, (float) j / subdivisions);
+                        glm::vec3 he_ef = lerp(he, ef, (float) j / subdivisions);
 
-                        vertices->push_back({ab_bc, yellow});
-                        vertices->push_back({bc_cd, green});
-                        vertices->push_back({cd_da, blue});
-                        vertices->push_back({da_ab, red});
+                        vertices->push_back({ab_bc, ef_fg});
+                        vertices->push_back({bc_cd, fg_gh});
+                        vertices->push_back({cd_da, gh_he});
+                        vertices->push_back({da_ab, he_ef});
 
                         uint32_t offset = vertices->size() - 4;
-                        indices->push_back(offset);
+                        indices->push_back(offset + 2);
                         indices->push_back(offset + 1);
+                        indices->push_back(offset + 0);
+                        indices->push_back(offset + 3);
                         indices->push_back(offset + 2);
                         indices->push_back(offset);
-                        indices->push_back(offset + 2);
-                        indices->push_back(offset + 3);
                     }
             }
     }
@@ -149,17 +154,49 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
             for (int sides = 0; sides < 6; sides++) 
                 {
                     glm::vec3 a, b, c, d;
+                    glm::vec3 e, f, g, h;
                     switch (sides) 
                         {
-                            case 0: a = p4; b = p3; c = p2; d = p1; break; // front
-                            case 1: a = p8; b = p7; c = p6; d = p5; break; // back
-                            case 2: a = p1; b = p2; c = p6; d = p5; break; // top
-                            case 3: a = p4; b = p3; c = p7; d = p8; break; // bottom
-                            case 4: a = p1; b = p4; c = p8; d = p5; break; // left
-                            case 5: a = p2; b = p3; c = p7; d = p6; break; // right
+                            case 0: // front
+                                a = p1; b = p2; c = p3; d = p4; 
+                                e = red; f = blue; g = green; h = yellow;
+                                break; 
+                            case 1:  // back
+                                a = p6; b = p5; c = p8; d = p7; 
+                                e = blue; f = red; g = yellow; h = green;
+                                break;
+                            case 3:  // bottom
+                                a = p4; b = p3; c = p7; d = p8; 
+                                e = yellow; f = green; g = green; h = yellow;
+                                break;
+                            case 5:  // right
+                                a = p2; b = p6; c = p7; d = p3; 
+                                e = blue; f = blue; g = green; h = green;
+                                break;
+                            case 2:  // top
+                                a = p1; b = p5; c = p6; d = p2; 
+                                e = red; f = red; g = blue; h = blue;
+                                break;
+                            case 4:  // left
+                                a = p5; b = p1; c = p4; d = p8; 
+                                e = red; f = red; g = yellow; h = yellow;
+                                break;
                         }
 
-                    subdivide(a, b, c, d, vertices, indices);
+                    subdivide(a, b, c, d, e, f, g, h, vertices, indices);
                 }
         }
     }
+              /////////////////////////////////////////////////
+            //                                              ///
+          //                                               ////
+        //////////////////////////////////////////////////// //
+        //                                               //  //
+        //       /P5------P6              /R--------B    //  //
+        //     P1------P2/ |             R--------B/|    //  //
+        //     | |      |  |             | |      | |    //  //
+        //     | P8_____|_P7             | Y______|_G    // //
+        //     P4/_____P3/               Y/______G/      ////
+        //                                               ///
+        //                                               //
+        //////////////////////////////////////////////////
