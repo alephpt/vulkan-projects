@@ -13,11 +13,9 @@ layout(binding = 0) uniform MVP {
     mat4 projection;
 } ubo;
 
-layout(binding = 1) uniform sampler2D tex;
-
 void main()
 {
     gl_Position = ubo.projection * ubo.view * ubo.model * vec4(position, 1.0);
-    oColor = texture(tex, uv);
+    oColor = iColor;
     frag_uv = uv;
 }

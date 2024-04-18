@@ -62,12 +62,12 @@ void genesis::createObjects(std::vector<Vertex>* vertices, std::vector<uint32_t>
     {
         vertices->push_back({p4, yellow, uv4});  // 0
         vertices->push_back({p3, green, uv3});  // 1
-        vertices->push_back({p2, blue, uv2});    // 2
-        vertices->push_back({p1, red, uv1});     // 3
+        vertices->push_back({p2, red, uv2});    // 2
+        vertices->push_back({p1, blue, uv1});     // 3
         vertices->push_back({p8, yellow, uv3});  // 4
         vertices->push_back({p7, green, uv4});   // 5
-        vertices->push_back({p6, blue, uv1});    // 6
-        vertices->push_back({p5, red, uv2});     // 7
+        vertices->push_back({p6, red, uv1});    // 6
+        vertices->push_back({p5, blue, uv2});     // 7
 
         // front
         indices->push_back(0);  // front bottom left
