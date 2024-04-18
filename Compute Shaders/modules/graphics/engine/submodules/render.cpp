@@ -162,13 +162,17 @@ void Nova::drawFrame()
             }
 
         VkCommandBuffer _command_buffer = current_frame().cmd.buffer;
+
+        // used to update the uniform buffer in the shader for model rotation
         updateUniformBuffer(_frame_ct);
 
+        // reset the command buffer to begin recording the draw commands for the frame
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
         VK_TRY(vkResetCommandBuffer(_command_buffer, 0));
 
         recordCommandBuffers(_command_buffer, _image_index);
 
+        // submit the command buffer to the graphics queue
         present.submit_info = {};
         VkSemaphore _wait_semaphores[] = { current_frame().image_available };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };

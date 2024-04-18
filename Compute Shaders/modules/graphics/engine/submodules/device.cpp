@@ -30,11 +30,11 @@ bool Nova::checkValidationLayerSupport()
 
 void Nova::setQueueFamilyProperties(unsigned int i) {
     VkQueueFamilyProperties* queue_family = &queues.families[i];
-    std::string queue_name = "";
+    //std::string queue_name = "";
 
     if (queue_family->queueFlags & VK_QUEUE_GRAPHICS_BIT) 
         { 
-            queue_name += "{ Graphics } "; 
+            //queue_name += "{ Graphics } "; 
             queues.indices.graphics_family = i;
             queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
             report(LOGGER::VLINE, "\t\tGraphics Family Set.");
@@ -42,7 +42,7 @@ void Nova::setQueueFamilyProperties(unsigned int i) {
 
     if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
         { 
-            queue_name += "{ Compute } "; 
+            //queue_name += "{ Compute } "; 
 
             if (queues.indices.graphics_family.value() != i) 
                 {
@@ -54,7 +54,7 @@ void Nova::setQueueFamilyProperties(unsigned int i) {
 
     if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
         { 
-            queue_name += "{ Transfer } "; 
+            //queue_name += "{ Transfer } "; 
 
             if (queues.indices.graphics_family.value() != i) 
                 {
@@ -63,7 +63,7 @@ void Nova::setQueueFamilyProperties(unsigned int i) {
                     report(LOGGER::VLINE, "\t\tTransfer Family Set.");
                 }
         }
-
+/*
     if (queue_family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
         { queue_name += "{ Sparse Binding } "; }
 
@@ -73,6 +73,7 @@ void Nova::setQueueFamilyProperties(unsigned int i) {
 
     report(LOGGER::VLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
     report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
+    */
 }
 
 void Nova::getQueueFamilies(VkPhysicalDevice scanned_device) 
@@ -157,7 +158,7 @@ void Nova::createPhysicalDevice()
 
         uint32_t device_count = 0;
         VK_TRY(vkEnumeratePhysicalDevices(instance, &device_count, nullptr));
-
+        
         if (device_count == 0) 
             { 
                 report(LOGGER::ERROR, "Vulkan: No GPUs with Vulkan support found"); 

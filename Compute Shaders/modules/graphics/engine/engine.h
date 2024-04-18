@@ -81,8 +81,6 @@ class Nova {
         VkRenderPassBeginInfo getRenderPassInfo(size_t);
         VkAttachmentDescription colorAttachment();
 
-        void constructPipeline(Pipeline*);
-
         VkCommandBufferBeginInfo createBeginInfo();
         VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
         VkCommandBuffer createEphemeralCommand(VkCommandPool&);
