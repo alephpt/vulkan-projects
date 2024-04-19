@@ -1,5 +1,5 @@
 #pragma once
-#include "./engine/engine.h"
+#include "./core/core.h"
 
 #include <string>
 #include <future>
@@ -7,12 +7,12 @@
 // The goal of this layer of abstraction is to create a friendly user implementation for creating a graphics engine, for future projects.
 
 // TODO: Cross Platform Support
-class Graphics {
+class NovaEngine {
     public:
         bool initialized = false;
 
-        Graphics(std::string, VkExtent2D);
-        ~Graphics();
+        NovaEngine(std::string, VkExtent2D);
+        ~NovaEngine();
 
         // TODO: Determine Default Initializers 
         
@@ -25,7 +25,7 @@ class Graphics {
         bool _suspended = false;
         VkExtent2D _window_extent;
         struct SDL_Window* _window = nullptr;
-        Nova* _architect;
+        NovaCore* _architect;
 
         VkDebugUtilsMessengerEXT _debug_messenger;
 

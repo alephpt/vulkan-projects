@@ -1,0 +1,2 @@
+glslc ~/z/Ancillary/Big\ Stick\ Studios/repos/learning/Cpp/Vulkan/Compute\ Shaders/nova/engine/core/components/shaders/sq1.vert -o ~/z/Ancillary/Big\ Stick\ Studios/repos/learning/Cpp/Vulkan/Compute\ Shaders/nova/engine/core/components/shaders/sq1_v.spv
+glslc ~/z/Ancillary/Big\ Stick\ Studios/repos/learning/Cpp/Vulkan/Compute\ Shaders/nova/engine/core/components/shaders/sq1.frag -o ~/z/Ancillary/Big\ Stick\ Studios/repos/learning/Cpp/Vulkan/Compute\ Shaders/nova/engine/core/components/shaders/sq1_f.spv

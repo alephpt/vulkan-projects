@@ -1,13 +1,13 @@
 #pragma once
-#include "./graphics/graphics.h"
+#include "./engine/engine.h"
 #include <string>
 
-class Existence {
+class  Nova {
     public:
-        Existence();
-        ~Existence();
+         Nova();
+        ~ Nova();
 
-        static Existence* manifest();   // Singleton
+        static  Nova* manifest();   // Singleton
 
         static void materialize();      // Draw
         void actualize();               // Run
@@ -15,7 +15,7 @@ class Existence {
     private:
         std::string _application_name;
         VkExtent2D _window_extent;
-        Graphics* _actuality;
+        NovaEngine* _engine;
 
-        Existence* realize();            // Init
+         Nova* realize();            // Init
 };

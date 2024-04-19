@@ -1,15 +1,15 @@
-#include "engine.h"
+#include "core.h"
 
 #include <SDL2/SDL_vulkan.h>
 
     // Get Current Frame
-FrameData& Nova::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+FrameData& NovaCore::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
     ////////////////////////
     //  INSTANCE CREATION //
     ////////////////////////
 
-Nova::Nova(VkExtent2D extent) 
+NovaCore::NovaCore(VkExtent2D extent) 
     {
         _blankContext();
         setWindowExtent(extent);
@@ -34,9 +34,9 @@ Nova::Nova(VkExtent2D extent)
         // setWindowExtent(extent);
     }
 
-Nova::~Nova() 
+NovaCore::~NovaCore() 
     {
-        report(LOGGER::INFO, "Nova - Destroying Context ..");
+        report(LOGGER::INFO, "NovaCore - Destroying Context ..");
 
         destroySwapChain();
         destroyImageContext();
@@ -71,7 +71,7 @@ Nova::~Nova()
     // VULKAN INSTANCE //
     /////////////////////
 
-void Nova::createVulkanInstance() 
+void NovaCore::createVulkanInstance() 
     {
         report(LOGGER::VLINE, "\t .. Instantiating Engine ..");
         VkApplicationInfo app_info = {
@@ -217,9 +217,9 @@ static SwapChainContext initSwapchain() {
 }
 
 
-void Nova::_blankContext() 
+void NovaCore::_blankContext() 
     {
-        report(LOGGER::INFO, "Nova - No Context ..");
+        report(LOGGER::INFO, "NovaCore - No Context ..");
 
         instance = VK_NULL_HANDLE;
         physical_device = VK_NULL_HANDLE;
@@ -238,7 +238,7 @@ void Nova::_blankContext()
     }
 
 // This should not be done like this
-void Nova::setWindowExtent(VkExtent2D extent) 
+void NovaCore::setWindowExtent(VkExtent2D extent) 
     {
         swapchain.extent = extent;
         //swapchain.details.extent = extent;
@@ -250,7 +250,7 @@ void Nova::setWindowExtent(VkExtent2D extent)
     // LOGGING //
     /////////////
 
-void Nova::logQueues() 
+void NovaCore::logQueues() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Queues ..");
         report(LOGGER::DLINE, "\t\tFamilies: %d", queues.families.size());
@@ -274,7 +274,7 @@ void Nova::logQueues()
         report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
     }
 
-void Nova::logFrameData()
+void NovaCore::logFrameData()
     {
         report(LOGGER::DEBUG, "\t .. Logging Frame Data ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -289,7 +289,7 @@ void Nova::logFrameData()
     
     }
 
-void Nova::logSwapChain() 
+void NovaCore::logSwapChain() 
     {
         report(LOGGER::DEBUG, "\t .. Logging SwapChain ..");
         report(LOGGER::DLINE, "\t\tSwapchain: %p", swapchain.instance);
@@ -304,7 +304,7 @@ void Nova::logSwapChain()
         report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
     }
 
-void Nova::log() 
+void NovaCore::log() 
     {
         report(LOGGER::DEBUG, "\t .. Logging Context ..");
         report(LOGGER::DLINE, "\t\tInstance: %p", instance);

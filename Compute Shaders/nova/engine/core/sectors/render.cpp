@@ -1,4 +1,4 @@
-#include "../engine.h"
+#include "../core.h"
 
 
 
@@ -26,7 +26,7 @@ static inline VkRect2D getScissor(VkExtent2D extent)
         };
     }
 
-void Nova::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
+void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i) 
     {
         //report(LOGGER::VLINE, "\t .. Recording Command Buffer %d ..", i);
 
@@ -59,7 +59,7 @@ void Nova::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
         return;
     }
 
-void Nova::resetCommandBuffers() 
+void NovaCore::resetCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
@@ -132,7 +132,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSema
     // ACTUAL DRAW //
     /////////////////
 
-void Nova::drawFrame() 
+void NovaCore::drawFrame() 
     {
         //report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
@@ -208,6 +208,6 @@ void Nova::drawFrame()
     // TRANSITION IMAGE //
     //////////////////////
 
-void Nova::transitionImage() {
+void NovaCore::transitionImage() {
     
 }

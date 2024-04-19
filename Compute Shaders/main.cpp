@@ -16,10 +16,10 @@
  * =====================================================================================
  */
 #include <iostream>
-#include "modules/creation.h"
+#include "nova/nova.h"
 
 int main(int argc, char* argv[]) {
-    Existence* creation = Existence::manifest();    // Instantiate the World
+    Nova* creation =  Nova::manifest();    // Instantiate the World
     creation->actualize();                          // Run the Simulation
     delete creation;                                // Destroy the World
 

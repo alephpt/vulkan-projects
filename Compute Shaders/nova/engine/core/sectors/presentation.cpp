@@ -1,4 +1,4 @@
-#include "../engine.h"
+#include "../core.h"
 
 #include <set>
 
@@ -7,7 +7,7 @@
     //  Virtual Swapchain Layers //
     ///////////////////////////////
 
-SwapChainSupportDetails Nova::querySwapChainSupport(VkPhysicalDevice device)
+SwapChainSupportDetails NovaCore::querySwapChainSupport(VkPhysicalDevice device)
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Support ..");
         
@@ -92,7 +92,7 @@ static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExt
     }
 
 
-void Nova::querySwapChainDetails()
+void NovaCore::querySwapChainDetails()
     {
         report(LOGGER::VLINE, "\t .. Querying SwapChain Details ..");
 
@@ -106,7 +106,7 @@ void Nova::querySwapChainDetails()
         return;
     }
 
-void Nova::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
+void NovaCore::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
     {
     *create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -129,7 +129,7 @@ void Nova::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_
 }
 
 // TODO: Wrap this in a class where we can just delete and recreate the swapchain using a singleton wrapper
-void Nova::constructSwapChain() 
+void NovaCore::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
 
@@ -185,7 +185,7 @@ void Nova::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo Nova::createImageViewInfo(VkImage img, VkFormat fmt, VkImageAspectFlags aspect, uint32_t mips)
+VkImageViewCreateInfo NovaCore::createImageViewInfo(VkImage img, VkFormat fmt, VkImageAspectFlags aspect, uint32_t mips)
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -209,7 +209,7 @@ VkImageViewCreateInfo Nova::createImageViewInfo(VkImage img, VkFormat fmt, VkIma
     }
 
 
-void Nova::constructImageViews()
+void NovaCore::constructImageViews()
     {
         report(LOGGER::VLINE, "\t .. Constructing Image Views ..");
 
@@ -231,7 +231,7 @@ void Nova::constructImageViews()
     // FRAME BUFFER CREATION //
     ///////////////////////////
 
-void Nova::createFrameBuffers()
+void NovaCore::createFrameBuffers()
     {
         report(LOGGER::VLINE, "Presentation - Creating Frame Buffers ..");
 
@@ -262,7 +262,7 @@ void Nova::createFrameBuffers()
         return;
     }
 
-void Nova::destroySwapChain() 
+void NovaCore::destroySwapChain() 
     {
         report(LOGGER::VERBOSE, "Presentation - Destroying Swapchain ..");
 
@@ -282,7 +282,7 @@ void Nova::destroySwapChain()
         return;
     }
 
-void Nova::recreateSwapChain() 
+void NovaCore::recreateSwapChain() 
     {
         report(LOGGER::VERBOSE, "Presentation - Recreating Swapchain ..");
 
@@ -322,7 +322,7 @@ static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_
         return -1;
     }
 
-VkMemoryAllocateInfo Nova::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+VkMemoryAllocateInfo NovaCore::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
     {
         report(LOGGER::VLINE, "\t\t\t .. Creating Memory Allocate Info ..");
 
@@ -350,7 +350,7 @@ static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageF
         };
     }
 
-void Nova::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
+void NovaCore::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Buffer ..");
 
@@ -382,7 +382,7 @@ static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& c
     }
 
 
-VkCommandBufferBeginInfo Nova::createBeginInfo()
+VkCommandBufferBeginInfo NovaCore::createBeginInfo()
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
@@ -418,7 +418,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
 // and the Present Queue is used for presenting the swapchain images to the screen
-void Nova::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
+void NovaCore::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
     {
         report(LOGGER::VLINE, "\t\t .. Copying Buffer ..");
         VkCommandBuffer _ephemeral_buffer = createEphemeralCommand(queues.xfr.pool);
@@ -430,7 +430,7 @@ void Nova::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize siz
         flushCommandBuffer(_ephemeral_buffer, _cmd_name);
     }
 
-void Nova::destroyBuffer(BufferContext* buffer) 
+void NovaCore::destroyBuffer(BufferContext* buffer) 
     {
         report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
 

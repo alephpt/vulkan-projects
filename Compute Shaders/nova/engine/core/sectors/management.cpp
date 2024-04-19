@@ -1,4 +1,4 @@
-#include "../engine.h"
+#include "../core.h"
 
 #include <array>
 
@@ -6,7 +6,7 @@
     // PIPELINE CONSTRUCTION //
     ///////////////////////////
 
-void Nova::destroyPipeline(Pipeline* pipeline)
+void NovaCore::destroyPipeline(Pipeline* pipeline)
     {
         report(LOGGER::DEBUG, "Management - Destroying Pipeline.");
         vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
@@ -15,7 +15,7 @@ void Nova::destroyPipeline(Pipeline* pipeline)
         return;
     }
 
-void Nova::constructGraphicsPipeline()
+void NovaCore::constructGraphicsPipeline()
     { 
         report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); 
         
@@ -36,7 +36,7 @@ void Nova::constructGraphicsPipeline()
         return; 
     }
     
-void Nova::constructComputePipeline()
+void NovaCore::constructComputePipeline()
     { 
         report(LOGGER::DEBUG, "Management - Constructing Compute Pipeline .."); 
         
@@ -47,7 +47,7 @@ void Nova::constructComputePipeline()
     // RENDER PASS CREATION //
     //////////////////////////
 
-VkAttachmentDescription Nova::getColorAttachment()
+VkAttachmentDescription NovaCore::getColorAttachment()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Attachment ..");
 
@@ -64,7 +64,7 @@ VkAttachmentDescription Nova::getColorAttachment()
         };
     }
 
-VkFormat Nova::findDepthFormat(VkImageTiling tiling)
+VkFormat NovaCore::findDepthFormat(VkImageTiling tiling)
     {
         report(LOGGER::VLINE, "\t\t .. Finding Depth Format ..");
 
@@ -88,7 +88,7 @@ VkFormat Nova::findDepthFormat(VkImageTiling tiling)
             }
     }
 
-void Nova::createColorResources()
+void NovaCore::createColorResources()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Resources ..");
 
@@ -103,7 +103,7 @@ void Nova::createColorResources()
     
     }
 
-void Nova::createDepthResources() 
+void NovaCore::createDepthResources() 
     {
         report(LOGGER::VLINE, "\t\t .. Creating Depth Resources ..");
 
@@ -119,7 +119,7 @@ void Nova::createDepthResources()
         return;
     }
 
-VkAttachmentDescription Nova::getDepthAttachment()
+VkAttachmentDescription NovaCore::getDepthAttachment()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Depth Attachment ..");
 
@@ -172,7 +172,7 @@ static inline VkRenderPassCreateInfo _getRenderPassInfo(VkAttachmentDescription*
         };
     }
 
-void Nova::createRenderPass()
+void NovaCore::createRenderPass()
     {
         report(LOGGER::VLINE, "\t .. Creating Render Pass ..");
 
@@ -189,7 +189,7 @@ void Nova::createRenderPass()
     }
 
 
-VkRenderPassBeginInfo Nova::getRenderPassInfo(size_t i)
+VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
     {
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -240,7 +240,7 @@ static inline VkDescriptorSetLayoutCreateInfo _getLayoutInfo(std::array<VkDescri
             };
     }
 
-void Nova::createDescriptorSetLayout() 
+void NovaCore::createDescriptorSetLayout() 
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Set Layout ..");
 
@@ -289,7 +289,7 @@ static inline VkDescriptorPoolCreateInfo _getPoolInfo(uint32_t ct, std::array<Vk
         };
     }
 
-void Nova::constructDescriptorPool() 
+void NovaCore::constructDescriptorPool() 
     {
         report(LOGGER::VLINE, "\t .. Constructing Descriptor Pool ..");
 
@@ -376,7 +376,7 @@ static inline VkWriteDescriptorSet _getSamplerDescriptorWrite(VkDescriptorSet* s
         };
     }
 
-void Nova::createDescriptorSets() 
+void NovaCore::createDescriptorSets() 
     {
         report(LOGGER::VLINE, "\t .. Creating Descriptor Sets ..");
 
@@ -416,7 +416,7 @@ static inline VkCommandPoolCreateInfo _createCommandPoolInfo(unsigned int queue_
             };
     }
     
-void Nova::createCommandPool() 
+void NovaCore::createCommandPool() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
@@ -442,7 +442,7 @@ void Nova::createCommandPool()
         return;
     }
 
-inline VkCommandBufferAllocateInfo Nova::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
+inline VkCommandBufferAllocateInfo NovaCore::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
     {
         report(LOGGER::VLINE, "\t\t\t\t .. Creating %s Command Buffer Info  ..", name);
 
@@ -455,7 +455,7 @@ inline VkCommandBufferAllocateInfo Nova::createCommandBuffersInfo(VkCommandPool&
             };
     }
 
-void Nova::createCommandBuffers() 
+void NovaCore::createCommandBuffers() 
     {
         report(LOGGER::VLINE, "\t .. Creating Command Buffers ..");
 
@@ -482,7 +482,7 @@ void Nova::createCommandBuffers()
     }
 
 
-VkCommandBuffer Nova::createEphemeralCommand(VkCommandPool& pool) 
+VkCommandBuffer NovaCore::createEphemeralCommand(VkCommandPool& pool) 
     {
         report(LOGGER::VLINE, "\t\t\t .. Creating Ephemeral Command Buffer ..");
 
@@ -516,7 +516,7 @@ static inline VkSubmitInfo _createSubmitInfo(VkCommandBuffer* cmd)
         };
     }
 
-void Nova::flushCommandBuffer(VkCommandBuffer& buf, char* name) 
+void NovaCore::flushCommandBuffer(VkCommandBuffer& buf, char* name) 
     {
         report(LOGGER::VLINE, "\t .. Ending %s Command Buffer ..", name);
 
@@ -533,7 +533,7 @@ void Nova::flushCommandBuffer(VkCommandBuffer& buf, char* name)
         return;
     }
 
-void Nova::destroyCommandContext()
+void NovaCore::destroyCommandContext()
     {
         report(LOGGER::VERBOSE, "Management - Destroying Semaphores, Fences and Command Pools ..");
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
@@ -576,7 +576,7 @@ static VkFenceCreateInfo createFenceInfo()
         };
     }
 
-void Nova::createSyncObjects() 
+void NovaCore::createSyncObjects() 
     {
         report(LOGGER::VLINE, "\t .. Creating Sync Objects ..");
 

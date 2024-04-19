@@ -1,4 +1,4 @@
-#include "./graphics.h"
+#include "./engine.h"
 
 #include <thread>
 #include <chrono>
@@ -11,9 +11,9 @@
     ///////////////////
 
 
-Graphics::Graphics(std::string name, VkExtent2D window_extent)
+NovaEngine::NovaEngine(std::string name, VkExtent2D window_extent)
     {
-        report(LOGGER::INFO, "Graphics - Instantiating ..");
+        report(LOGGER::INFO, "NovaEngine - Instantiating ..");
 
         // Set the application name and window extent
         _application_name = name;
@@ -34,7 +34,7 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
 
         if (_window == nullptr) 
             {
-                report(LOGGER::ERROR, "Graphics - Failed to create SDL window ..");
+                report(LOGGER::ERROR, "NovaEngine - Failed to create SDL window ..");
                 return;
             }
 
@@ -47,8 +47,8 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
         // Scene()
         // Render()
 
-        _architect = new Nova(_window_extent);
-        _initFramework(); // Do we want to handle this in the Nova?
+        _architect = new NovaCore(_window_extent);
+        _initFramework(); // Do we want to handle this in the NovaCore?
 
         _architect->swapchain.support = _architect->querySwapChainSupport(_architect->physical_device);
         _architect->querySwapChainDetails();
@@ -61,8 +61,8 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
         std::promise<void> waitForPipeline; 
         std::future<void> waitingForPipeline = waitForPipeline.get_future();
 
-        std::thread _swapchain_thread(&Graphics::_initSwapChain, this, std::ref(startPipeline), std::ref(waitingForPipeline), std::ref(waitForSwapchain));
-        std::thread _pipeline_thread(&Graphics::_initPipeline, this, std::ref(startingPipeline), std::ref(waitForPipeline));
+        std::thread _swapchain_thread(&NovaEngine::_initSwapChain, this, std::ref(startPipeline), std::ref(waitingForPipeline), std::ref(waitForSwapchain));
+        std::thread _pipeline_thread(&NovaEngine::_initPipeline, this, std::ref(startingPipeline), std::ref(waitForPipeline));
 
         _pipeline_thread.join();
         _swapchain_thread.join();
@@ -72,12 +72,12 @@ Graphics::Graphics(std::string name, VkExtent2D window_extent)
         // Now we can construct the Command Buffers 
         _initBuffers();
         _initSyncStructures();
-        report(LOGGER::INFO, "Graphics - Initialized ..");
+        report(LOGGER::INFO, "NovaEngine - Initialized ..");
     }
 
-Graphics::~Graphics() 
+NovaEngine::~NovaEngine() 
     {
-        report(LOGGER::INFO, "Graphics - Deconstructing ..");
+        report(LOGGER::INFO, "NovaEngine - Deconstructing ..");
         vkDeviceWaitIdle(_architect->logical_device);
 
         if (USE_VALIDATION_LAYERS) 
@@ -88,7 +88,7 @@ Graphics::~Graphics()
 
         if (initialized) 
             {         
-                report(LOGGER::VLINE, "\t .. Destroying Nova ..");
+                report(LOGGER::VLINE, "\t .. Destroying NovaCore ..");
                 delete _architect;
 
                 report(LOGGER::VLINE, "\t .. Destroying Window ..");
@@ -97,7 +97,7 @@ Graphics::~Graphics()
                 SDL_Quit();
             }
         
-        report(LOGGER::INFO, "Graphics - Destroyed ..");
+        report(LOGGER::INFO, "NovaEngine - Destroyed ..");
     }
 
 
@@ -105,10 +105,10 @@ Graphics::~Graphics()
     // TOP LEVEL FUNCTIONS //
     /////////////////////////
 
-void Graphics::illuminate()
-//void Graphics::illuminate(fnManifest fnManifest)
+void NovaEngine::illuminate()
+//void Nova::illuminate(fnManifest fnManifest)
     {
-        report(LOGGER::INFO, "Graphics - Illuminating ..");
+        report(LOGGER::INFO, "NovaEngine - Illuminating ..");
 
         SDL_Event _e;
         bool _quit = false;
@@ -152,9 +152,9 @@ void Graphics::illuminate()
     // INITIALIZERS //
     //////////////////
 
-void Graphics::_initFramework() 
+void NovaEngine::_initFramework() 
     {
-        report(LOGGER::INFO, "Graphics - Initializing Frameworks ..");
+        report(LOGGER::INFO, "NovaEngine - Initializing Frameworks ..");
 
         SDL_Vulkan_CreateSurface(_window, _architect->instance, &_architect->surface);
         createDebugMessenger(&_architect->instance, &_debug_messenger);
@@ -164,9 +164,9 @@ void Graphics::_initFramework()
         return;
     }
 
-void Graphics::_initSwapChain(std::promise<void>& startPipeline, std::future<void>& waitingForPipeline, std::promise<void>& waitForFrameBuffer) 
+void NovaEngine::_initSwapChain(std::promise<void>& startPipeline, std::future<void>& waitingForPipeline, std::promise<void>& waitForFrameBuffer) 
     {
-        report(LOGGER::INFO, "Graphics - Initializing SwapChain Buffers ..");
+        report(LOGGER::INFO, "NovaEngine - Initializing SwapChain Buffers ..");
 
         _architect->constructSwapChain();
         _architect->constructImageViews();
@@ -178,11 +178,11 @@ void Graphics::_initSwapChain(std::promise<void>& startPipeline, std::future<voi
         return;
     }
 
-void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<void>& waitForPipeline) 
+void NovaEngine::_initPipeline(std::future<void>& startingPipeline, std::promise<void>& waitForPipeline) 
     {
-        report(LOGGER::INFO, "Graphics - Initializing Graphics Pipeline ..");
+        report(LOGGER::INFO, "NovaEngine - Initializing Nova Pipeline ..");
 
-        // abstract both of these as part of the Nova and rename _architect to Nova
+        // abstract both of these as part of the NovaCore and rename _architect to NovaCore
 
         startingPipeline.wait();
         _architect->createRenderPass();
@@ -194,9 +194,9 @@ void Graphics::_initPipeline(std::future<void>& startingPipeline, std::promise<v
         return;
     }
 
-void Graphics::_initBuffers() 
+void NovaEngine::_initBuffers() 
     {
-        report(LOGGER::INFO, "Graphics - Initializing Command Operator ..");
+        report(LOGGER::INFO, "NovaEngine - Initializing Command Operator ..");
 
         _architect->createCommandPool(); 
         // TODO: Combine Texture  Phases
@@ -218,9 +218,9 @@ void Graphics::_initBuffers()
         return;
     }
 
-void Graphics::_initSyncStructures()
+void NovaEngine::_initSyncStructures()
     {
-        report(LOGGER::INFO, "Graphics - Initializing Synchronization Structures ..");
+        report(LOGGER::INFO, "NovaEngine - Initializing Synchronization Structures ..");
 
         _architect->createSyncObjects();
 
@@ -232,9 +232,9 @@ void Graphics::_initSyncStructures()
     // RESIZE WINDOW //
     ///////////////////
 
-inline void Graphics::_resizeWindow()
+inline void NovaEngine::_resizeWindow()
     {
-        report(LOGGER::VERBOSE, "Graphics - Resizing Window ..");
+        report(LOGGER::VERBOSE, "NovaEngine - Resizing Window ..");
 
         int w, h;
         SDL_Vulkan_GetDrawableSize(_window, &w, &h);

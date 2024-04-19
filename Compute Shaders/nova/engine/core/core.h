@@ -1,11 +1,11 @@
 #pragma once
-#include "./submodules/pipeline/pipeline.h"
-#include "./components/lexicon.h"
+#include "./sectors/pipeline/pipeline.h"
+#include "./components/utility/lexicon.h"
 
 //const _TILING_OPTIMAL = VK_IMAGE_TILING_OPTIMAL
 
 
-class Nova {
+class NovaCore {
     public:
         VkInstance instance;
         VkPhysicalDevice physical_device;
@@ -16,8 +16,8 @@ class Nova {
 
         bool framebuffer_resized = false;
 
-        Nova(VkExtent2D);
-        ~Nova();
+        NovaCore(VkExtent2D);
+        ~NovaCore();
 
         void log();
 
