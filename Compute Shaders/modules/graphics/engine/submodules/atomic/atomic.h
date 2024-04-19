@@ -136,7 +136,7 @@ struct DescriptorContext
         std::vector<VkDescriptorSet> sets;
     };
 
-struct TextureContext
+struct ImageContext
     {
         VkImage image;
         VkDeviceMemory memory;

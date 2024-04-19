@@ -200,6 +200,8 @@ void Graphics::_initBuffers()
 
         _architect->createCommandPool(); 
         // TODO: Combine Texture  Phases
+        _architect->createColorResources();
+        _architect->createDepthResources();
         _architect->createTextureImage();
         _architect->createTextureImageView();
         _architect->constructTextureSampler();

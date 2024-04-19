@@ -17,15 +17,18 @@ const char* TEXTURE_PATH = "/home/persist/z/Ancillary/Big Stick Studios/repos/le
     ////////////////////////////
 
 static const VkBufferUsageFlags _TRANSFER_SRC_BIT = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-static const VkBufferUsageFlags _BUFFER_INDEX_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+static const VkBufferUsageFlags _INDEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 static const VkBufferUsageFlags _VERTEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-static const VkBufferUsageFlags _IMAGE_SAMPLED_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+static const VkBufferUsageFlags _IMAGE_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+static const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 static const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 static const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 static const VkImageLayout _IMAGE_LAYOUT_BIT = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 static const VkFormat _SRGB_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
+
+static const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 void Nova::constructVertexBuffer() 
     {
@@ -66,7 +69,7 @@ void Nova::constructIndexBuffer()
         memcpy(data, graphics_pipeline->indices.data(), (size_t)_buffer_size);
         vkUnmapMemory(logical_device, _staging.memory);
 
-        createBuffer(_buffer_size, _BUFFER_INDEX_BIT, _LOCAL_DEVICE_BIT, &index);
+        createBuffer(_buffer_size, _INDEX_BUFFER_BIT, _LOCAL_DEVICE_BIT, &index);
         copyBuffer(_staging.buffer, index.buffer, _buffer_size);
  
         destroyBuffer(&_staging);
@@ -248,6 +251,25 @@ inline void Nova::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t w
         return;
     }
 
+void Nova::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountFlagBits samples, 
+                        VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags props,
+                        VkImage& image, VkDeviceMemory& memory)
+    {
+        report(LOGGER::VLINE, "\t .. Creating Image ..");
+
+        VkImageCreateInfo _image_info = createImageInfo(w, h, format, tiling, usage);
+        VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &image));
+
+        VkMemoryRequirements _mem_reqs;
+        vkGetImageMemoryRequirements(logical_device, image, &_mem_reqs);
+
+        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(_mem_reqs, props);
+        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
+        VK_TRY(vkBindImageMemory(logical_device, image, memory, 0));
+
+        return;
+    }
+
 void Nova::createTextureImage() 
     {
         report(LOGGER::VLINE, "\t .. Creating Texture Buffer ..");
@@ -256,6 +278,7 @@ void Nova::createTextureImage()
         int _tex_width, _tex_height, _tex_channels;
         stbi_uc* _pixels = stbi_load(TEXTURE_PATH, &_tex_width, &_tex_height, &_tex_channels, STBI_rgb_alpha);
         VkDeviceSize _image_size = _tex_width * _tex_height * 4;
+        mip_lvls = static_cast<uint32_t>(std::floor(std::log2(std::max(_tex_width, _tex_height)))) + 1;
 
         if (!_pixels) 
             { report(LOGGER::ERROR, "Scene - Failed to load texture image .."); return; }
@@ -272,19 +295,7 @@ void Nova::createTextureImage()
 
         stbi_image_free(_pixels);
 
-        // Create the image
-        const VkImageTiling _TILING = VK_IMAGE_TILING_OPTIMAL;
-
-        VkImageCreateInfo _image_info = createImageInfo(_tex_width, _tex_height, _SRGB_FORMAT, _TILING, _IMAGE_SAMPLED_BIT);
-        VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &texture.image));
-
-        VkMemoryRequirements _mem_reqs;
-        vkGetImageMemoryRequirements(logical_device, texture.image, &_mem_reqs);
-
-        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(_mem_reqs, _LOCAL_DEVICE_BIT);
-        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &texture.memory));
-
-        vkBindImageMemory(logical_device, texture.image, texture.memory, 0);
+        createImage(_tex_width, _tex_height, mip_lvls, VK_SAMPLE_COUNT_1_BIT, _SRGB_FORMAT, VK_IMAGE_TILING_OPTIMAL, _IMAGE_TRANSFER_BIT, _LOCAL_DEVICE_BIT, texture.image, texture.memory);
 
         // Transition the image to a layout that is optimal for copying data to
         transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_BIT);
@@ -372,7 +383,7 @@ void Nova::constructTextureSampler() {
 
 
 
-void Nova::destroyTextureContext() 
+void Nova::destroyImageContext() 
     {
         report(LOGGER::VERBOSE, "Scene - Destroying Texture Context ..");
 

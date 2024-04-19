@@ -2,6 +2,7 @@
 
 #include <set>
 
+
     ///////////////////////////////
     //  Virtual Swapchain Layers //
     ///////////////////////////////
@@ -39,8 +40,6 @@ SwapChainSupportDetails Nova::querySwapChainSupport(VkPhysicalDevice device)
         return details;
     }
 
-
-
 static void selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& available_formats, VkSurfaceFormatKHR* surface_format)
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Surface Format ..");
@@ -56,7 +55,6 @@ static void selectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& avail
         return;
     }
 
-
 static void selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available_present_modes, VkPresentModeKHR* present_mode)
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Present Mode ..");
@@ -71,7 +69,6 @@ static void selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available
 
         return;
     }
-
 
 static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D* window_extent) 
     {
@@ -188,27 +185,28 @@ void Nova::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo Nova::createImageViewInfo(size_t image) {
-    return {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .image = swapchain.images[image],
-        .viewType = VK_IMAGE_VIEW_TYPE_2D,
-        .format = swapchain.format,
-        .components = {
-            .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .a = VK_COMPONENT_SWIZZLE_IDENTITY
-        },
-        .subresourceRange = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = 1,
-            .baseArrayLayer = 0,
-            .layerCount = 1
-        }
-    };
-}
+VkImageViewCreateInfo Nova::createImageViewInfo(VkImage img, VkFormat fmt, VkImageAspectFlags aspect, uint32_t mips)
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image = img,
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            .format = fmt,
+            .components = {
+                .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .a = VK_COMPONENT_SWIZZLE_IDENTITY
+            },
+            .subresourceRange = {
+                .aspectMask = aspect,
+                .baseMipLevel = 0,
+                .levelCount = mips,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
+    }
 
 
 void Nova::constructImageViews()
@@ -219,7 +217,7 @@ void Nova::constructImageViews()
 
         for (size_t i = 0; i < swapchain.images.size(); i++) 
             {
-                VkImageViewCreateInfo _create_info = createImageViewInfo(i);
+                VkImageViewCreateInfo _create_info = createImageViewInfo(swapchain.images[i], swapchain.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
                 VK_TRY(vkCreateImageView(logical_device, &_create_info, nullptr, &swapchain.image_views[i]));
             }
 
@@ -227,6 +225,7 @@ void Nova::constructImageViews()
 
         return;
     }
+
 
     ///////////////////////////
     // FRAME BUFFER CREATION //
@@ -240,12 +239,17 @@ void Nova::createFrameBuffers()
 
         for (size_t i = 0; i < swapchain.image_views.size(); i++) 
             {
-                VkImageView _attachments[] = { swapchain.image_views[i] };
+                VkImageView _attachments[] = 
+                    { 
+                        color.view,
+                        depth.view,
+                        swapchain.image_views[i] 
+                    };
 
                 VkFramebufferCreateInfo _create_info = {
                     .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                     .renderPass = render_pass,
-                    .attachmentCount = 1,
+                    .attachmentCount = static_cast<uint32_t>(std::size(_attachments)),
                     .pAttachments = _attachments,
                     .width = swapchain.extent.width,
                     .height = swapchain.extent.height,

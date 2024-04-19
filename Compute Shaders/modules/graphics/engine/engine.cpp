@@ -39,7 +39,7 @@ Nova::~Nova()
         report(LOGGER::INFO, "Nova - Destroying Context ..");
 
         destroySwapChain();
-        destroyTextureContext();
+        destroyImageContext();
         queues.deletion.flush();
         destroyUniformContext();
         vkDestroyDescriptorPool(logical_device, descriptor.pool, nullptr);

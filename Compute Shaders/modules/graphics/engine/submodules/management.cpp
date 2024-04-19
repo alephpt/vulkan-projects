@@ -47,14 +47,14 @@ void Nova::constructComputePipeline()
     // RENDER PASS CREATION //
     //////////////////////////
 
-VkAttachmentDescription Nova::colorAttachment()
+VkAttachmentDescription Nova::getColorAttachment()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Attachment ..");
 
         return {
             .flags = 0,
             .format = swapchain.format,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .samples = msaa_samples,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -64,7 +64,79 @@ VkAttachmentDescription Nova::colorAttachment()
         };
     }
 
-static VkAttachmentReference colorAttachmentRef()
+VkFormat Nova::findDepthFormat(VkImageTiling tiling)
+    {
+        report(LOGGER::VLINE, "\t\t .. Finding Depth Format ..");
+
+        const VkFormatFeatureFlags _FEATURES = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        const std::vector<VkFormat> _CANDIDATES = {
+            VK_FORMAT_D32_SFLOAT,
+            VK_FORMAT_D32_SFLOAT_S8_UINT,
+            VK_FORMAT_D24_UNORM_S8_UINT
+        };
+
+        for (VkFormat _format : _CANDIDATES) 
+            {
+                VkFormatProperties _props;
+                vkGetPhysicalDeviceFormatProperties(physical_device, _format, &_props);
+
+                if ((tiling == VK_IMAGE_TILING_LINEAR && (_props.linearTilingFeatures & _FEATURES) == _FEATURES) ||
+                    (tiling == VK_IMAGE_TILING_OPTIMAL && (_props.optimalTilingFeatures & _FEATURES) == _FEATURES)) 
+                    {
+                        return _format;
+                    }
+            }
+    }
+
+void Nova::createColorResources()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Color Resources ..");
+
+        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, swapchain.format, 
+                    VK_IMAGE_TILING_OPTIMAL, , 
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, color.image, color.memory);
+        
+        VkImageViewCreateInfo _view_info = createImageViewInfo(color.image, swapchain.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &color.view));
+
+        return;
+    
+    }
+
+void Nova::createDepthResources() 
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Depth Resources ..");
+
+        VkFormat _depth_format = findDepthFormat(VK_IMAGE_TILING_OPTIMAL);
+    
+        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, _depth_format, 
+                    VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
+                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.memory);
+        
+        VkImageViewCreateInfo _view_info = createImageViewInfo(depth.image, _depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &depth.view));
+
+        return;
+    }
+
+VkAttachmentDescription Nova::getDepthAttachment()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Depth Attachment ..");
+
+        return {
+            .flags = 0,
+            .format = findDepthFormat(VK_IMAGE_TILING_OPTIMAL),
+            .samples = msaa_samples,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        };
+    }
+
+static inline VkAttachmentReference _getColorAttachmentRef()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Reference ..");
 
@@ -74,7 +146,7 @@ static VkAttachmentReference colorAttachmentRef()
         };
     }
 
-static VkSubpassDescription subpassDescription(VkAttachmentReference* color_attachment_ref)
+static inline VkSubpassDescription _getSubpassDescription(VkAttachmentReference* color_attachment_ref)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Subpass Description");
 
@@ -86,7 +158,7 @@ static VkSubpassDescription subpassDescription(VkAttachmentReference* color_atta
         };
     }
 
-static VkRenderPassCreateInfo renderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
+static inline VkRenderPassCreateInfo _getRenderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Render Pass Info ..");
 
@@ -105,10 +177,11 @@ void Nova::createRenderPass()
         report(LOGGER::VLINE, "\t .. Creating Render Pass ..");
 
         //log();
-        VkAttachmentDescription _color_attachment = colorAttachment();
-        VkAttachmentReference _color_attachment_ref = colorAttachmentRef();
-        VkSubpassDescription _subpass_description = subpassDescription(&_color_attachment_ref);
-        VkRenderPassCreateInfo render_pass_info = renderPassInfo(&_color_attachment, &_subpass_description);
+        VkAttachmentDescription _color_attachment = getColorAttachment();
+        VkAttachmentDescription _depth_attachment = getDepthAttachment();
+        VkAttachmentReference _color_attachment_ref = _getColorAttachmentRef();
+        VkSubpassDescription _subpass_description = _getSubpassDescription(&_color_attachment_ref);
+        VkRenderPassCreateInfo render_pass_info = _getRenderPassInfo(&_color_attachment, &_subpass_description);
         
         VK_TRY(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
 
@@ -256,7 +329,7 @@ static inline VkDescriptorBufferInfo _getDescriptorBufferInfo(VkBuffer* buffer, 
         };
     }
 
-static inline VkDescriptorImageInfo _getDescriptorImageInfo(TextureContext* texture)
+static inline VkDescriptorImageInfo _getDescriptorImageInfo(ImageContext* texture)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Image Info ..");
 
