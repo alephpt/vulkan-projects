@@ -93,7 +93,7 @@ void Nova::createColorResources()
         report(LOGGER::VLINE, "\t\t .. Creating Color Resources ..");
 
         createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, swapchain.format, 
-                    VK_IMAGE_TILING_OPTIMAL, , 
+                    VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, color.image, color.memory);
         
         VkImageViewCreateInfo _view_info = createImageViewInfo(color.image, swapchain.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
