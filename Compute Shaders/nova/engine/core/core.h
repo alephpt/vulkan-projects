@@ -109,6 +109,7 @@ class NovaCore {
         void createImage(uint32_t, uint32_t, uint32_t, VkSampleCountFlagBits, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory&);
         void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout);
         void copyBufferToImage(VkBuffer&, VkImage&, uint32_t, uint32_t);
+        void generateMipmaps(VkImage&, VkFormat, int32_t, int32_t, uint32_t);
 
         void destroySwapChain();
         void destroyBuffer(BufferContext*);

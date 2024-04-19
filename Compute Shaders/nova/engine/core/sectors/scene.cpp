@@ -23,11 +23,13 @@ static const VkBufferUsageFlags _IMAGE_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST
 static const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 static const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 static const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-static const VkImageLayout _IMAGE_LAYOUT_BIT = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+static const VkImageLayout _IMAGE_LAYOUT_DST = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+static const VkImageLayout _IMAGE_LAYOUT_SRC = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
 static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+static const VkPipelineStageFlagBits _PIPELINE_TRANSFER_BIT = VK_PIPELINE_STAGE_TRANSFER_BIT;
 static const VkFormat _SRGB_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
-
+static const VkImageAspectFlagBits _IMAGE_COLOR_BIT = VK_IMAGE_ASPECT_COLOR_BIT;
 static const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 void NovaCore::constructVertexBuffer() 
@@ -136,12 +138,122 @@ void NovaCore::destroyUniformContext()
             { destroyBuffer(&uniform[i]); }
     }
 
+
+    ///////////////////////
+    // MIPMAP GENERATION //
+    ///////////////////////
+
+static inline void _setTransferBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_level) 
+    {
+        barrier.subresourceRange.baseMipLevel = mip_level;
+        barrier.oldLayout = _IMAGE_LAYOUT_DST;
+        barrier.newLayout = _IMAGE_LAYOUT_SRC;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+    }
+
+static inline VkImageBlit _getBlit(uint32_t mip_level, int32_t width, int32_t height) 
+    {
+        return {
+            .srcOffsets[0] = { .x = 0, .y = 0, .z = 0 },
+            .srcOffsets[1] = 
+                { 
+                    .x = width, 
+                    .y = height, 
+                    .z = 1 
+                },
+            .srcSubresource = 
+                { 
+                    .aspectMask = _IMAGE_COLOR_BIT,
+                    .mipLevel = mip_level - 1,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                },
+
+            .dstOffsets[0] = { 0, 0, 0 },
+            .dstOffsets[1] = 
+                { 
+                    .x = width > 1 ? width / 2 : 1,
+                    .y = height > 1 ? height / 2 : 1,
+                    .z = 1
+                },
+            .dstSubresource = 
+                { 
+                    .aspectMask = _IMAGE_COLOR_BIT,
+                    .mipLevel = mip_level,
+                    .baseArrayLayer = 0,
+                    .layerCount = 1
+                }
+        };
+    }
+
+static inline void _setReadBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_level) 
+    {
+        barrier.subresourceRange.baseMipLevel = mip_level;
+        barrier.oldLayout = _IMAGE_LAYOUT_SRC;
+        barrier.newLayout = _IMAGE_LAYOUT_READ_ONLY;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    }
+
+static inline void _setFinalBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_level) 
+    {
+        barrier.subresourceRange.baseMipLevel = mip_level;
+        barrier.oldLayout = _IMAGE_LAYOUT_DST;
+        barrier.newLayout = _IMAGE_LAYOUT_READ_ONLY;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    }
+
+void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_width, int32_t tex_height, uint32_t mip_levels) 
+    {
+        report(LOGGER::VLINE, "\t .. Generating Mipmaps ..");
+
+        VkFormatProperties _format_props;
+        vkGetPhysicalDeviceFormatProperties(physical_device, format, &_format_props);
+
+        if (!(_format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) 
+            { report(LOGGER::ERROR, "Scene - Texture Image Format does not support linear blitting .."); return; }
+
+        VkCommandBuffer _cmd = createEphemeralCommand(queues.xfr.pool);
+
+        VkImageLayout _old_layout = _IMAGE_LAYOUT_DST;
+        VkImageLayout _new_layout = _IMAGE_LAYOUT_SRC;
+        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, _old_layout, _new_layout);
+
+        int _mip_width = tex_width;
+        int _mip_height = tex_height;
+
+        for (uint32_t i = 1; i < mip_levels; i++) 
+            {
+                _setTransferBarrier(_barrier, i - 1);   
+                vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+                VkImageBlit _blit = _getBlit(i, _mip_width, _mip_height);
+                vkCmdBlitImage(_cmd, image, _IMAGE_LAYOUT_SRC, image, _IMAGE_LAYOUT_DST, 1, &_blit, VK_FILTER_LINEAR);
+                _setReadBarrier(_barrier, i);
+                vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+
+                if (_mip_width > 1) _mip_width /= 2;
+                if (_mip_height > 1) _mip_height /= 2;
+            }
+
+        _setFinalBarrier(_barrier, mip_levels - 1);
+        vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+
+        char _msg[] = "Generate Mipmaps";
+        flushCommandBuffer(_cmd, _msg);
+
+        return;
+    }
+
+
+
     /////////////////////////////
     // TEXTURE BUFFER CREATION //
     /////////////////////////////
 
 
-static inline VkImageCreateInfo createImageInfo(int w, int h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) 
+static inline VkImageCreateInfo _createImageInfo(int w, int h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -160,7 +272,7 @@ static inline VkImageCreateInfo createImageInfo(int w, int h, VkFormat format, V
     }
 
 
-static inline VkImageMemoryBarrier getMemoryBarrier(VkImage& image, VkImageLayout& _old_layout, VkImageLayout& _new_layout) 
+static inline VkImageMemoryBarrier _getMemoryBarrier(VkImage& image, VkImageLayout& _old_layout, VkImageLayout& _new_layout) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -172,11 +284,11 @@ static inline VkImageMemoryBarrier getMemoryBarrier(VkImage& image, VkImageLayou
             .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
             .image = image,
             .subresourceRange = { 
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, 
-                .baseMipLevel = 0, 
-                .levelCount = 1, 
-                .baseArrayLayer = 0, 
-                .layerCount = 1 
+                    .aspectMask = _IMAGE_COLOR_BIT, 
+                    .baseMipLevel = 0, 
+                    .levelCount = 1, 
+                    .baseArrayLayer = 0, 
+                    .layerCount = 1 
                 }
         };
     }
@@ -185,23 +297,23 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
     {
         report(LOGGER::VLINE, "\t .. Transitioning Image Layout ..");
         VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
-        VkImageMemoryBarrier _barrier = getMemoryBarrier(image, old_layout, new_layout);
+        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, old_layout, new_layout);
         VkPipelineStageFlags _src_stage, _dst_stage;
 
-        if (old_layout == _IMAGE_LAYOUT_UNDEFINED && new_layout == _IMAGE_LAYOUT_BIT) 
+        if (old_layout == _IMAGE_LAYOUT_UNDEFINED && new_layout == _IMAGE_LAYOUT_DST) 
             {
                 _barrier.srcAccessMask = 0;
                 _barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
                 _src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-                _dst_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                _dst_stage = _PIPELINE_TRANSFER_BIT;
             } 
-        else if (old_layout == _IMAGE_LAYOUT_BIT && new_layout == _IMAGE_LAYOUT_READ_ONLY) 
+        else if (old_layout == _IMAGE_LAYOUT_DST && new_layout == _IMAGE_LAYOUT_READ_ONLY) 
             {
                 _barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
                 _barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-                _src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+                _src_stage = _PIPELINE_TRANSFER_BIT;
                 _dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
             } 
         else 
@@ -224,13 +336,13 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
         flushCommandBuffer(_ephemeral_cmd, _msg);
     }
 
-static inline VkBufferImageCopy getImageCopyRegion(uint32_t width, uint32_t height) 
+static inline VkBufferImageCopy _getImageCopyRegion(uint32_t width, uint32_t height) 
     {
         return {
             .bufferOffset = 0,
             .bufferRowLength = 0,
             .bufferImageHeight = 0,
-            .imageSubresource = { .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
+            .imageSubresource = { .aspectMask = _IMAGE_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1 },
             .imageOffset = { .x = 0, .y = 0, .z = 0 },
             .imageExtent = { .width = width, .height = height, .depth = 1 }
         };
@@ -242,8 +354,8 @@ inline void NovaCore::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32
 
         VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
 
-        VkBufferImageCopy _region = getImageCopyRegion(width, height);
-        vkCmdCopyBufferToImage(_ephemeral_cmd, buffer, image, _IMAGE_LAYOUT_BIT, 1, &_region);
+        VkBufferImageCopy _region = _getImageCopyRegion(width, height);
+        vkCmdCopyBufferToImage(_ephemeral_cmd, buffer, image, _IMAGE_LAYOUT_DST, 1, &_region);
 
         char _msg[] = "Copy Buffer";
         flushCommandBuffer(_ephemeral_cmd, _msg);
@@ -257,7 +369,7 @@ void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountF
     {
         report(LOGGER::VLINE, "\t .. Creating Image ..");
 
-        VkImageCreateInfo _image_info = createImageInfo(w, h, format, tiling, usage);
+        VkImageCreateInfo _image_info = _createImageInfo(w, h, format, tiling, usage);
         VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &image));
 
         VkMemoryRequirements _mem_reqs;
@@ -298,9 +410,9 @@ void NovaCore::createTextureImage()
         createImage(_tex_width, _tex_height, mip_lvls, VK_SAMPLE_COUNT_1_BIT, _SRGB_FORMAT, VK_IMAGE_TILING_OPTIMAL, _IMAGE_TRANSFER_BIT, _LOCAL_DEVICE_BIT, texture.image, texture.memory);
 
         // Transition the image to a layout that is optimal for copying data to
-        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_BIT);
+        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST);
         copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height));
-        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_BIT, _IMAGE_LAYOUT_READ_ONLY);
+//        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_BIT, _IMAGE_LAYOUT_READ_ONLY);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
         queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });
@@ -308,6 +420,8 @@ void NovaCore::createTextureImage()
 
         // Clean up the staging buffer
         destroyBuffer(&_staging);
+
+        generateMipmaps(texture.image, _SRGB_FORMAT, _tex_width, _tex_height, mip_lvls);
 
         return;
     }
@@ -317,7 +431,7 @@ void NovaCore::createTextureImage()
     /////////////////////////////////
 
 // TODO: Look into other view types
-static inline VkImageViewCreateInfo getImageViewInfo(VkImage& image, VkFormat format) 
+static inline VkImageViewCreateInfo _getImageViewInfo(VkImage& image, VkFormat format) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -325,7 +439,7 @@ static inline VkImageViewCreateInfo getImageViewInfo(VkImage& image, VkFormat fo
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = format,
             .subresourceRange = { 
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, 
+                .aspectMask = _IMAGE_COLOR_BIT, 
                 .baseMipLevel = 0, 
                 .levelCount = 1, 
                 .baseArrayLayer = 0, 
@@ -339,7 +453,7 @@ void NovaCore::createTextureImageView()
     {
         report(LOGGER::VLINE, "\t .. Creating Texture Image View ..");
 
-        VkImageViewCreateInfo _view_info = getImageViewInfo(texture.image, _SRGB_FORMAT);
+        VkImageViewCreateInfo _view_info = _getImageViewInfo(texture.image, _SRGB_FORMAT);
         VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &texture.view));
     }
 
@@ -349,7 +463,7 @@ void NovaCore::createTextureImageView()
     // TEXTURE SAMPLER CREATION //
     //////////////////////////////
 
-static inline VkSamplerCreateInfo getSamplerInfo(VkPhysicalDeviceProperties& props) 
+static inline VkSamplerCreateInfo _getSamplerInfo(VkPhysicalDeviceProperties& props) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -376,7 +490,7 @@ void NovaCore::constructTextureSampler() {
 
     VkPhysicalDeviceProperties _props;
     vkGetPhysicalDeviceProperties(physical_device, &_props);
-    VkSamplerCreateInfo _sampler_info = getSamplerInfo(_props);
+    VkSamplerCreateInfo _sampler_info = _getSamplerInfo(_props);
 
     VK_TRY(vkCreateSampler(logical_device, &_sampler_info, nullptr, &texture.sampler));
 }

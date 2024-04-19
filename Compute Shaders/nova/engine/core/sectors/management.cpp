@@ -86,6 +86,9 @@ VkFormat NovaCore::findDepthFormat(VkImageTiling tiling)
                         return _format;
                     }
             }
+        
+        report(LOGGER::ERROR, "Management - Failed to find a suitable depth format.");
+        return VK_FORMAT_UNDEFINED;
     }
 
 void NovaCore::createColorResources()
