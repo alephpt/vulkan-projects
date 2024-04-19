@@ -298,6 +298,8 @@ void NovaCore::recreateSwapChain()
 
         constructSwapChain();
         constructImageViews();
+        createColorResources();
+        createDepthResources();
         createFrameBuffers();
         return;
     }

@@ -26,7 +26,7 @@ void NovaCore::constructGraphicsPipeline()
                 .inputAssembly()
                 .viewportState()
                 .rasterizer()
-                .multisampling()
+                .multisampling(msaa_samples)
                 .colorBlending()
                 .dynamicState()
                 .createLayout(&logical_device, &descriptor.layout)
@@ -139,6 +139,23 @@ VkAttachmentDescription NovaCore::getDepthAttachment()
         };
     }
 
+static inline VkAttachmentDescription _getColorAttachmentResolve(VkFormat format)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Resolve ..");
+
+        return {
+            .flags = 0,
+            .format = format,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+        };
+    }
+
 static inline VkAttachmentReference _getColorAttachmentRef()
     {
         report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Reference ..");
@@ -149,7 +166,29 @@ static inline VkAttachmentReference _getColorAttachmentRef()
         };
     }
 
-static inline VkSubpassDescription _getSubpassDescription(VkAttachmentReference* color_attachment_ref)
+static inline VkAttachmentReference _getDepthAttachmentRef()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Depth Attachment Reference ..");
+
+        return {
+            .attachment = 1,
+            .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+        };
+    }
+
+static inline VkAttachmentReference _getColorAttachmentResolveRef()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Color Attachment Resolve Reference ..");
+
+        return {
+            .attachment = 2,
+            .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+        };
+    }
+
+static inline VkSubpassDescription _getSubpassDescription(VkAttachmentReference* color_attachment_ref, 
+                                                            VkAttachmentReference* depth_attachment_ref, 
+                                                            VkAttachmentReference* color_attachment_resolve_ref)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Subpass Description");
 
@@ -157,19 +196,35 @@ static inline VkSubpassDescription _getSubpassDescription(VkAttachmentReference*
             .flags = 0,
             .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             .colorAttachmentCount = 1,
-            .pColorAttachments = color_attachment_ref
+            .pColorAttachments = color_attachment_ref,
+            .pResolveAttachments = color_attachment_resolve_ref,
+            .pDepthStencilAttachment = depth_attachment_ref,
         };
     }
 
-static inline VkRenderPassCreateInfo _getRenderPassInfo(VkAttachmentDescription* color_attachment, VkSubpassDescription* subpass_description)
+static inline VkSubpassDependency _getDependency()
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Subpass Dependency ..");
+
+        return {
+            .srcSubpass = VK_SUBPASS_EXTERNAL,
+            .dstSubpass = 0,
+            .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+            .srcAccessMask = 0,
+            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+            .dependencyFlags = 0
+        };
+    }
+
+static inline VkRenderPassCreateInfo _getRenderPassInfo(std::array<VkAttachmentDescription, 3>* attachments, VkSubpassDescription* subpass_description, VkSubpassDependency* dependency)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Render Pass Info ..");
 
-
         return {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-            .attachmentCount = 1,
-            .pAttachments = color_attachment,
+            .attachmentCount = static_cast<uint32_t>(attachments->size()),
+            .pAttachments = attachments->data(),
             .subpassCount = 1,
             .pSubpasses = subpass_description
         };
@@ -182,9 +237,15 @@ void NovaCore::createRenderPass()
         //log();
         VkAttachmentDescription _color_attachment = getColorAttachment();
         VkAttachmentDescription _depth_attachment = getDepthAttachment();
+        VkAttachmentDescription _color_resolve = _getColorAttachmentResolve(swapchain.format);
         VkAttachmentReference _color_attachment_ref = _getColorAttachmentRef();
-        VkSubpassDescription _subpass_description = _getSubpassDescription(&_color_attachment_ref);
-        VkRenderPassCreateInfo render_pass_info = _getRenderPassInfo(&_color_attachment, &_subpass_description);
+        VkAttachmentReference _depth_attachment_ref = _getDepthAttachmentRef();
+        VkAttachmentReference _color_attachment_resolve_ref = _getColorAttachmentResolveRef();
+        VkSubpassDescription _subpass_description = _getSubpassDescription(&_color_attachment_ref, &_depth_attachment_ref, &_color_attachment_resolve_ref);
+        VkSubpassDependency _dependency = _getDependency();
+
+        std::array<VkAttachmentDescription, 3> _attachments = {_color_attachment, _depth_attachment, _color_resolve};
+        VkRenderPassCreateInfo render_pass_info = _getRenderPassInfo(&_attachments, &_subpass_description, &_dependency);
         
         VK_TRY(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
 

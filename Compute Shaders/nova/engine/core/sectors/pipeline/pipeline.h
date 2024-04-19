@@ -25,7 +25,7 @@ class Pipeline {
         Pipeline& inputAssembly();
         Pipeline& viewportState();
         Pipeline& rasterizer();
-        Pipeline& multisampling();
+        Pipeline& multisampling(VkSampleCountFlagBits);
         Pipeline& depthStencil();
         Pipeline& colorBlending();
         Pipeline& dynamicState();

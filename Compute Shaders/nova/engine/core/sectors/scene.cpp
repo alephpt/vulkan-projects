@@ -143,6 +143,28 @@ void NovaCore::destroyUniformContext()
     // MIPMAP GENERATION //
     ///////////////////////
 
+
+static inline VkImageMemoryBarrier _getMemoryBarrier(VkImage& image, VkImageLayout& _old_layout, VkImageLayout& _new_layout, uint32_t mip_level = 1)
+    {
+        return {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask = 0,
+            .dstAccessMask = 0,
+            .oldLayout = _old_layout,
+            .newLayout = _new_layout,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = image,
+            .subresourceRange = { 
+                    .aspectMask = _IMAGE_COLOR_BIT, 
+                    .baseMipLevel = 0, 
+                    .levelCount = mip_level,
+                    .baseArrayLayer = 0, 
+                    .layerCount = 1 
+                }
+        };
+    }
+
 static inline void _setTransferBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_level) 
     {
         barrier.subresourceRange.baseMipLevel = mip_level;
@@ -155,35 +177,10 @@ static inline void _setTransferBarrier(VkImageMemoryBarrier& barrier, uint32_t m
 static inline VkImageBlit _getBlit(uint32_t mip_level, int32_t width, int32_t height) 
     {
         return {
-            .srcOffsets[0] = { .x = 0, .y = 0, .z = 0 },
-            .srcOffsets[1] = 
-                { 
-                    .x = width, 
-                    .y = height, 
-                    .z = 1 
-                },
-            .srcSubresource = 
-                { 
-                    .aspectMask = _IMAGE_COLOR_BIT,
-                    .mipLevel = mip_level - 1,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1
-                },
-
-            .dstOffsets[0] = { 0, 0, 0 },
-            .dstOffsets[1] = 
-                { 
-                    .x = width > 1 ? width / 2 : 1,
-                    .y = height > 1 ? height / 2 : 1,
-                    .z = 1
-                },
-            .dstSubresource = 
-                { 
-                    .aspectMask = _IMAGE_COLOR_BIT,
-                    .mipLevel = mip_level,
-                    .baseArrayLayer = 0,
-                    .layerCount = 1
-                }
+            .srcSubresource = { .aspectMask = _IMAGE_COLOR_BIT, .mipLevel = mip_level - 1, .baseArrayLayer = 0, .layerCount = 1 },
+            .srcOffsets = { {0, 0, 0}, {width, height, 1} },
+            .dstSubresource = { .aspectMask = _IMAGE_COLOR_BIT, .mipLevel = mip_level, .baseArrayLayer = 0, .layerCount = 1 },
+            .dstOffsets = { {0, 0, 0}, {width > 1 ? width / 2 : 1, height > 1 ? height / 2 : 1, 1} }
         };
     }
 
@@ -271,33 +268,11 @@ static inline VkImageCreateInfo _createImageInfo(int w, int h, VkFormat format, 
         };
     }
 
-
-static inline VkImageMemoryBarrier _getMemoryBarrier(VkImage& image, VkImageLayout& _old_layout, VkImageLayout& _new_layout) 
-    {
-        return {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            .srcAccessMask = 0,
-            .dstAccessMask = 0,
-            .oldLayout = _old_layout,
-            .newLayout = _new_layout,
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image = image,
-            .subresourceRange = { 
-                    .aspectMask = _IMAGE_COLOR_BIT, 
-                    .baseMipLevel = 0, 
-                    .levelCount = 1, 
-                    .baseArrayLayer = 0, 
-                    .layerCount = 1 
-                }
-        };
-    }
-
 inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) 
     {
         report(LOGGER::VLINE, "\t .. Transitioning Image Layout ..");
         VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
-        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, old_layout, new_layout);
+        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, old_layout, new_layout, mip_lvls);
         VkPipelineStageFlags _src_stage, _dst_stage;
 
         if (old_layout == _IMAGE_LAYOUT_UNDEFINED && new_layout == _IMAGE_LAYOUT_DST) 
@@ -319,18 +294,7 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
         else 
             { report(LOGGER::ERROR, "Scene - Unsupported Layout Transition .."); return; }
 
-        vkCmdPipelineBarrier(
-            _ephemeral_cmd, 
-            _src_stage, 
-            _dst_stage, 
-            0, 
-            0, 
-            nullptr, 
-            0, 
-            nullptr, 
-            1, 
-            &_barrier
-        );
+        vkCmdPipelineBarrier(_ephemeral_cmd, _src_stage, _dst_stage, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
         char _msg[] = "Transition Image Layout";
         flushCommandBuffer(_ephemeral_cmd, _msg);
@@ -463,7 +427,7 @@ void NovaCore::createTextureImageView()
     // TEXTURE SAMPLER CREATION //
     //////////////////////////////
 
-static inline VkSamplerCreateInfo _getSamplerInfo(VkPhysicalDeviceProperties& props) 
+static inline VkSamplerCreateInfo _getSamplerInfo(VkPhysicalDeviceProperties& props, float mip_levels) 
     {
         return {
             .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
@@ -479,7 +443,7 @@ static inline VkSamplerCreateInfo _getSamplerInfo(VkPhysicalDeviceProperties& pr
             .compareEnable = VK_FALSE,
             .compareOp = VK_COMPARE_OP_ALWAYS,
             .minLod = 0.0f,
-            .maxLod = 0.0f,
+            .maxLod = mip_levels,
             .borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK,
             .unnormalizedCoordinates = VK_FALSE,
         };
@@ -490,7 +454,7 @@ void NovaCore::constructTextureSampler() {
 
     VkPhysicalDeviceProperties _props;
     vkGetPhysicalDeviceProperties(physical_device, &_props);
-    VkSamplerCreateInfo _sampler_info = _getSamplerInfo(_props);
+    VkSamplerCreateInfo _sampler_info = _getSamplerInfo(_props, static_cast<float>(mip_lvls));
 
     VK_TRY(vkCreateSampler(logical_device, &_sampler_info, nullptr, &texture.sampler));
 }
