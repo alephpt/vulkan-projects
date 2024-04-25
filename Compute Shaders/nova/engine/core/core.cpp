@@ -197,9 +197,8 @@ static SwapChainSupportDetails initSwapChainSupport()
 static SwapChainDetails initSwapChainDetails() 
     {
         return {
-                .surface_format = {},
+                .surface = {},
                 .present_mode = {},
-                .extent = {}
             };
     }
 
@@ -209,7 +208,6 @@ static SwapChainContext initSwapchain() {
             .images = {},
             .image_views = {},
             .framebuffers = {},
-            .format = VK_FORMAT_UNDEFINED,
             .extent = {0, 0},
             .support = initSwapChainSupport(),
             .details = initSwapChainDetails()
@@ -241,7 +239,6 @@ void NovaCore::_blankContext()
 void NovaCore::setWindowExtent(VkExtent2D extent) 
     {
         swapchain.extent = extent;
-        //swapchain.details.extent = extent;
         framebuffer_resized = true;
     }
 
@@ -296,10 +293,9 @@ void NovaCore::logSwapChain()
         report(LOGGER::DLINE, "\t\tImage Count: %d", swapchain.images.size());
         report(LOGGER::DLINE, "\t\tImage Views: %d", swapchain.image_views.size());
         report(LOGGER::DLINE, "\t\tFramebuffers: %d", swapchain.framebuffers.size());
-        report(LOGGER::DLINE, "\t\tImage Format: %d", swapchain.format);
         report(LOGGER::DLINE, "\t\tSupport: %d Formats", swapchain.support.formats.size());
         report(LOGGER::DLINE, "\t\tSupport: %d Present Modes", swapchain.support.present_modes.size());
-        report(LOGGER::DLINE, "\t\tDetails: %d Formats", swapchain.details.surface_format.format);
+        report(LOGGER::DLINE, "\t\tDetails: %d Formats", swapchain.details.surface.format);
         report(LOGGER::DLINE, "\t\tDetails: %d Present Modes", swapchain.details.present_mode);
         report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
     }

@@ -107,6 +107,7 @@ class NovaCore {
         void updateUniformBuffer(uint32_t);
 
         void createImage(uint32_t, uint32_t, uint32_t, VkSampleCountFlagBits, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory&);
+        VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags, uint32_t);
         void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout);
         void copyBufferToImage(VkBuffer&, VkImage&, uint32_t, uint32_t);
         void generateMipmaps(VkImage&, VkFormat, int32_t, int32_t, uint32_t);

@@ -24,7 +24,10 @@ static const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_DS
 static const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 static const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 static const VkImageLayout _IMAGE_LAYOUT_DST = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-static const VkImageLayout _IMAGE_LAYOUT_SRC = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+static const VkImageLayout _IMAGE_LAYOUT_SRC = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; 
+static const VkAccessFlags _TRANSFER_WRITE_BIT = VK_ACCESS_TRANSFER_WRITE_BIT;
+static const VkAccessFlags _TRANSFER_READ_BIT = VK_ACCESS_TRANSFER_READ_BIT;
+static const VkAccessFlags _SHADER_READ_BIT = VK_ACCESS_SHADER_READ_BIT;
 static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 static const VkPipelineStageFlagBits _PIPELINE_TRANSFER_BIT = VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -148,8 +151,8 @@ static inline VkImageMemoryBarrier _getMemoryBarrier(VkImage& image, VkImageLayo
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-            .srcAccessMask = 0,
-            .dstAccessMask = 0,
+            .srcAccessMask = _TRANSFER_WRITE_BIT,
+            .dstAccessMask = _TRANSFER_READ_BIT,
             .oldLayout = _old_layout,
             .newLayout = _new_layout,
             .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -170,8 +173,8 @@ static inline void _setTransferBarrier(VkImageMemoryBarrier& barrier, uint32_t m
         barrier.subresourceRange.baseMipLevel = mip_level;
         barrier.oldLayout = _IMAGE_LAYOUT_DST;
         barrier.newLayout = _IMAGE_LAYOUT_SRC;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.srcAccessMask = _TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = _TRANSFER_READ_BIT;
     }
 
 static inline VkImageBlit _getBlit(uint32_t mip_level, int32_t width, int32_t height) 
@@ -189,8 +192,8 @@ static inline void _setReadBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_l
         barrier.subresourceRange.baseMipLevel = mip_level;
         barrier.oldLayout = _IMAGE_LAYOUT_SRC;
         barrier.newLayout = _IMAGE_LAYOUT_READ_ONLY;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcAccessMask = _TRANSFER_READ_BIT;
+        barrier.dstAccessMask = _SHADER_READ_BIT;
     }
 
 static inline void _setFinalBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_level) 
@@ -198,8 +201,8 @@ static inline void _setFinalBarrier(VkImageMemoryBarrier& barrier, uint32_t mip_
         barrier.subresourceRange.baseMipLevel = mip_level;
         barrier.oldLayout = _IMAGE_LAYOUT_DST;
         barrier.newLayout = _IMAGE_LAYOUT_READ_ONLY;
-        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        barrier.srcAccessMask = _TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = _SHADER_READ_BIT;
     }
 
 void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_width, int32_t tex_height, uint32_t mip_levels) 
@@ -223,6 +226,7 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
 
         for (uint32_t i = 1; i < mip_levels; i++) 
             {
+                report(LOGGER::VLINE, "\t\t .. Mipmap Level: %d", i);
                 _setTransferBarrier(_barrier, i - 1);   
                 vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
                 VkImageBlit _blit = _getBlit(i, _mip_width, _mip_height);
@@ -250,17 +254,17 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
     /////////////////////////////
 
 
-static inline VkImageCreateInfo _createImageInfo(int w, int h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage) 
+static inline VkImageCreateInfo _createImageInfo(uint32_t w, uint32_t h, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, uint32_t mip_lvls = 1, VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT)
     {
         return {
             .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
             .flags = 0,
             .imageType = VK_IMAGE_TYPE_2D,
             .format = format,
-            .extent = { .width = (uint32_t)w, .height = (uint32_t)h, .depth = 1 },
-            .mipLevels = 1,
+            .extent = { .width = w, .height = h, .depth = 1 },
+            .mipLevels = mip_lvls,
             .arrayLayers = 1,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .samples = samples,
             .tiling = tiling,
             .usage = usage,
             .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -278,15 +282,15 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
         if (old_layout == _IMAGE_LAYOUT_UNDEFINED && new_layout == _IMAGE_LAYOUT_DST) 
             {
                 _barrier.srcAccessMask = 0;
-                _barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                _barrier.dstAccessMask = _TRANSFER_WRITE_BIT;
 
                 _src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
                 _dst_stage = _PIPELINE_TRANSFER_BIT;
             } 
         else if (old_layout == _IMAGE_LAYOUT_DST && new_layout == _IMAGE_LAYOUT_READ_ONLY) 
             {
-                _barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-                _barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                _barrier.srcAccessMask = _TRANSFER_WRITE_BIT;
+                _barrier.dstAccessMask = _SHADER_READ_BIT;
 
                 _src_stage = _PIPELINE_TRANSFER_BIT;
                 _dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
@@ -331,9 +335,9 @@ void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountF
                         VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags props,
                         VkImage& image, VkDeviceMemory& memory)
     {
-        report(LOGGER::VLINE, "\t .. Creating Image ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Image ..");
 
-        VkImageCreateInfo _image_info = _createImageInfo(w, h, format, tiling, usage);
+        VkImageCreateInfo _image_info = _createImageInfo(w, h, format, tiling, usage, mips, samples);
         VK_TRY(vkCreateImage(logical_device, &_image_info, nullptr, &image));
 
         VkMemoryRequirements _mem_reqs;

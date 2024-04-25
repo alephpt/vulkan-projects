@@ -32,10 +32,6 @@ SwapChainSupportDetails NovaCore::querySwapChainSupport(VkPhysicalDevice device)
                 vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &_present_mode_count, details.present_modes.data());
             }
 
-        details.capabilities.minImageExtent.width = details.capabilities.minImageExtent.width - 10;
-        details.capabilities.minImageExtent.height = details.capabilities.minImageExtent.height - 10;
-        details.capabilities.maxImageExtent.width = details.capabilities.maxImageExtent.width + 10;
-        details.capabilities.maxImageExtent.height = details.capabilities.maxImageExtent.height + 10;
 
         return details;
     }
@@ -70,22 +66,25 @@ static void selectSwapPresentMode(const std::vector<VkPresentModeKHR>& available
         return;
     }
 
-static void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D* window_extent) 
+static inline void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D* extent)
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Extent ..");
 
+        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Current Width: %d Current Height: %d", capabilities.currentExtent.width, capabilities.currentExtent.height);
+        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Min Width: %d Min Height: %d", capabilities.minImageExtent.width, capabilities.minImageExtent.height);
+        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Max Width: %d Max Height: %d", capabilities.maxImageExtent.width, capabilities.maxImageExtent.height);
+        report(LOGGER::VERBOSE, "Vulkan: Swap Extent: Width: %d Height: %d", extent->width, extent->height);
+
+
         if (capabilities.currentExtent.width != UINT32_MAX) 
             { 
-                window_extent->width = capabilities.currentExtent.width;
-                window_extent->height = capabilities.currentExtent.height;
+                extent->width = capabilities.currentExtent.width;
+                extent->height = capabilities.currentExtent.height;
             }
         else 
             {
-                uint32_t width = window_extent->width;
-                uint32_t height = window_extent->height;
-
-                window_extent->width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, width));
-                window_extent->height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, height));
+                extent->width = std::max(capabilities.maxImageExtent.width, std::min(capabilities.minImageExtent.width, extent->width));
+                extent->height = std::max(capabilities.maxImageExtent.height, std::min(capabilities.minImageExtent.height, extent->height));
             }
 
         return;
@@ -99,34 +98,34 @@ void NovaCore::querySwapChainDetails()
         if (swapchain.support.formats.empty() || swapchain.support.present_modes.empty()) 
             { report(LOGGER::ERROR, "Vulkan: SwapChain support is not available."); }
 
-        selectSwapSurfaceFormat(swapchain.support.formats, &swapchain.details.surface_format);
+        selectSwapSurfaceFormat(swapchain.support.formats, &swapchain.details.surface);
         selectSwapPresentMode(swapchain.support.present_modes, &swapchain.details.present_mode);
-        selectSwapExtent(swapchain.support.capabilities, &swapchain.details.extent);
+        selectSwapExtent(swapchain.support.capabilities, &swapchain.extent);
 
         return;
     }
 
 void NovaCore::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uint32_t image_count) 
     {
-    *create_info = {
-        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-        .surface = surface,
-        .minImageCount = image_count,
-        .imageFormat = swapchain.details.surface_format.format,
-        .imageColorSpace = swapchain.details.surface_format.colorSpace,
-        .imageExtent = swapchain.extent,
-        .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .queueFamilyIndexCount = 0,
-        .pQueueFamilyIndices = nullptr,
-        .preTransform = swapchain.support.capabilities.currentTransform,
-        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = swapchain.details.present_mode,
-        .clipped = VK_TRUE,
-        .oldSwapchain = VK_NULL_HANDLE
-    };
-}
+        *create_info = {
+            .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+            .surface = surface,
+            .minImageCount = image_count,
+            .imageFormat = swapchain.details.surface.format,
+            .imageColorSpace = swapchain.details.surface.colorSpace,
+            .imageExtent = swapchain.extent,
+            .imageArrayLayers = 1,
+            .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+            .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+            .queueFamilyIndexCount = 0,
+            .pQueueFamilyIndices = nullptr,
+            .preTransform = swapchain.support.capabilities.currentTransform,
+            .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+            .presentMode = swapchain.details.present_mode,
+            .clipped = VK_TRUE,
+            .oldSwapchain = VK_NULL_HANDLE
+        };
+    }
 
 // TODO: Wrap this in a class where we can just delete and recreate the swapchain using a singleton wrapper
 void NovaCore::constructSwapChain() 
@@ -177,9 +176,6 @@ void NovaCore::constructSwapChain()
         swapchain.images.resize(_image_count);
         vkGetSwapchainImagesKHR(logical_device, swapchain.instance, &_image_count, swapchain.images.data());
 
-        swapchain.format = swapchain.details.surface_format.format;
-        swapchain.extent = swapchain.details.extent;
-
         report(LOGGER::VLINE, "\t .. SwapChain Constructed ..");
 
         return;
@@ -192,12 +188,6 @@ VkImageViewCreateInfo NovaCore::createImageViewInfo(VkImage img, VkFormat fmt, V
             .image = img,
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = fmt,
-            .components = {
-                .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .g = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .b = VK_COMPONENT_SWIZZLE_IDENTITY,
-                .a = VK_COMPONENT_SWIZZLE_IDENTITY
-            },
             .subresourceRange = {
                 .aspectMask = aspect,
                 .baseMipLevel = 0,
@@ -217,7 +207,7 @@ void NovaCore::constructImageViews()
 
         for (size_t i = 0; i < swapchain.images.size(); i++) 
             {
-                VkImageViewCreateInfo _create_info = createImageViewInfo(swapchain.images[i], swapchain.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+                VkImageViewCreateInfo _create_info = createImageViewInfo(swapchain.images[i], swapchain.details.surface.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
                 VK_TRY(vkCreateImageView(logical_device, &_create_info, nullptr, &swapchain.image_views[i]));
             }
 
@@ -239,7 +229,7 @@ void NovaCore::createFrameBuffers()
 
         for (size_t i = 0; i < swapchain.image_views.size(); i++) 
             {
-                VkImageView _attachments[] = 
+                std::array<VkImageView, 3> _attachments =
                     { 
                         color.view,
                         depth.view,
@@ -249,8 +239,8 @@ void NovaCore::createFrameBuffers()
                 VkFramebufferCreateInfo _create_info = {
                     .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                     .renderPass = render_pass,
-                    .attachmentCount = static_cast<uint32_t>(std::size(_attachments)),
-                    .pAttachments = _attachments,
+                    .attachmentCount = static_cast<uint32_t>(_attachments.size()),
+                    .pAttachments = _attachments.data(),
                     .width = swapchain.extent.width,
                     .height = swapchain.extent.height,
                     .layers = 1

@@ -92,9 +92,8 @@ struct SwapChainSupportDetails
 
 struct SwapChainDetails 
     {
-        VkSurfaceFormatKHR  surface_format;
+        VkSurfaceFormatKHR  surface;
         VkPresentModeKHR    present_mode;
-        VkExtent2D          extent; // TODO: Make 3D
     };
 
 struct SwapChainContext 
@@ -103,7 +102,6 @@ struct SwapChainContext
         std::vector<VkImage> images;
         std::vector<VkImageView> image_views;
         std::vector<VkFramebuffer> framebuffers;
-        VkFormat format;
         VkExtent2D extent;
         SwapChainSupportDetails support;
         SwapChainDetails details;

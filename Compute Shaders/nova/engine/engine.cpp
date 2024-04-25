@@ -172,6 +172,9 @@ void NovaEngine::_initSwapChain(std::promise<void>& startPipeline, std::future<v
         _architect->constructImageViews();
         startPipeline.set_value();
         waitingForPipeline.wait();
+        _architect->createCommandPool(); 
+        _architect->createColorResources();
+        _architect->createDepthResources();
         _architect->createFrameBuffers();
         waitForFrameBuffer.set_value();
      
@@ -198,10 +201,6 @@ void NovaEngine::_initBuffers()
     {
         report(LOGGER::INFO, "NovaEngine - Initializing Command Operator ..");
 
-        _architect->createCommandPool(); 
-        // TODO: Combine Texture  Phases
-        _architect->createColorResources();
-        _architect->createDepthResources();
         _architect->createTextureImage();
         _architect->createTextureImageView();
         _architect->constructTextureSampler();

@@ -53,7 +53,7 @@ VkAttachmentDescription NovaCore::getColorAttachment()
 
         return {
             .flags = 0,
-            .format = swapchain.format,
+            .format = swapchain.details.surface.format,
             .samples = msaa_samples,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
@@ -91,16 +91,28 @@ VkFormat NovaCore::findDepthFormat(VkImageTiling tiling)
         return VK_FORMAT_UNDEFINED;
     }
 
+inline VkImageView NovaCore::createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspect, uint32_t mip_levels)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Image View ..");
+
+        VkImageViewCreateInfo _view_info = createImageViewInfo(image, format, aspect, 1);
+        VkImageView view;
+        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &view));
+
+        return view;
+    }
+
 void NovaCore::createColorResources()
     {
-        report(LOGGER::VLINE, "\t\t .. Creating Color Resources ..");
+        report(LOGGER::VLINE, "\t .. Creating Color Resources ..");
+        VkFormat _color_format = swapchain.details.surface.format;
 
-        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, swapchain.format, 
+        report(LOGGER::DEBUG, "Swapchain Extent: %d x %d", swapchain.extent.width, swapchain.extent.height);
+        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, _color_format, 
                     VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, color.image, color.memory);
         
-        VkImageViewCreateInfo _view_info = createImageViewInfo(color.image, swapchain.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &color.view));
+        color.view = createImageView(color.image, _color_format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
         return;
     
@@ -116,8 +128,7 @@ void NovaCore::createDepthResources()
                     VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.memory);
         
-        VkImageViewCreateInfo _view_info = createImageViewInfo(depth.image, _depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
-        VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &depth.view));
+        depth.view = createImageView(depth.image, _depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
         return;
     }
@@ -237,7 +248,7 @@ void NovaCore::createRenderPass()
         //log();
         VkAttachmentDescription _color_attachment = getColorAttachment();
         VkAttachmentDescription _depth_attachment = getDepthAttachment();
-        VkAttachmentDescription _color_resolve = _getColorAttachmentResolve(swapchain.format);
+        VkAttachmentDescription _color_resolve = _getColorAttachmentResolve(swapchain.details.surface.format);
         VkAttachmentReference _color_attachment_ref = _getColorAttachmentRef();
         VkAttachmentReference _depth_attachment_ref = _getDepthAttachmentRef();
         VkAttachmentReference _color_attachment_resolve_ref = _getColorAttachmentResolveRef();

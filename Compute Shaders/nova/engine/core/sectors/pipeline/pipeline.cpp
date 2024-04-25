@@ -346,6 +346,7 @@ Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
                 .pViewportState = &_viewport_state,
                 .pRasterizationState = &_rasterizer,
                 .pMultisampleState = &_multisampling,
+                .pDepthStencilState = &_depth_stencil,
                 .pColorBlendState = &_color_blending,
                 .pDynamicState = &_dynamic_state,
                 .layout = layout,
