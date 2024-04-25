@@ -107,8 +107,8 @@ void NovaCore::createColorResources()
         report(LOGGER::VLINE, "\t .. Creating Color Resources ..");
         VkFormat _color_format = swapchain.details.surface.format;
 
-        report(LOGGER::DEBUG, "Swapchain Extent: %d x %d", swapchain.extent.width, swapchain.extent.height);
-        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, _color_format, 
+        report(LOGGER::DEBUG, "Swapchain Extent: %d x %d", swapchain.details.extent.width, swapchain.details.extent.height);
+        createImage(swapchain.details.extent.width, swapchain.details.extent.height, 1, msaa_samples, _color_format, 
                     VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, color.image, color.memory);
         
@@ -124,7 +124,7 @@ void NovaCore::createDepthResources()
 
         VkFormat _depth_format = findDepthFormat(VK_IMAGE_TILING_OPTIMAL);
     
-        createImage(swapchain.extent.width, swapchain.extent.height, 1, msaa_samples, _depth_format, 
+        createImage(swapchain.details.extent.width, swapchain.details.extent.height, 1, msaa_samples, _depth_format, 
                     VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.memory);
         
@@ -273,7 +273,7 @@ VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
                 .framebuffer = swapchain.framebuffers[i],
                 .renderArea = {
                     .offset = {0, 0},
-                    .extent = swapchain.extent
+                    .extent = swapchain.details.extent
                 },
                 .clearValueCount = 1,
                 .pClearValues = &CLEAR_COLOR

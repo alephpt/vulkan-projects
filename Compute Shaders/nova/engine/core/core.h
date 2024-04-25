@@ -8,7 +8,6 @@
 class NovaCore {
     public:
         VkInstance instance;
-        VkPhysicalDevice physical_device;
         VkDevice logical_device;
         Queues queues;
         SwapChainContext swapchain;
@@ -23,7 +22,6 @@ class NovaCore {
 
         void setWindowExtent(VkExtent2D);
 
-        SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
         void querySwapChainDetails();
         void createPhysicalDevice();
         void createLogicalDevice(); 
@@ -51,6 +49,7 @@ class NovaCore {
         void drawFrame();
 
     private:
+        VkPhysicalDevice physical_device;
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
         VkRenderPass render_pass;
         QueuePresentContext present;
@@ -77,6 +76,7 @@ class NovaCore {
         void _blankContext();
         void createVulkanInstance();
 
+        SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice);
         bool deviceProvisioned(VkPhysicalDevice);
         bool checkValidationLayerSupport();
         void getQueueFamilies(VkPhysicalDevice);

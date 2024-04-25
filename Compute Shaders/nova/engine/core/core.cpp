@@ -208,7 +208,6 @@ static SwapChainContext initSwapchain() {
             .images = {},
             .image_views = {},
             .framebuffers = {},
-            .extent = {0, 0},
             .support = initSwapChainSupport(),
             .details = initSwapChainDetails()
         };
@@ -238,7 +237,7 @@ void NovaCore::_blankContext()
 // This should not be done like this
 void NovaCore::setWindowExtent(VkExtent2D extent) 
     {
-        swapchain.extent = extent;
+        swapchain.details.extent = extent;
         framebuffer_resized = true;
     }
 
@@ -297,7 +296,7 @@ void NovaCore::logSwapChain()
         report(LOGGER::DLINE, "\t\tSupport: %d Present Modes", swapchain.support.present_modes.size());
         report(LOGGER::DLINE, "\t\tDetails: %d Formats", swapchain.details.surface.format);
         report(LOGGER::DLINE, "\t\tDetails: %d Present Modes", swapchain.details.present_mode);
-        report(LOGGER::DLINE, "\t\tExtent: %d x %d", swapchain.extent.width, swapchain.extent.height);
+        report(LOGGER::DLINE, "\t\tDetails: %d x %d Extent", swapchain.details.extent.width, swapchain.details.extent.height);
     }
 
 void NovaCore::log() 

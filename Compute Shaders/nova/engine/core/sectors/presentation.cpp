@@ -100,7 +100,7 @@ void NovaCore::querySwapChainDetails()
 
         selectSwapSurfaceFormat(swapchain.support.formats, &swapchain.details.surface);
         selectSwapPresentMode(swapchain.support.present_modes, &swapchain.details.present_mode);
-        selectSwapExtent(swapchain.support.capabilities, &swapchain.extent);
+        selectSwapExtent(swapchain.support.capabilities, &swapchain.details.extent);
 
         return;
     }
@@ -113,7 +113,7 @@ void NovaCore::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uin
             .minImageCount = image_count,
             .imageFormat = swapchain.details.surface.format,
             .imageColorSpace = swapchain.details.surface.colorSpace,
-            .imageExtent = swapchain.extent,
+            .imageExtent = swapchain.details.extent,
             .imageArrayLayers = 1,
             .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -131,6 +131,10 @@ void NovaCore::createSwapchainInfoKHR(VkSwapchainCreateInfoKHR* create_info, uin
 void NovaCore::constructSwapChain() 
     {
         report(LOGGER::VLINE, "\t .. Constructing SwapChain ..");
+
+        swapchain.support = querySwapChainSupport(physical_device);
+
+        querySwapChainDetails();
 
         uint32_t _image_count = swapchain.support.capabilities.minImageCount + 1;
 
@@ -241,8 +245,8 @@ void NovaCore::createFrameBuffers()
                     .renderPass = render_pass,
                     .attachmentCount = static_cast<uint32_t>(_attachments.size()),
                     .pAttachments = _attachments.data(),
-                    .width = swapchain.extent.width,
-                    .height = swapchain.extent.height,
+                    .width = swapchain.details.extent.width,
+                    .height = swapchain.details.extent.height,
                     .layers = 1
                 };
 

@@ -125,7 +125,7 @@ void NovaCore::updateUniformBuffer(uint32_t current_frame)
         MVP _mvp = {
             .model = glm::rotate(glm::mat4(1.0f), _e_t * glm::radians(65.0f), glm::vec3(0.125f, 0.825f, 1.0f)),                         // This sets the model matrix to rotate around the z-axis 
             .view = glm::lookAt(glm::vec3(1.0f, 1.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)),             // This sets the view matrix to look at the origin from the z-axis
-            .proj = glm::perspective(glm::radians(45.0f), swapchain.extent.width / (float)swapchain.extent.height, 0.1f, 10.0f),    // This sets the projection matrix to a perspective view
+            .proj = glm::perspective(glm::radians(45.0f), swapchain.details.extent.width / (float)swapchain.details.extent.height, 0.1f, 10.0f),    // This sets the projection matrix to a perspective view
         };
 
         _mvp.proj[1][1] *= -1; // This flips the y-axis

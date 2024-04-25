@@ -50,9 +50,7 @@ NovaEngine::NovaEngine(std::string name, VkExtent2D window_extent)
         _architect = new NovaCore(_window_extent);
         _initFramework(); // Do we want to handle this in the NovaCore?
 
-        _architect->swapchain.support = _architect->querySwapChainSupport(_architect->physical_device);
-        _architect->querySwapChainDetails();
-
+        
         // Now we can construct the Swapchain
         std::promise<void> waitForSwapchain;
         std::future<void> waitingForFrameBuffer = waitForSwapchain.get_future();

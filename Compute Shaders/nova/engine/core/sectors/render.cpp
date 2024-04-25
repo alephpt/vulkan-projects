@@ -38,10 +38,10 @@ void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->instance);
 
-        VkViewport _viewport = getViewport(swapchain.extent);
+        VkViewport _viewport = getViewport(swapchain.details.extent);
         vkCmdSetViewport(command_buffer, 0, 1, &_viewport);
 
-        VkRect2D _scissor = getScissor(swapchain.extent);
+        VkRect2D _scissor = getScissor(swapchain.details.extent);
         vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
         VkBuffer _vertex_buffers[] = {vertex.buffer};
