@@ -4,6 +4,8 @@
 
 //const _TILING_OPTIMAL = VK_IMAGE_TILING_OPTIMAL
 
+const VkMemoryPropertyFlagBits _MEMORY_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+static const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 class NovaCore {
     public:
@@ -64,6 +66,10 @@ class NovaCore {
         std::vector<BufferContext> uniform;
         std::vector<void*> uniform_data;
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
+        const std::array<VkClearValue, 2> CLEAR_VALUES = {
+            CLEAR_COLOR,
+            {1.0f, 0}
+        };
         FrameData& current_frame();
         int _frame_ct = 0;
         VkSampleCountFlagBits msaa_samples = VK_SAMPLE_COUNT_1_BIT;
@@ -98,18 +104,18 @@ class NovaCore {
         VkCommandBufferBeginInfo createBeginInfo();
         VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
         VkCommandBuffer createEphemeralCommand(VkCommandPool&);
-        void flushCommandBuffer(VkCommandBuffer&, char*);
+        void flushCommandBuffer(VkCommandBuffer&, char*, VkQueue&, VkCommandPool&);
 
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
-        void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize);
+        void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue&, VkCommandPool&);
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
         void resetCommandBuffers();
         void updateUniformBuffer(uint32_t);
 
         void createImage(uint32_t, uint32_t, uint32_t, VkSampleCountFlagBits, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory&);
         VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags, uint32_t);
-        void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout);
-        void copyBufferToImage(VkBuffer&, VkImage&, uint32_t, uint32_t);
+        void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout, VkQueue&, VkCommandPool&, uint32_t);
+        void copyBufferToImage(VkBuffer&, VkImage&, uint32_t, uint32_t, VkQueue&, VkCommandPool&);
         void generateMipmaps(VkImage&, VkFormat, int32_t, int32_t, uint32_t);
 
         void destroySwapChain();

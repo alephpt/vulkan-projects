@@ -70,21 +70,16 @@ static inline void selectSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities
     {
         report(LOGGER::VLINE, "\t .. Selecting Swap Extent ..");
 
-        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Current Width: %d Current Height: %d", capabilities.currentExtent.width, capabilities.currentExtent.height);
-        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Min Width: %d Min Height: %d", capabilities.minImageExtent.width, capabilities.minImageExtent.height);
-        report(LOGGER::VERBOSE, "Vulkan: Surface Capabilities: Max Width: %d Max Height: %d", capabilities.maxImageExtent.width, capabilities.maxImageExtent.height);
-        report(LOGGER::VERBOSE, "Vulkan: Swap Extent: Width: %d Height: %d", extent->width, extent->height);
+        report(LOGGER::VERBOSE, "\t\tSurface Capabilities: Current Width: %d Current Height: %d", capabilities.currentExtent.width, capabilities.currentExtent.height);
+        report(LOGGER::VERBOSE, "\t\tSurface Capabilities: Min Width: %d Min Height: %d", capabilities.minImageExtent.width, capabilities.minImageExtent.height);
+        report(LOGGER::VERBOSE, "\t\tSurface Capabilities: Max Width: %d Max Height: %d", capabilities.maxImageExtent.width, capabilities.maxImageExtent.height);
+        report(LOGGER::VERBOSE, "\t\tSwap Extent: Width: %d Height: %d", extent->width, extent->height);
 
 
         if (capabilities.currentExtent.width != UINT32_MAX) 
             { 
                 extent->width = capabilities.currentExtent.width;
                 extent->height = capabilities.currentExtent.height;
-            }
-        else 
-            {
-                extent->width = std::max(capabilities.maxImageExtent.width, std::min(capabilities.minImageExtent.width, extent->width));
-                extent->height = std::max(capabilities.maxImageExtent.height, std::min(capabilities.minImageExtent.height, extent->height));
             }
 
         return;
@@ -399,31 +394,20 @@ static inline VkBufferCopy getBufferCopy(VkDeviceSize size)
         };
     }
 
-// TODO: We can combine the 2 static types into a more generic wrapper maybe? 
-//       Or is this better?
-static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer) 
-    {
-        return {
-            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .commandBufferCount = 1,
-            .pCommandBuffers = command_buffer,
-        };
-    }
-
 // Copy data from one buffer to another using the Transfer Queue (if available)
 // Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
 // and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
 // and the Present Queue is used for presenting the swapchain images to the screen
-void NovaCore::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size)
+void NovaCore::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, VkQueue& queue, VkCommandPool& pool)
     {
         report(LOGGER::VLINE, "\t\t .. Copying Buffer ..");
-        VkCommandBuffer _ephemeral_buffer = createEphemeralCommand(queues.xfr.pool);
+        VkCommandBuffer _ephemeral_command = createEphemeralCommand(pool);
 
         VkBufferCopy _copy_region = getBufferCopy(size);
-        vkCmdCopyBuffer(_ephemeral_buffer, src_buffer, dst_buffer, 1, &_copy_region);
+        vkCmdCopyBuffer(_ephemeral_command, src_buffer, dst_buffer, 1, &_copy_region);
 
         char _cmd_name[] = "Copy Buffer";
-        flushCommandBuffer(_ephemeral_buffer, _cmd_name);
+        flushCommandBuffer(_ephemeral_command, _cmd_name, queue, pool);
     }
 
 void NovaCore::destroyBuffer(BufferContext* buffer) 

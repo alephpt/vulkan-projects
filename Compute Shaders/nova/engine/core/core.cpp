@@ -213,6 +213,15 @@ static SwapChainContext initSwapchain() {
         };
 }
 
+static inline ImageContext _initImageContext() 
+    {
+        return {
+                .image = VK_NULL_HANDLE,
+                .memory = VK_NULL_HANDLE,
+                .view = VK_NULL_HANDLE,
+                .sampler = VK_NULL_HANDLE
+            };
+    }
 
 void NovaCore::_blankContext() 
     {
@@ -232,6 +241,14 @@ void NovaCore::_blankContext()
         index = {};
         uniform = {};
         uniform_data = {};
+        color = _initImageContext();
+        depth = _initImageContext();
+        texture = _initImageContext();
+        descriptor = {
+            .layout = VK_NULL_HANDLE,
+            .pool = VK_NULL_HANDLE,
+            .sets = {}
+        };
     }
 
 // This should not be done like this
@@ -261,6 +278,8 @@ void NovaCore::logQueues()
             }
         report(LOGGER::DLINE, "\t\tTransfer Family Index: %d", queues.indices.transfer_family.value());
         report(LOGGER::DLINE, "\t\tTransfer: %p", queues.transfer);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Graphics): %p", queues.gfx.pool);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Graphics): %p", queues.gfx.buffer);
         report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.xfr.pool);
         report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.xfr.buffer);
         report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());

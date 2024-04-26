@@ -75,6 +75,7 @@ struct Queues
 
         DeletionQueue deletion;
 
+        CommandContext gfx;
         CommandContext xfr;
         CommandContext cmp;
 

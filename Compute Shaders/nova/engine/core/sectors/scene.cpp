@@ -20,7 +20,7 @@ static const VkBufferUsageFlags _TRANSFER_SRC_BIT = VK_BUFFER_USAGE_TRANSFER_SRC
 static const VkBufferUsageFlags _INDEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 static const VkBufferUsageFlags _VERTEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 static const VkBufferUsageFlags _IMAGE_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-static const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+static const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 static const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 static const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 static const VkImageLayout _IMAGE_LAYOUT_DST = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
@@ -31,9 +31,9 @@ static const VkAccessFlags _SHADER_READ_BIT = VK_ACCESS_SHADER_READ_BIT;
 static const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
 static const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 static const VkPipelineStageFlagBits _PIPELINE_TRANSFER_BIT = VK_PIPELINE_STAGE_TRANSFER_BIT;
-static const VkFormat _SRGB_FORMAT = VK_FORMAT_R8G8B8A8_SRGB;
+static const VkPipelineStageFlagBits _PIPELINE_FRAGMENT_BIT = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+static const VkFormat _SRGB_FORMAT_888 = VK_FORMAT_R8G8B8A8_SRGB;
 static const VkImageAspectFlagBits _IMAGE_COLOR_BIT = VK_IMAGE_ASPECT_COLOR_BIT;
-static const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
 void NovaCore::constructVertexBuffer() 
     {
@@ -46,13 +46,13 @@ void NovaCore::constructVertexBuffer()
 
         // We do this to copy the data from the CPU to the GPU
         void* data;
-        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data); // This maps the memory to the CPU
-        memcpy(data, graphics_pipeline->vertices.data(), (size_t)_buffer_size);           // This copies the data to the memory
-        vkUnmapMemory(logical_device, _staging.memory);                          // This unmaps the memory from the CPU
+        vkMapMemory(logical_device, _staging.memory, 0, _buffer_size, 0, &data);            // This maps the memory to the CPU
+        memcpy(data, graphics_pipeline->vertices.data(), (size_t)_buffer_size);             // This copies the data to the memory
+        vkUnmapMemory(logical_device, _staging.memory);                                     // This unmaps the memory from the CPU
 
         // We create the buffer that will be used by the GPU
         createBuffer(_buffer_size, _VERTEX_BUFFER_BIT, _LOCAL_DEVICE_BIT, &vertex);
-        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size);
+        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size, queues.graphics, queues.gfx.pool); // TODO: I want to be able to choose which queue to use from top level
 
         destroyBuffer(&_staging);
 
@@ -75,7 +75,7 @@ void NovaCore::constructIndexBuffer()
         vkUnmapMemory(logical_device, _staging.memory);
 
         createBuffer(_buffer_size, _INDEX_BUFFER_BIT, _LOCAL_DEVICE_BIT, &index);
-        copyBuffer(_staging.buffer, index.buffer, _buffer_size);
+        copyBuffer(_staging.buffer, index.buffer, _buffer_size, queues.graphics, queues.gfx.pool); // TODO: I want to be able to choose which queue to use from top level
  
         destroyBuffer(&_staging);
 
@@ -215,7 +215,7 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
         if (!(_format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) 
             { report(LOGGER::ERROR, "Scene - Texture Image Format does not support linear blitting .."); return; }
 
-        VkCommandBuffer _cmd = createEphemeralCommand(queues.xfr.pool);
+        VkCommandBuffer _ephemeral_command = createEphemeralCommand(queues.gfx.pool);
 
         VkImageLayout _old_layout = _IMAGE_LAYOUT_DST;
         VkImageLayout _new_layout = _IMAGE_LAYOUT_SRC;
@@ -228,21 +228,21 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
             {
                 report(LOGGER::VLINE, "\t\t .. Mipmap Level: %d", i);
                 _setTransferBarrier(_barrier, i - 1);   
-                vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+                vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
                 VkImageBlit _blit = _getBlit(i, _mip_width, _mip_height);
-                vkCmdBlitImage(_cmd, image, _IMAGE_LAYOUT_SRC, image, _IMAGE_LAYOUT_DST, 1, &_blit, VK_FILTER_LINEAR);
+                vkCmdBlitImage(_ephemeral_command, image, _IMAGE_LAYOUT_SRC, image, _IMAGE_LAYOUT_DST, 1, &_blit, VK_FILTER_LINEAR);
                 _setReadBarrier(_barrier, i);
-                vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+                vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_FRAGMENT_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
                 if (_mip_width > 1) _mip_width /= 2;
                 if (_mip_height > 1) _mip_height /= 2;
             }
 
         _setFinalBarrier(_barrier, mip_levels - 1);
-        vkCmdPipelineBarrier(_cmd, _PIPELINE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
+        vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_FRAGMENT_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
         char _msg[] = "Generate Mipmaps";
-        flushCommandBuffer(_cmd, _msg);
+        flushCommandBuffer(_ephemeral_command, _msg, queues.graphics, queues.gfx.pool); 
 
         return;
     }
@@ -272,11 +272,11 @@ static inline VkImageCreateInfo _createImageInfo(uint32_t w, uint32_t h, VkForma
         };
     }
 
-inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout) 
+inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, VkQueue& queue, VkCommandPool& pool, uint32_t mips = 1)
     {
         report(LOGGER::VLINE, "\t .. Transitioning Image Layout ..");
-        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
-        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, old_layout, new_layout, mip_lvls);
+        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(pool);
+        VkImageMemoryBarrier _barrier = _getMemoryBarrier(image, old_layout, new_layout, mips);
         VkPipelineStageFlags _src_stage, _dst_stage;
 
         if (old_layout == _IMAGE_LAYOUT_UNDEFINED && new_layout == _IMAGE_LAYOUT_DST) 
@@ -293,7 +293,7 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
                 _barrier.dstAccessMask = _SHADER_READ_BIT;
 
                 _src_stage = _PIPELINE_TRANSFER_BIT;
-                _dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                _dst_stage = _PIPELINE_FRAGMENT_BIT;
             } 
         else 
             { report(LOGGER::ERROR, "Scene - Unsupported Layout Transition .."); return; }
@@ -301,7 +301,7 @@ inline void NovaCore::transitionImageLayout(VkImage image, VkFormat format, VkIm
         vkCmdPipelineBarrier(_ephemeral_cmd, _src_stage, _dst_stage, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
         char _msg[] = "Transition Image Layout";
-        flushCommandBuffer(_ephemeral_cmd, _msg);
+        flushCommandBuffer(_ephemeral_cmd, _msg, queue, pool);
     }
 
 static inline VkBufferImageCopy _getImageCopyRegion(uint32_t width, uint32_t height) 
@@ -316,17 +316,17 @@ static inline VkBufferImageCopy _getImageCopyRegion(uint32_t width, uint32_t hei
         };
     }
 
-inline void NovaCore::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height) 
+inline void NovaCore::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32_t width, uint32_t height, VkQueue& queue, VkCommandPool& pool)
     {
         report(LOGGER::VLINE, "\t .. Copying Buffer to Image ..");
 
-        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(queues.xfr.pool);
+        VkCommandBuffer _ephemeral_cmd = createEphemeralCommand(pool);
 
         VkBufferImageCopy _region = _getImageCopyRegion(width, height);
         vkCmdCopyBufferToImage(_ephemeral_cmd, buffer, image, _IMAGE_LAYOUT_DST, 1, &_region);
 
         char _msg[] = "Copy Buffer";
-        flushCommandBuffer(_ephemeral_cmd, _msg);
+        flushCommandBuffer(_ephemeral_cmd, _msg, queue, pool);
 
         return;
     }
@@ -375,12 +375,12 @@ void NovaCore::createTextureImage()
 
         stbi_image_free(_pixels);
 
-        createImage(_tex_width, _tex_height, mip_lvls, VK_SAMPLE_COUNT_1_BIT, _SRGB_FORMAT, VK_IMAGE_TILING_OPTIMAL, _IMAGE_TRANSFER_BIT, _LOCAL_DEVICE_BIT, texture.image, texture.memory);
+        createImage(_tex_width, _tex_height, mip_lvls, VK_SAMPLE_COUNT_1_BIT, _SRGB_FORMAT_888, VK_IMAGE_TILING_OPTIMAL, _IMAGE_TRANSFER_BIT, _LOCAL_DEVICE_BIT, texture.image, texture.memory);
 
+        // Can we do this on transfer?
         // Transition the image to a layout that is optimal for copying data to
-        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST);
-        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height));
-//        transitionImageLayout(texture.image, _SRGB_FORMAT, _IMAGE_LAYOUT_BIT, _IMAGE_LAYOUT_READ_ONLY);
+        transitionImageLayout(texture.image, _SRGB_FORMAT_888, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST, queues.graphics, queues.gfx.pool, mip_lvls); 
+        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.gfx.pool);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
         queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });
@@ -389,7 +389,7 @@ void NovaCore::createTextureImage()
         // Clean up the staging buffer
         destroyBuffer(&_staging);
 
-        generateMipmaps(texture.image, _SRGB_FORMAT, _tex_width, _tex_height, mip_lvls);
+        generateMipmaps(texture.image, _SRGB_FORMAT_888, _tex_width, _tex_height, mip_lvls);
 
         return;
     }
@@ -421,7 +421,7 @@ void NovaCore::createTextureImageView()
     {
         report(LOGGER::VLINE, "\t .. Creating Texture Image View ..");
 
-        VkImageViewCreateInfo _view_info = _getImageViewInfo(texture.image, _SRGB_FORMAT);
+        VkImageViewCreateInfo _view_info = _getImageViewInfo(texture.image, _SRGB_FORMAT_888);
         VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &texture.view));
     }
 

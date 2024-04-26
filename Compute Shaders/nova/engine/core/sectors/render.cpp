@@ -67,6 +67,7 @@ void NovaCore::resetCommandBuffers()
             VK_TRY(vkResetCommandBuffer(frames[i].cmd.buffer, 0));
         }
 
+        VK_TRY(vkResetCommandBuffer(queues.gfx.buffer, 0));
         VK_TRY(vkResetCommandBuffer(queues.xfr.buffer, 0));
         VK_TRY(vkResetCommandBuffer(queues.cmp.buffer, 0));
 

@@ -105,17 +105,13 @@ inline VkImageView NovaCore::createImageView(VkImage image, VkFormat format, VkI
 void NovaCore::createColorResources()
     {
         report(LOGGER::VLINE, "\t .. Creating Color Resources ..");
-        VkFormat _color_format = swapchain.details.surface.format;
-
-        report(LOGGER::DEBUG, "Swapchain Extent: %d x %d", swapchain.details.extent.width, swapchain.details.extent.height);
-        createImage(swapchain.details.extent.width, swapchain.details.extent.height, 1, msaa_samples, _color_format, 
-                    VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, color.image, color.memory);
         
-        color.view = createImageView(color.image, _color_format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        createImage(swapchain.details.extent.width, swapchain.details.extent.height, 1, msaa_samples, swapchain.details.surface.format, 
+                    VK_IMAGE_TILING_OPTIMAL, _COLOR_ATTACHMENT_BIT, _MEMORY_DEVICE_BIT, color.image, color.memory);
+        
+        color.view = createImageView(color.image, swapchain.details.surface.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
         return;
-    
     }
 
 void NovaCore::createDepthResources() 
@@ -126,7 +122,7 @@ void NovaCore::createDepthResources()
     
         createImage(swapchain.details.extent.width, swapchain.details.extent.height, 1, msaa_samples, _depth_format, 
                     VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 
-                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.memory);
+                    _MEMORY_DEVICE_BIT, depth.image, depth.memory);
         
         depth.view = createImageView(depth.image, _depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 
@@ -230,7 +226,7 @@ static inline VkSubpassDependency _getDependency()
 
 static inline VkRenderPassCreateInfo _getRenderPassInfo(std::array<VkAttachmentDescription, 3>* attachments, VkSubpassDescription* subpass_description, VkSubpassDependency* dependency)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating Render Pass Info ..");
+        report(LOGGER::VLINE, "\t\t .. Getting Render Pass Create Info ..");
 
         return {
             .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -266,6 +262,8 @@ void NovaCore::createRenderPass()
 
 VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
     {
+        report(LOGGER::VLINE, "\t\t .. Getting Render Pass Begin Info ..");
+        
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
                 .pNext = nullptr,
@@ -275,8 +273,8 @@ VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
                     .offset = {0, 0},
                     .extent = swapchain.details.extent
                 },
-                .clearValueCount = 1,
-                .pClearValues = &CLEAR_COLOR
+                .clearValueCount = static_cast<uint32_t>(CLEAR_VALUES.size()),
+                .pClearValues = CLEAR_VALUES.data()
             };
     }
 
@@ -482,7 +480,7 @@ void NovaCore::createDescriptorSets()
 
 static inline VkCommandPoolCreateInfo _createCommandPoolInfo(unsigned int queue_family_index, char* name)
     {
-        report(LOGGER::VLINE, "\t\t .. Creating %s Command Pool Info ..", name);
+        report(LOGGER::VLINE, "\t\t .. Creating %s Command Pool Info on Queue %d ..", name, queue_family_index);
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
                 .pNext = nullptr,
@@ -495,12 +493,19 @@ void NovaCore::createCommandPool()
     {
         report(LOGGER::VLINE, "\t .. Creating Command Pool ..");
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            char name[32];
-            sprintf(name, "Graphics %d", i);
+        {
+            char name[] = "Graphics";
             VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.graphics_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd.pool));
+
+            // Create a command pool for each frame
+            for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+                VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd.pool));
+            }
+
+            // Create a command pool for the graphics queue (incase transfer and compute queue families don't have graphics capabilities)
+            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &queues.gfx.pool));
         }
+
 
         {
             char name[] = "Transfer";
@@ -539,6 +544,13 @@ void NovaCore::createCommandBuffers()
             sprintf(name, "Graphics %d", i);
             VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd.pool, name);
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd.buffer));
+        }
+
+        // We need to create a command buffer for each queue family
+        {
+            char name[] = "Graphics";
+            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(queues.gfx.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &queues.gfx.buffer));
         }
 
         {
@@ -591,7 +603,7 @@ static inline VkSubmitInfo _createSubmitInfo(VkCommandBuffer* cmd)
         };
     }
 
-void NovaCore::flushCommandBuffer(VkCommandBuffer& buf, char* name) 
+void NovaCore::flushCommandBuffer(VkCommandBuffer& buf, char* name, VkQueue& submit_queue, VkCommandPool& pool)
     {
         report(LOGGER::VLINE, "\t .. Ending %s Command Buffer ..", name);
 
@@ -599,11 +611,11 @@ void NovaCore::flushCommandBuffer(VkCommandBuffer& buf, char* name)
 
         // Submit the command buffer
         VkSubmitInfo _submit_info = _createSubmitInfo(&buf);
-        VK_TRY(vkQueueSubmit(queues.transfer, 1, &_submit_info, VK_NULL_HANDLE));
-        VK_TRY(vkQueueWaitIdle(queues.transfer));
+        VK_TRY(vkQueueSubmit(submit_queue, 1, &_submit_info, VK_NULL_HANDLE));
+        VK_TRY(vkQueueWaitIdle(submit_queue));
 
         // Free the command buffer
-        vkFreeCommandBuffers(logical_device, queues.xfr.pool, 1, &buf);
+        vkFreeCommandBuffers(logical_device, pool, 1, &buf);
 
         return;
     }
@@ -621,6 +633,7 @@ void NovaCore::destroyCommandContext()
                 vkDestroyCommandPool(logical_device, frames[i].cmd.pool, nullptr);
             }
 
+        vkDestroyCommandPool(logical_device, queues.gfx.pool, nullptr);
         vkDestroyCommandPool(logical_device, queues.xfr.pool, nullptr);
         vkDestroyCommandPool(logical_device, queues.cmp.pool, nullptr);
     }
