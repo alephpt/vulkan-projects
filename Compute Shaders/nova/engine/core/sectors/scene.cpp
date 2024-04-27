@@ -347,6 +347,9 @@ void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountF
         VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
         VK_TRY(vkBindImageMemory(logical_device, image, memory, 0));
 
+        //queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, image, nullptr); });
+        //queues.deletion.push_fn([=]() { vkFreeMemory(logical_device, memory, nullptr); });
+
         return;
     }
 

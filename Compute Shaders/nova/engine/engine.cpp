@@ -96,6 +96,8 @@ NovaEngine::~NovaEngine()
             }
         
         report(LOGGER::INFO, "NovaEngine - Destroyed ..");
+
+        delete _architect;
     }
 
 

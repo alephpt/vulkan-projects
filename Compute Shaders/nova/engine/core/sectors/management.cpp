@@ -99,6 +99,8 @@ inline VkImageView NovaCore::createImageView(VkImage image, VkFormat format, VkI
         VkImageView view;
         VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &view));
 
+        queues.deletion.push_fn([=]() { vkDestroyImageView(logical_device, view, nullptr); });
+
         return view;
     }
 
