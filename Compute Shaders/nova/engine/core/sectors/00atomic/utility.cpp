@@ -1,8 +1,7 @@
-#include "core.h"
+#include "../core.h"
 
-#include <SDL2/SDL_vulkan.h>
-
-
+    // Get Current Frame
+FrameData& NovaCore::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
 
     /////////////
