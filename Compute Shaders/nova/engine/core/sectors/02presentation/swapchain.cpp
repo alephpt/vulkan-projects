@@ -1,7 +1,5 @@
-#include "../core.h"
-
-#include <set>
-
+#include "../../core.h"
+#include <set> 
 
     ///////////////////////////////
     //  Virtual Swapchain Layers //
@@ -180,97 +178,6 @@ void NovaCore::constructSwapChain()
         return;
     }
 
-VkImageViewCreateInfo NovaCore::createImageViewInfo(VkImage img, VkFormat fmt, VkImageAspectFlags aspect, uint32_t mips)
-    {
-        return {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .image = img,
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = fmt,
-            .subresourceRange = {
-                .aspectMask = aspect,
-                .baseMipLevel = 0,
-                .levelCount = mips,
-                .baseArrayLayer = 0,
-                .layerCount = 1
-            }
-        };
-    }
-
-
-void NovaCore::constructImageViews()
-    {
-        report(LOGGER::VLINE, "\t .. Constructing Image Views ..");
-
-        swapchain.image_views.resize(swapchain.images.size());
-
-        for (size_t i = 0; i < swapchain.images.size(); i++) 
-            {
-                VkImageViewCreateInfo _create_info = createImageViewInfo(swapchain.images[i], swapchain.details.surface.format, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-                VK_TRY(vkCreateImageView(logical_device, &_create_info, nullptr, &swapchain.image_views[i]));
-            }
-
-        report(LOGGER::VLINE, "\t .. Image Views Constructed ..");
-
-        return;
-    }
-
-
-    ///////////////////////////
-    // FRAME BUFFER CREATION //
-    ///////////////////////////
-
-void NovaCore::createFrameBuffers()
-    {
-        report(LOGGER::VLINE, "Presentation - Creating Frame Buffers ..");
-
-        swapchain.framebuffers.resize(swapchain.image_views.size());
-
-        for (size_t i = 0; i < swapchain.image_views.size(); i++) 
-            {
-                std::array<VkImageView, 3> _attachments =
-                    { 
-                        color.view,
-                        depth.view,
-                        swapchain.image_views[i] 
-                    };
-
-                VkFramebufferCreateInfo _create_info = {
-                    .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-                    .renderPass = render_pass,
-                    .attachmentCount = static_cast<uint32_t>(_attachments.size()),
-                    .pAttachments = _attachments.data(),
-                    .width = swapchain.details.extent.width,
-                    .height = swapchain.details.extent.height,
-                    .layers = 1
-                };
-
-                VK_TRY(vkCreateFramebuffer(logical_device, &_create_info, nullptr, &swapchain.framebuffers[i]));
-            }
-
-        return;
-    }
-
-void NovaCore::destroySwapChain() 
-    {
-        report(LOGGER::VERBOSE, "Presentation - Destroying Swapchain ..");
-
-        for (const auto& _frame_buffers : swapchain.framebuffers) 
-            { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
-        
-        swapchain.framebuffers.clear();
-
-        
-        for (const auto& _image_view : swapchain.image_views) 
-            { vkDestroyImageView(logical_device, _image_view, nullptr); }
-
-        swapchain.image_views.clear();
-
-        vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
-
-        return;
-    }
-
 void NovaCore::recreateSwapChain() 
     {
         report(LOGGER::VERBOSE, "Presentation - Recreating Swapchain ..");
@@ -294,128 +201,22 @@ void NovaCore::recreateSwapChain()
     }
 
 
-    ////////////////////
-    // BUFFER OBJECTS //
-    ////////////////////
-
-static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
+void NovaCore::destroySwapChain() 
     {
-        report(LOGGER::VLINE, "\t\t\t\t .. Finding Memory Type ..");
+        report(LOGGER::VERBOSE, "Presentation - Destroying Swapchain ..");
 
-        VkPhysicalDeviceMemoryProperties mem_props;
-        vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
+        for (const auto& _frame_buffers : swapchain.framebuffers) 
+            { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
+        
+        swapchain.framebuffers.clear();
 
-        for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++)
-            { if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties)
-                    { return i; } }
+        
+        for (const auto& _image_view : swapchain.image_views) 
+            { vkDestroyImageView(logical_device, _image_view, nullptr); }
 
-        VK_TRY(VK_ERROR_INITIALIZATION_FAILED);
-        return -1;
-    }
+        swapchain.image_views.clear();
 
-VkMemoryAllocateInfo NovaCore::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
-    {
-        report(LOGGER::VLINE, "\t\t\t .. Creating Memory Allocate Info ..");
-
-        return {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-            .pNext = nullptr,
-            .allocationSize = mem_reqs.size,
-            .memoryTypeIndex = findMemoryType(physical_device, mem_reqs.memoryTypeBits, properties)
-        };
-    }
-
-static inline VkBufferCreateInfo getBufferInfo(VkDeviceSize size, VkBufferUsageFlags usage)
-    {
-        report(LOGGER::VLINE, "\t\t\t .. Creating Buffer Info ..");
-
-        return {
-            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .size = size,
-            .usage = usage,
-            .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-            .queueFamilyIndexCount = 0,
-            .pQueueFamilyIndices = nullptr
-        };
-    }
-
-void NovaCore::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, BufferContext* buffer)
-    {
-        report(LOGGER::VLINE, "\t\t .. Creating Buffer ..");
-
-        VkBufferCreateInfo _buffer_info = getBufferInfo(size, usage);
-        VK_TRY(vkCreateBuffer(logical_device, &_buffer_info, nullptr, &buffer->buffer));
-
-        VkMemoryRequirements _mem_reqs;
-        vkGetBufferMemoryRequirements(logical_device, buffer->buffer, &_mem_reqs);
-
-        VkMemoryAllocateInfo _alloc_info = getMemoryAllocateInfo(_mem_reqs, properties);
-        VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &buffer->memory));
-
-        vkBindBufferMemory(logical_device, buffer->buffer, buffer->memory, 0);
-
-        return;
-    }
-
-static inline VkCommandBufferAllocateInfo getCommandBuffersInfo(VkCommandPool& cmd_pool, uint32_t count)
-    {
-        report(LOGGER::VLINE, "\t .. Creating Command Buffers Info ..");
-
-        return {
-            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-            .pNext = nullptr,
-            .commandPool = cmd_pool,
-            .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-            .commandBufferCount = count
-        };
-    }
-
-
-VkCommandBufferBeginInfo NovaCore::createBeginInfo()
-    {
-        return {
-                .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-                .pNext = nullptr,
-                .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
-                .pInheritanceInfo = nullptr
-            };
-    }
-
-static inline VkBufferCopy getBufferCopy(VkDeviceSize size)
-    {
-        report(LOGGER::VLINE, "\t .. Creating Buffer Copy ..");
-
-        return {
-            .srcOffset = 0,
-            .dstOffset = 0,
-            .size = size
-        };
-    }
-
-// Copy data from one buffer to another using the Transfer Queue (if available)
-// Asynchronous copy operations are possible by using the Transfer Queue for copying data to the GPU
-// and the Compute Queue for running compute shaders, while the Graphics Queue is used for rendering
-// and the Present Queue is used for presenting the swapchain images to the screen
-void NovaCore::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize size, VkQueue& queue, VkCommandPool& pool)
-    {
-        report(LOGGER::VLINE, "\t\t .. Copying Buffer ..");
-        VkCommandBuffer _ephemeral_command = createEphemeralCommand(pool);
-
-        VkBufferCopy _copy_region = getBufferCopy(size);
-        vkCmdCopyBuffer(_ephemeral_command, src_buffer, dst_buffer, 1, &_copy_region);
-
-        char _cmd_name[] = "Copy Buffer";
-        flushCommandBuffer(_ephemeral_command, _cmd_name, queue, pool);
-    }
-
-void NovaCore::destroyBuffer(BufferContext* buffer) 
-    {
-        report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
-
-        vkDestroyBuffer(logical_device, buffer->buffer, nullptr);
-        vkFreeMemory(logical_device, buffer->memory, nullptr);
+        vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
 
         return;
     }

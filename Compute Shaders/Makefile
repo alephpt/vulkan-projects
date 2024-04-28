@@ -6,7 +6,7 @@ VK_EXP_PATH = /etc/vulkan/explicit_layer.d
 CFLAGS = -std=c++17 -I $(VULKAN_SDK_PATH) -I $(STB_PATH) -I $(TINYOBJ_PATH)
 LDFLAGS = -L $(VULKAN_SDK_PATH) -lSDL2 -lvulkan -ldl -pthread 
 DBFLAGS = -fsanitize=address,undefined --debug
-INCLUDES = ./nova/*.cpp ./nova/engine/*.cpp ./nova/engine/core/*.cpp ./nova/engine/core/components/*/*.cpp ./nova/engine/core/sectors/*.cpp ./nova/engine/core/sectors/*/*.cpp 
+INCLUDES = ./nova/*.cpp ./nova/engine/*.cpp ./nova/engine/core/*.cpp ./nova/engine/core/components/*/*.cpp ./nova/engine/core/sectors/*/*.cpp ./nova/engine/core/sectors/*/*/*.cpp 
 OUT = ~/compute
 
 compute: main.cpp

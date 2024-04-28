@@ -1,7 +1,46 @@
-#include "../core.h"
+#include "../../core.h"
+
 
     // Get Current Frame
 FrameData& NovaCore::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
+
+
+
+
+    ///////////////////////
+    // Memory Allocation //
+    ///////////////////////
+
+static inline uint32_t findMemoryType(VkPhysicalDevice& physical_device, uint32_t type_filter, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::VLINE, "\t\t\t\t .. Finding Memory Type ..");
+
+        VkPhysicalDeviceMemoryProperties mem_props;
+        vkGetPhysicalDeviceMemoryProperties(physical_device, &mem_props);
+
+        for (uint32_t i = 0; i < mem_props.memoryTypeCount; i++)
+            { if ((type_filter & (1 << i)) && (mem_props.memoryTypes[i].propertyFlags & properties) == properties)
+                    { return i; } }
+
+        VK_TRY(VK_ERROR_INITIALIZATION_FAILED);
+        return -1;
+    }
+
+VkMemoryAllocateInfo NovaCore::getMemoryAllocateInfo(VkMemoryRequirements mem_reqs, VkMemoryPropertyFlags properties)
+    {
+        report(LOGGER::VLINE, "\t\t\t .. Creating Memory Allocate Info ..");
+
+        return {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .pNext = nullptr,
+            .allocationSize = mem_reqs.size,
+            .memoryTypeIndex = findMemoryType(physical_device, mem_reqs.memoryTypeBits, properties)
+        };
+    }
+
+
+
+
 
 
     /////////////

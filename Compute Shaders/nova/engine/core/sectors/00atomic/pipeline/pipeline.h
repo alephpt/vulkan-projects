@@ -1,5 +1,5 @@
 #pragma once
-#include "../atomic/atomic.h"
+#include "../atomic.h"
 
 #include <vector>
 

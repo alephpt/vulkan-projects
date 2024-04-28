@@ -1,11 +1,29 @@
 #pragma once
-#include "./sectors/pipeline/pipeline.h"
+#include "./sectors/00atomic/pipeline/pipeline.h"
 #include "./components/utility/lexicon.h"
 
 //const _TILING_OPTIMAL = VK_IMAGE_TILING_OPTIMAL
 
 const VkMemoryPropertyFlagBits _MEMORY_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-static const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+const VkImageUsageFlags _COLOR_ATTACHMENT_BIT = VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+const VkBufferUsageFlags _TRANSFER_SRC_BIT = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+const VkBufferUsageFlags _INDEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+const VkBufferUsageFlags _VERTEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+const VkBufferUsageFlags _IMAGE_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+const VkImageLayout _IMAGE_LAYOUT_DST = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+const VkImageLayout _IMAGE_LAYOUT_SRC = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; 
+const VkAccessFlags _TRANSFER_WRITE_BIT = VK_ACCESS_TRANSFER_WRITE_BIT;
+const VkAccessFlags _TRANSFER_READ_BIT = VK_ACCESS_TRANSFER_READ_BIT;
+const VkAccessFlags _SHADER_READ_BIT = VK_ACCESS_SHADER_READ_BIT;
+const VkImageLayout _IMAGE_LAYOUT_UNDEFINED = VK_IMAGE_LAYOUT_UNDEFINED;
+const VkImageLayout _IMAGE_LAYOUT_READ_ONLY = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+const VkPipelineStageFlagBits _PIPELINE_TRANSFER_BIT = VK_PIPELINE_STAGE_TRANSFER_BIT;
+const VkPipelineStageFlagBits _PIPELINE_FRAGMENT_BIT = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+const VkFormat _SRGB_FORMAT_888 = VK_FORMAT_R8G8B8A8_SRGB;
+const VkImageAspectFlagBits _IMAGE_COLOR_BIT = VK_IMAGE_ASPECT_COLOR_BIT;
 
 class NovaCore {
     public:
@@ -112,6 +130,7 @@ class NovaCore {
         void resetCommandBuffers();
         void updateUniformBuffer(uint32_t);
 
+        VkImageMemoryBarrier getMemoryBarrier(VkImage&, VkImageLayout&, VkImageLayout&, uint32_t mip_level = 1);
         void createImage(uint32_t, uint32_t, uint32_t, VkSampleCountFlagBits, VkFormat, VkImageTiling, VkImageUsageFlags, VkMemoryPropertyFlags, VkImage&, VkDeviceMemory&);
         VkImageView createImageView(VkImage, VkFormat, VkImageAspectFlags, uint32_t);
         void transitionImageLayout(VkImage, VkFormat, VkImageLayout, VkImageLayout, VkQueue&, VkCommandPool&, uint32_t);
