@@ -64,13 +64,3 @@ void NovaCore::copyBuffer(VkBuffer src_buffer, VkBuffer dst_buffer, VkDeviceSize
         char _cmd_name[] = "Copy Buffer";
         flushCommandBuffer(_ephemeral_command, _cmd_name, queue, pool);
     }
-
-void NovaCore::destroyBuffer(BufferContext* buffer) 
-    {
-        report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
-
-        vkDestroyBuffer(logical_device, buffer->buffer, nullptr);
-        vkFreeMemory(logical_device, buffer->memory, nullptr);
-
-        return;
-    }
