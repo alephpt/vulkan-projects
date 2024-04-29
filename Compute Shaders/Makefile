@@ -9,7 +9,10 @@ DBFLAGS = -fsanitize=address,undefined --debug
 INCLUDES = ./nova/*.cpp ./nova/engine/*.cpp ./nova/engine/core/*.cpp ./nova/engine/core/components/*/*.cpp ./nova/engine/core/sectors/*/*.cpp ./nova/engine/core/sectors/*/*/*.cpp 
 OUT = ~/compute
 
-compute: main.cpp
+compute:
+	g++ $(CFLAGS) -o $(OUT) main.cpp $(LDFLAGS) $(INCLUDES)
+
+run: main.cpp
 	g++ $(CFLAGS) -o $(OUT) main.cpp $(LDFLAGS) $(INCLUDES)
 	$(OUT)
 

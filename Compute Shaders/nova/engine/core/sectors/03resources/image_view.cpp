@@ -9,7 +9,10 @@ VkImageView NovaCore::createImageView(VkImage image, VkFormat format, VkImageAsp
         VkImageView view;
         VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &view));
 
-        queues.deletion.push_fn([=]() { vkDestroyImageView(logical_device, view, nullptr); });
+        queues.deletion.push_fn([=]() { 
+                vkDestroyImageView(logical_device, view, nullptr); 
+                report(LOGGER::VLINE, "\t .. Image View Destroyed ..");
+            });
 
         return view;
     }

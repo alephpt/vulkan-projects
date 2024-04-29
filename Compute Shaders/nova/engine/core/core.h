@@ -122,9 +122,7 @@ class NovaCore {
         void destroyCommandContext();
         void destroyVertexContext();
         void destroyIndexContext();
-        void destroyUniformContext();
         void destroyPipeline(Pipeline*);
-        void destroyImageContext();
 };
 
 

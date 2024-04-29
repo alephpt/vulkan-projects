@@ -104,8 +104,11 @@ void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountF
         VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
         VK_TRY(vkBindImageMemory(logical_device, image, memory, 0));
 
-        //queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, image, nullptr); });
-        //queues.deletion.push_fn([=]() { vkFreeMemory(logical_device, memory, nullptr); });
+        queues.deletion.push_fn([=]() { 
+                vkDestroyImage(logical_device, image, nullptr); 
+                vkFreeMemory(logical_device, memory, nullptr);
+                report(LOGGER::VLINE, "\t .. Image Destroyed ..");
+            });
 
         return;
     }
@@ -139,8 +142,8 @@ void NovaCore::createTextureImage()
 
         // Can we do this on transfer?
         // Transition the image to a layout that is optimal for copying data to
-        transitionImageLayout(texture.image, _SRGB_FORMAT_888, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST, queues.graphics, queues.transfer.pool, mip_lvls); 
-        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.transfer.pool);
+        transitionImageLayout(texture.image, _SRGB_FORMAT_888, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST, queues.graphics, queues.command_pool, mip_lvls); 
+        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.command_pool);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
         queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });
@@ -221,15 +224,10 @@ void NovaCore::constructTextureSampler() {
     VkSamplerCreateInfo _sampler_info = _getSamplerInfo(_props, static_cast<float>(mip_lvls));
 
     VK_TRY(vkCreateSampler(logical_device, &_sampler_info, nullptr, &texture.sampler));
+
+    queues.deletion.push_fn([=]() { vkDestroySampler(logical_device, texture.sampler, nullptr); });
+    queues.deletion.push_fn([=]() { vkDestroyImageView(logical_device, texture.view, nullptr); });
 }
 
 
 
-void NovaCore::destroyImageContext() 
-    {
-        report(LOGGER::VERBOSE, "Scene - Destroying Texture Context ..");
-
-        vkDestroySampler(logical_device, texture.sampler, nullptr);
-        vkDestroyImageView(logical_device, texture.view, nullptr);
-
-    }

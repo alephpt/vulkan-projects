@@ -26,7 +26,11 @@ void NovaCore::constructUniformBuffer()
             {
                 createBuffer(_buffer_size, _uniform_usage, _uniform_properties, &uniform[i]);
                 vkMapMemory(logical_device, uniform[i].memory, 0, _buffer_size, 0, &uniform_data[i]);
-                queues.deletion.push_fn([=]() { vkUnmapMemory(logical_device, uniform[i].memory); });
+                queues.deletion.push_fn([=]() { 
+                    vkUnmapMemory(logical_device, uniform[i].memory); 
+                    destroyBuffer(&uniform[i]);
+                    report(LOGGER::VLINE, "\t .. Uniform Buffer Destroyed ..");
+                });
             }
     }
 
@@ -49,12 +53,4 @@ void NovaCore::updateUniformBuffer(uint32_t current_frame)
         _mvp.proj[1][1] *= -1; // This flips the y-axis
 
         memcpy(uniform_data[current_frame], &_mvp, sizeof(MVP));
-    }
-
-void NovaCore::destroyUniformContext() 
-    {
-        report(LOGGER::VERBOSE, "Scene - Destroying Uniform Context ..");
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            { destroyBuffer(&uniform[i]); }
     }

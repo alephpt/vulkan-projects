@@ -31,37 +31,6 @@ NovaCore::NovaCore(VkExtent2D extent)
         // setWindowExtent(extent);
     }
 
-NovaCore::~NovaCore() 
-    {
-        report(LOGGER::INFO, "NovaCore - Destroying Context ..");
-
-        destroySwapChain();
-        destroyImageContext();
-        queues.deletion.flush();
-        destroyUniformContext();
-        vkDestroyDescriptorPool(logical_device, descriptor.pool, nullptr);
-        vkDestroyDescriptorSetLayout(logical_device, descriptor.layout, nullptr);
-        destroyVertexContext();
-        destroyIndexContext();
-        destroyCommandContext();
-        destroyPipeline(graphics_pipeline);
-        //destroyPipeline(compute_pipeline);
-
-        report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass.");
-        vkDestroyRenderPass(logical_device, render_pass, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Logical Device.");
-        vkDestroyDevice(logical_device, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Surface.");
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-
-        report(LOGGER::VLINE, "\t .. Destroying Instance.");
-        vkDestroyInstance(instance, nullptr);
-
-        _blankContext();
-    }
-
 
 
     /////////////////////

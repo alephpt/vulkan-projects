@@ -144,19 +144,6 @@ void NovaCore::flushCommandBuffer(VkCommandBuffer& buf, char* name, VkQueue& sub
         return;
     }
 
-void NovaCore::destroyCommandContext()
-    {
-        report(LOGGER::VERBOSE, "Management - Destroying Semaphores, Fences and Command Pools ..");
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
-            {
-                vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
-                vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
-                vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-            }
-
-        vkDestroyCommandPool(logical_device, queues.command_pool, nullptr);
-    }
-
 
     //////////////////////////////
     // COMMAND BUFFER RECORDING //
@@ -221,6 +208,13 @@ void NovaCore::resetCommandBuffers()
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             VK_TRY(vkResetCommandBuffer(frames[i].command_buffer, 0));
+        }
+
+        VK_TRY(vkResetCommandBuffer(queues.transfer.buffer, 0));
+
+        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
+        {
+            VK_TRY(vkResetCommandBuffer(compute[i].command_buffer, 0));
         }
 
         return;

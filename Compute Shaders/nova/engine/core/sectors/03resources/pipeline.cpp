@@ -4,15 +4,6 @@
     // PIPELINE CONSTRUCTION //
     ///////////////////////////
 
-void NovaCore::destroyPipeline(Pipeline* pipeline)
-    {
-        report(LOGGER::DEBUG, "Management - Destroying Pipeline.");
-        vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
-        vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
-        delete pipeline;
-        return;
-    }
-
 void NovaCore::constructGraphicsPipeline()
     { 
         report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); 
