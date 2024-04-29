@@ -163,23 +163,26 @@ void NovaCore::createVulkanInstance()
 static Queues initQueues() 
     {
         return {
-                .graphics = VK_NULL_HANDLE,
-                .present = VK_NULL_HANDLE,
+            .command_pool = VK_NULL_HANDLE,
+            .graphics = VK_NULL_HANDLE,
+            .present = VK_NULL_HANDLE,
+            .transfer = {
+                .transfer_finished = VK_NULL_HANDLE,
+                .in_flight = VK_NULL_HANDLE,
                 .transfer = VK_NULL_HANDLE,
-                .compute = VK_NULL_HANDLE,
-                .deletion = {},
-                .xfr = {
-                    .pool = VK_NULL_HANDLE,
-                    .buffer = VK_NULL_HANDLE
-                },
-                .cmp = {
-                    .pool = VK_NULL_HANDLE,
-                    .buffer = VK_NULL_HANDLE
-                },
-                .families = {},
-                .indices = {},
-                .priorities = {}
-            };
+                .deletion_queue = {},
+                .pool = VK_NULL_HANDLE,
+                .buffer = VK_NULL_HANDLE
+            },
+            .compute = {
+                .queue = VK_NULL_HANDLE,
+                .pool = VK_NULL_HANDLE
+            },
+            .deletion = {},
+            .families = {},
+            .indices = {},
+            .priorities = {}
+        };
     }
 
 static SwapChainSupportDetails initSwapChainSupport() 

@@ -34,26 +34,20 @@ void NovaCore::createCommandPool()
             char name[] = "Graphics";
             VkCommandPoolCreateInfo _gfx_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.graphics_family.value(), name);
 
-            // Create a command pool for each frame
-            for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-                VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &frames[i].cmd.pool));
-            }
-
-            // Create a command pool for the graphics queue (incase transfer and compute queue families don't have graphics capabilities)
-            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &queues.gfx.pool));
+            VK_TRY(vkCreateCommandPool(logical_device, &_gfx_cmd_pool_create_info, nullptr, &queues.command_pool));
         }
 
 
         {
             char name[] = "Transfer";
             VkCommandPoolCreateInfo _xfr_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.transfer_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.xfr.pool));
+            VK_TRY(vkCreateCommandPool(logical_device, &_xfr_cmd_pool_create_info, nullptr, &queues.transfer.pool));
         }
 
         {
             char name[] = "Compute";
             VkCommandPoolCreateInfo _cmp_cmd_pool_create_info = _createCommandPoolInfo(queues.indices.compute_family.value(), name);
-            VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.cmp.pool));
+            VK_TRY(vkCreateCommandPool(logical_device, &_cmp_cmd_pool_create_info, nullptr, &queues.compute.pool));
         }
 
         return;
@@ -79,27 +73,21 @@ void NovaCore::createCommandBuffers()
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[32];
             sprintf(name, "Graphics %d", i);
-            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(frames[i].cmd.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].cmd.buffer));
-        }
-
-        // We need to create a command buffer for each queue family
-        {
-            char name[] = "Graphics";
-            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(queues.gfx.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &queues.gfx.buffer));
+            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(queues.command_pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].command_buffer));
         }
 
         {
             char name[] = "Transfer";
-            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.xfr.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.xfr.buffer));
+            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.transfer.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.transfer.buffer));
         }
 
+        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
         {
             char name[] = "Compute";
-            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.cmp.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &queues.cmp.buffer));
+            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &compute[i].command_buffer));
         }
 
         return;
@@ -163,15 +151,10 @@ void NovaCore::destroyCommandContext()
             {
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
                 vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
-                //vkDestroySemaphore(logical_device, frames[i].transfer_finished, nullptr);
-                //vkDestroySemaphore(logical_device, frames[i].compute_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-                vkDestroyCommandPool(logical_device, frames[i].cmd.pool, nullptr);
             }
 
-        vkDestroyCommandPool(logical_device, queues.gfx.pool, nullptr);
-        vkDestroyCommandPool(logical_device, queues.xfr.pool, nullptr);
-        vkDestroyCommandPool(logical_device, queues.cmp.pool, nullptr);
+        vkDestroyCommandPool(logical_device, queues.command_pool, nullptr);
     }
 
 
@@ -237,12 +220,8 @@ void NovaCore::resetCommandBuffers()
         report(LOGGER::VLINE, "\t .. Resetting Command Buffers ..");
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VK_TRY(vkResetCommandBuffer(frames[i].cmd.buffer, 0));
+            VK_TRY(vkResetCommandBuffer(frames[i].command_buffer, 0));
         }
-
-        VK_TRY(vkResetCommandBuffer(queues.gfx.buffer, 0));
-        VK_TRY(vkResetCommandBuffer(queues.xfr.buffer, 0));
-        VK_TRY(vkResetCommandBuffer(queues.cmp.buffer, 0));
 
         return;
     }

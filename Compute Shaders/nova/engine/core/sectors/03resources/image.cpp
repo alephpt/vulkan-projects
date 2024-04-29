@@ -139,8 +139,8 @@ void NovaCore::createTextureImage()
 
         // Can we do this on transfer?
         // Transition the image to a layout that is optimal for copying data to
-        transitionImageLayout(texture.image, _SRGB_FORMAT_888, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST, queues.graphics, queues.gfx.pool, mip_lvls); 
-        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.gfx.pool);
+        transitionImageLayout(texture.image, _SRGB_FORMAT_888, _IMAGE_LAYOUT_UNDEFINED, _IMAGE_LAYOUT_DST, queues.graphics, queues.transfer.pool, mip_lvls); 
+        copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.transfer.pool);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
         queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });

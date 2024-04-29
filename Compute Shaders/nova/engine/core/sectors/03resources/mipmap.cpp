@@ -73,7 +73,7 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
         if (!(_format_props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) 
             { report(LOGGER::ERROR, "Scene - Texture Image Format does not support linear blitting .."); return; }
 
-        VkCommandBuffer _ephemeral_command = createEphemeralCommand(queues.gfx.pool);
+        VkCommandBuffer _ephemeral_command = createEphemeralCommand(queues.transfer.pool);
 
         VkImageLayout _old_layout = _IMAGE_LAYOUT_DST;
         VkImageLayout _new_layout = _IMAGE_LAYOUT_SRC;
@@ -100,7 +100,7 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
         vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_FRAGMENT_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
         char _msg[] = "Generate Mipmaps";
-        flushCommandBuffer(_ephemeral_command, _msg, queues.graphics, queues.gfx.pool); 
+        flushCommandBuffer(_ephemeral_command, _msg, queues.graphics, queues.transfer.pool); 
 
         return;
     }

@@ -17,6 +17,7 @@ typedef void (*fnManifest)();
 
 const bool USE_VALIDATION_LAYERS = true;
 constexpr unsigned int MAX_FRAMES_IN_FLIGHT = 2;
+constexpr unsigned int MAX_COMPUTE_QUEUES = 4;
 const std::vector<const char*> VALIDATION_LAYERS = { "VK_LAYER_KHRONOS_validation" };
 const uint32_t VALIDATION_LAYER_COUNT = static_cast<uint32_t>(VALIDATION_LAYERS.size());
 const std::vector<const char*> DEVICE_EXTENSIONS = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, };
@@ -35,22 +36,39 @@ struct DeletionQueue
     };
 
 
-struct CommandContext
-    {
-        VkCommandPool pool;
-        VkCommandBuffer buffer;
-    };
-
 
 struct FrameData 
     {
         VkSemaphore image_available;
         VkSemaphore render_finished;
-        VkSemaphore transfer_finished;
+        VkFence in_flight;
+        DeletionQueue deletion_queue;
+        VkCommandBuffer command_buffer;
+    };
+
+struct ComputeData
+    {
         VkSemaphore compute_finished;
         VkFence in_flight;
         DeletionQueue deletion_queue;
-        CommandContext cmd;
+        VkCommandBuffer command_buffer;
+    };
+
+struct ComputeContext
+    {
+        VkQueue queue;
+        VkCommandPool pool;
+    };
+
+struct TransferData
+    {
+        VkQueue queue;
+        VkSemaphore transfer_finished;
+        VkFence in_flight;
+        VkQueue transfer;
+        DeletionQueue deletion_queue;
+        VkCommandPool pool; // I don't know if we need this.
+        VkCommandBuffer buffer;
     };
 
 struct QueueFamilyIndices 
@@ -68,16 +86,16 @@ struct QueueFamilyIndices
 // This could be a class that constructs queues and families dynamically
 struct Queues 
     {
+        // We want 1 command pool for both graphics and present queues
+        VkCommandPool command_pool;
+
         VkQueue graphics;
         VkQueue present;
-        VkQueue transfer;
-        VkQueue compute;
+        
+        TransferData transfer; // We have 1 transfer queue that can stage data to the graphics queue family
+        ComputeContext compute; // Compute bffers and queues are seperate for parallel processing as we can have multiple Compute Frames in Flight
 
         DeletionQueue deletion;
-
-        CommandContext gfx;
-        CommandContext xfr;
-        CommandContext cmp;
 
         std::vector<VkQueueFamilyProperties> families;
         QueueFamilyIndices indices;

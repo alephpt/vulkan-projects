@@ -86,7 +86,7 @@ void NovaCore::drawFrame()
                 VK_TRY(result);
             }
 
-        VkCommandBuffer _command_buffer = current_frame().cmd.buffer;
+        VkCommandBuffer _command_buffer = current_frame().command_buffer;
 
         // used to update the uniform buffer in the shader for model rotation
         updateUniformBuffer(_frame_ct);

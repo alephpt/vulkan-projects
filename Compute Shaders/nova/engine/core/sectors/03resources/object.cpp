@@ -21,7 +21,7 @@ void NovaCore::constructVertexBuffer()
 
         // We create the buffer that will be used by the GPU
         createBuffer(_buffer_size, _VERTEX_BUFFER_BIT, _LOCAL_DEVICE_BIT, &vertex);
-        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size, queues.graphics, queues.gfx.pool); // TODO: I want to be able to choose which queue to use from top level
+        copyBuffer(_staging.buffer, vertex.buffer, _buffer_size, queues.graphics, queues.transfer.pool); // TODO: I want to be able to choose which queue to use from top level
 
         destroyBuffer(&_staging);
 
@@ -44,7 +44,7 @@ void NovaCore::constructIndexBuffer()
         vkUnmapMemory(logical_device, _staging.memory);
 
         createBuffer(_buffer_size, _INDEX_BUFFER_BIT, _LOCAL_DEVICE_BIT, &index);
-        copyBuffer(_staging.buffer, index.buffer, _buffer_size, queues.graphics, queues.gfx.pool); // TODO: I want to be able to choose which queue to use from top level
+        copyBuffer(_staging.buffer, index.buffer, _buffer_size, queues.graphics, queues.transfer.pool); // TODO: I want to be able to choose which queue to use from top level
  
         destroyBuffer(&_staging);
 

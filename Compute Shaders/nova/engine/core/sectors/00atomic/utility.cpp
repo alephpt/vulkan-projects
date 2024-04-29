@@ -57,19 +57,22 @@ void NovaCore::logQueues()
         report(LOGGER::DLINE, "\t\tGraphics: %p", queues.graphics);
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
-                report(LOGGER::DLINE, "\t\t\tCommand Pool (Graphics %d): %p", i, frames[i].cmd.pool);
-                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].cmd.buffer);
+                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Graphics %d): %p", i, frames[i].command_buffer);
             }
+        report(LOGGER::DLINE, "\t\t\tGraphics Command Pool: %p", queues.command_pool);
+        
         report(LOGGER::DLINE, "\t\tTransfer Family Index: %d", queues.indices.transfer_family.value());
-        report(LOGGER::DLINE, "\t\tTransfer: %p", queues.transfer);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Graphics): %p", queues.gfx.pool);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Graphics): %p", queues.gfx.buffer);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.xfr.pool);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.xfr.buffer);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Transfer): %p", queues.transfer.pool);
+        report(LOGGER::DLINE, "\t\tCommand Buffer (Transfer): %p", queues.transfer.buffer);
+
         report(LOGGER::DLINE, "\t\tCompute Family Index: %d", queues.indices.compute_family.value());
-        report(LOGGER::DLINE, "\t\tCompute: %p", queues.compute);
-        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.cmp.pool);
-        report(LOGGER::DLINE, "\t\tCommand Buffer (Compute): %p", queues.cmp.buffer);
+        report(LOGGER::DLINE, "\t\tCommand Pool (Compute): %p", queues.compute.pool);
+        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++) 
+            {
+                report(LOGGER::DLINE, "\t\t\tCommand Buffer (Compute %d): %p", i, compute[i].command_buffer);
+            }
+
+
         report(LOGGER::DLINE, "\t\tPriorities: %d", queues.priorities.size());
     }
 
@@ -81,11 +84,26 @@ void NovaCore::logFrameData()
                 report(LOGGER::DLINE, "\t\tFrame %d", i);
                 report(LOGGER::DLINE, "\t\t\tImage Available: %p", frames[i].image_available);
                 report(LOGGER::DLINE, "\t\t\tRender Finished: %p", frames[i].render_finished);
-                report(LOGGER::DLINE, "\t\t\tTransfer Finished: %p", frames[i].transfer_finished);
-                report(LOGGER::DLINE, "\t\t\tComputer Finished: %p", frames[i].compute_finished);
                 report(LOGGER::DLINE, "\t\t\tIn Flight: %p", frames[i].in_flight);
             }
-    
+    }
+
+void NovaCore::logComputeData()
+    {
+        report(LOGGER::DEBUG, "\t .. Logging Compute Data ..");
+        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++) 
+            {
+                report(LOGGER::DLINE, "\t\tCompute %d", i);
+                report(LOGGER::DLINE, "\t\t\tCompute Finished: %p", compute[i].compute_finished);
+                report(LOGGER::DLINE, "\t\t\tIn Flight: %p", compute[i].in_flight);
+            }
+    }
+
+void NovaCore::logTransferData()
+    {
+        report(LOGGER::DEBUG, "\t .. Logging Transfer Data ..");
+        report(LOGGER::DLINE, "\t\tTransfer Finished: %p", queues.transfer.transfer_finished);
+        report(LOGGER::DLINE, "\t\tIn Flight: %p", queues.transfer.in_flight);
     }
 
 void NovaCore::logSwapChain() 
