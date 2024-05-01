@@ -79,7 +79,6 @@ void NovaCore::drawFrame()
         recordComputeCommandBuffer(current_compute().command_buffer, _frame_ct);
 
         // submit the command buffer to the compute queue
-        
         present.submit_info = getSubmitInfo(&current_compute().command_buffer, &current_compute().compute_finished, nullptr, nullptr);
         VK_TRY(vkQueueSubmit(queues.compute.queue, 1, &present.submit_info, current_compute().in_flight));
 
@@ -113,21 +112,20 @@ void NovaCore::drawFrame()
                 VK_TRY(result);
             }
 
-        VkCommandBuffer _command_buffer = current_frame().command_buffer;
-
+        
 
         // reset the command buffer to begin recording the draw commands for the frame
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
-        VK_TRY(vkResetCommandBuffer(_command_buffer, 0));
+        VK_TRY(vkResetCommandBuffer(current_frame().command_buffer, 0));
 
-        recordCommandBuffers(_command_buffer, _image_index);
+        recordCommandBuffers(current_frame().command_buffer, _image_index);
 
         // submit the command buffer to the graphics queue
         present.submit_info = {};
         VkSemaphore _wait_semaphores[] = { current_frame().image_available, current_compute().compute_finished };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
         VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        present.submit_info = getSubmitInfo(&_command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
+        present.submit_info = getSubmitInfo(&current_frame().command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
 
         VK_TRY(vkQueueSubmit(queues.graphics, 1, &present.submit_info, current_frame().in_flight));
 
@@ -151,6 +149,8 @@ void NovaCore::drawFrame()
             }
 
         _frame_ct = (_frame_ct + 1) % MAX_FRAMES_IN_FLIGHT;
+
+        syncClock();
 
         return;
     }

@@ -12,7 +12,7 @@ NovaCore::~NovaCore()
         destroyIndexContext();
         destroyCommandContext();
         destroyPipeline(graphics_pipeline);
-        //destroyPipeline(compute_pipeline);
+        destroyPipeline(compute_pipeline);
 
         report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass.");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);

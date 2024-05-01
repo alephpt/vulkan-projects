@@ -66,8 +66,7 @@ struct TransferData
         VkFence in_flight;
         VkQueue transfer;
         DeletionQueue deletion_queue;
-        VkCommandPool pool; // I don't know if we need this.
-        VkCommandBuffer buffer;
+        VkCommandPool pool;
     };
 
 struct QueueFamilyIndices 
@@ -144,6 +143,12 @@ struct MVP
         glm::mat4 view;  // The view matrix is the one that will be used to transform the vertices of the world
         glm::mat4 proj;  // The projection matrix is the one that will be used to transform the vertices of the camera
     };
+
+struct UBO_T
+    {
+        float deltaTime = 1.0f;
+    };
+
 
 struct DescriptorContext
     {

@@ -1,6 +1,7 @@
 #include "../../core.h"
 
 #include <SDL2/SDL_vulkan.h>
+#include <SDL2/SDL_timer.h>
 
     ////////////////////////
     //  INSTANCE CREATION //
@@ -11,6 +12,8 @@ NovaCore::NovaCore(VkExtent2D extent)
         _blankContext();
         setWindowExtent(extent);
         createVulkanInstance();
+        last_time = SDL_GetTicks64() / 1000.0;
+
         // TODO: Inline Initialization to be done here instead of the constructor of the top level
         // 
 
@@ -141,7 +144,6 @@ static Queues initQueues()
                 .transfer = VK_NULL_HANDLE,
                 .deletion_queue = {},
                 .pool = VK_NULL_HANDLE,
-                .buffer = VK_NULL_HANDLE
             },
             .compute = {
                 .queue = VK_NULL_HANDLE,

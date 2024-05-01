@@ -52,7 +52,7 @@ class NovaCore {
     private:
         VkPhysicalDevice physical_device;
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
-        ComputeData compute[MAX_COMPUTE_QUEUES]; // TODO: Get Max Compute Queues from Device when we query the queue count
+        ComputeData computes[MAX_COMPUTE_QUEUES]; // TODO: Get Max Compute Queues from Device when we query the queue count
         VkRenderPass render_pass;
         QueuePresentContext present;
         DescriptorContext descriptor;           // TODO: Create a createNewDescriptor function (and combine with uniform?)
@@ -68,6 +68,10 @@ class NovaCore {
         std::vector<void*> uniform_data;
         std::vector<BufferContext> storage;
         const uint32_t MAX_PARTICLES = 8192;
+
+        double last_time = 0.0;
+        float last_frame_time = 0.0f;
+
         const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};  // Set this at the top level
         const std::array<VkClearValue, 2> CLEAR_VALUES = { CLEAR_COLOR, {1.0f, 0} };
         FrameData& current_frame();
@@ -75,6 +79,8 @@ class NovaCore {
         int _frame_ct = 0;
         VkSampleCountFlagBits msaa_samples = VK_SAMPLE_COUNT_1_BIT;
         uint32_t mip_lvls = 1;
+
+        void syncClock();
 
         void logQueues();
         void logSwapChain();
@@ -104,7 +110,7 @@ class NovaCore {
         VkAttachmentDescription getColorAttachment();
 
         VkCommandBufferBeginInfo createBeginInfo();
-        VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*);
+        VkCommandBufferAllocateInfo createCommandBuffersInfo(VkCommandPool&, char*, uint32_t);
         VkCommandBuffer createEphemeralCommand(VkCommandPool&);
         void flushCommandBuffer(VkCommandBuffer&, char*, VkQueue&, VkCommandPool&);
 

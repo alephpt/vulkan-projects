@@ -1,5 +1,7 @@
 #include "../../core.h"
 
+#include <SDL2/SDL_timer.h>
+
     /////////////////////
     // SYNC STRUCTURES //
     /////////////////////
@@ -30,14 +32,22 @@ void NovaCore::createSyncObjects()
     {
         report(LOGGER::VLINE, "\t .. Creating Sync Objects ..");
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            VkSemaphoreCreateInfo semaphore_info = createSemaphoreInfo();
-            VkFenceCreateInfo fence_info = createFenceInfo();
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                VkSemaphoreCreateInfo semaphore_info = createSemaphoreInfo();
+                VkFenceCreateInfo fence_info = createFenceInfo();
 
-            VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].image_available));
-            VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].render_finished));
-            VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &frames[i].in_flight));
-        }
+                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].image_available));
+                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].render_finished));
+                VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &frames[i].in_flight));
+            }
 
         return;
+    }
+
+void NovaCore::syncClock()
+    {
+        double current_time = SDL_GetTicks64() / 1000.0;
+        last_frame_time = current_time - last_time;
+        last_time = current_time;
     }

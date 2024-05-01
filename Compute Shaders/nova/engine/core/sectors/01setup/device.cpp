@@ -41,7 +41,12 @@ void NovaCore::setQueueFamilyProperties(unsigned int i)
         if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT && queues.indices.transfer_family.value() == -1) 
             { 
                 queues.indices.transfer_family = i;
-                queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                
+                if (queues.indices.graphics_family.value() == -1) 
+                    { 
+                        queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                    }
+
                 report(LOGGER::VLINE, "\t\t\tTransfer Family Set.");
                 // Need to set something up for transfer queues to determine state of engine and capabilities
                 //      i.e. if we have a compute queue, we can use it for transfer operations, but transfer queues
@@ -76,7 +81,7 @@ void NovaCore::getQueueFamilies(VkPhysicalDevice scanned_device)
                         if (_present_support) 
                             { 
                                 queues.indices.present_family = i; 
-                                queues.priorities.push_back(std::vector<float>(queues.families[i].queueCount, 1.0f));
+                                //queues.priorities.push_back(std::vector<float>(queues.families[i].queueCount, 1.0f));
                                 report(LOGGER::VLINE, "\t\t\tPresent Family Set.");    
                             }
                     }

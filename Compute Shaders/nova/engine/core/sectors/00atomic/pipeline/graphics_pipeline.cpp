@@ -123,7 +123,7 @@ GraphicsPipeline& GraphicsPipeline::inputAssembly()
 
         _input_assembly = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-                .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+                .topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST, // TRIANGLE_LIST for meshes
                 .primitiveRestartEnable = VK_FALSE
             };
 
@@ -189,7 +189,7 @@ GraphicsPipeline& GraphicsPipeline::multisampling(VkSampleCountFlagBits samples)
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
                 .pNext = nullptr,
                 .flags = 0,
-                .rasterizationSamples = samples,
+                .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT, //samples,
                 .sampleShadingEnable = VK_FALSE,
                 .minSampleShading = 1.0f,
                 .pSampleMask = nullptr,
@@ -233,11 +233,11 @@ GraphicsPipeline& GraphicsPipeline::depthStencil()
 static VkPipelineColorBlendAttachmentState colorBlendAttachment()
     {
         return {
-                .blendEnable = VK_FALSE,
-                .srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
-                .dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
+                .blendEnable = VK_TRUE, // TODO: make this dynamic
+                .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+                .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
                 .colorBlendOp = VK_BLEND_OP_ADD,
-                .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+                .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
                 .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
                 .alphaBlendOp = VK_BLEND_OP_ADD,
                 .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
@@ -248,17 +248,7 @@ GraphicsPipeline& GraphicsPipeline::colorBlending()
     {
         report(LOGGER::VLINE, "\t .. Creating Color Blend State ..");
 
-        _color_blend_attachment = 
-            {
-                .blendEnable = VK_FALSE,
-                .srcColorBlendFactor = VK_BLEND_FACTOR_ONE,
-                .dstColorBlendFactor = VK_BLEND_FACTOR_ZERO,
-                .colorBlendOp = VK_BLEND_OP_ADD,
-                .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-                .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-                .alphaBlendOp = VK_BLEND_OP_ADD,
-                .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-            };
+        _color_blend_attachment = colorBlendAttachment();
 
         _color_blending = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
@@ -301,12 +291,20 @@ GraphicsPipeline& GraphicsPipeline::createLayout(VkDevice* logical_device, VkDes
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Layout ..");
 
+        // From when we were using a vertex buffer and texture
+        // _pipeline_layout_info = {
+        //         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        //         .setLayoutCount = 1,
+        //         .pSetLayouts = descriptor_set_layout,
+        //         .pushConstantRangeCount = 0,
+        //         .pPushConstantRanges = nullptr
+        //     };
+
+        // For using the Compute Pipeline
         _pipeline_layout_info = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-                .setLayoutCount = 1,
-                .pSetLayouts = descriptor_set_layout,
-                .pushConstantRangeCount = 0,
-                .pPushConstantRanges = nullptr
+                .setLayoutCount = 0,
+                .pSetLayouts = nullptr,
             };
 
         VK_TRY(vkCreatePipelineLayout(*logical_device, &_pipeline_layout_info, nullptr, &layout));

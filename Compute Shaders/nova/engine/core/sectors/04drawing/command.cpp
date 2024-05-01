@@ -10,7 +10,7 @@ VkCommandBufferBeginInfo NovaCore::createBeginInfo()
         return {
                 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
                 .pNext = nullptr,
-                .flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
+                // .flags = nullptr, This is useful in Vertex and Image buffers VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT,
                 .pInheritanceInfo = nullptr
             };
     }
@@ -53,7 +53,7 @@ void NovaCore::createCommandPool()
         return;
     }
 
-inline VkCommandBufferAllocateInfo NovaCore::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name)
+inline VkCommandBufferAllocateInfo NovaCore::createCommandBuffersInfo(VkCommandPool& cmd_pool, char* name, uint32_t cmd_buf_ct)
     {
         report(LOGGER::VLINE, "\t\t\t\t .. Creating %s Command Buffer Info  ..", name);
 
@@ -62,7 +62,7 @@ inline VkCommandBufferAllocateInfo NovaCore::createCommandBuffersInfo(VkCommandP
                 .pNext = nullptr,
                 .commandPool = cmd_pool,
                 .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-                .commandBufferCount = 1
+                .commandBufferCount = cmd_buf_ct
             };
     }
 
@@ -73,21 +73,16 @@ void NovaCore::createCommandBuffers()
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[32];
             sprintf(name, "Graphics %d", i);
-            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(queues.command_pool, name);
+            VkCommandBufferAllocateInfo _gfx_cmd_buf_alloc_info = createCommandBuffersInfo(queues.command_pool, name, 1);
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].command_buffer));
         }
 
-        {
-            char name[] = "Transfer";
-            VkCommandBufferAllocateInfo _xfr_cmd_buf_alloc_info = createCommandBuffersInfo(queues.transfer.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_xfr_cmd_buf_alloc_info, &queues.transfer.buffer));
-        }
 
         for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
         {
             char name[] = "Compute";
-            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name);
-            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &compute[i].command_buffer));
+            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name, MAX_FRAMES_IN_FLIGHT);
+            VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &computes[i].command_buffer));
         }
 
         return;
@@ -100,7 +95,7 @@ VkCommandBuffer NovaCore::createEphemeralCommand(VkCommandPool& pool)
         VkCommandBuffer _buffer;
 
         char name[] = "Ephemeral";
-        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(pool, name);
+        VkCommandBufferAllocateInfo _tmp_alloc_info = createCommandBuffersInfo(pool, name, 1);
 
         VK_TRY(vkAllocateCommandBuffers(logical_device, &_tmp_alloc_info, &_buffer));
 
@@ -187,7 +182,7 @@ void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
         VkRect2D _scissor = getScissor(swapchain.details.extent);
         vkCmdSetScissor(command_buffer, 0, 1, &_scissor);
 
-        VkBuffer _vertex_buffers[] = {vertex.buffer};
+        //VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
         vkCmdBindVertexBuffers(command_buffer, 0, 1, &storage[i].buffer, _offsets);
         //vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
@@ -226,11 +221,9 @@ void NovaCore::resetCommandBuffers()
             VK_TRY(vkResetCommandBuffer(frames[i].command_buffer, 0));
         }
 
-        VK_TRY(vkResetCommandBuffer(queues.transfer.buffer, 0));
-
         for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
         {
-            VK_TRY(vkResetCommandBuffer(compute[i].command_buffer, 0));
+            VK_TRY(vkResetCommandBuffer(computes[i].command_buffer, 0));
         }
 
         return;

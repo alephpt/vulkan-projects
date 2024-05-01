@@ -74,6 +74,16 @@ static inline VkDescriptorPoolSize _getSamplerPoolSize(uint32_t ct)
         };
     }
 
+static inline VkDescriptorPoolSize _getStorageBufferPoolSize(uint32_t ct)
+    {
+        report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pool Size of %d ..", ct);
+
+        return {
+            .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .descriptorCount = ct
+        };
+    }
+
 static inline VkDescriptorPoolCreateInfo _getPoolInfo(uint32_t ct, std::array<VkDescriptorPoolSize, 2>& sizes)
     {
         report(LOGGER::VLINE, "\t\t .. Creating Descriptor Pools Info with size %d ..", sizes.size());
@@ -94,7 +104,8 @@ void NovaCore::constructDescriptorPool()
 
         std::array<VkDescriptorPoolSize, 2> _pool_size = {
             _getUniformPoolSize(MAX_FRAMES_IN_FLIGHT),
-            _getSamplerPoolSize(MAX_FRAMES_IN_FLIGHT)
+            //_getSamplerPoolSize(MAX_FRAMES_IN_FLIGHT)
+            _getStorageBufferPoolSize(MAX_FRAMES_IN_FLIGHT)
         };
 
         VkDescriptorPoolCreateInfo _pool_info = _getPoolInfo(MAX_FRAMES_IN_FLIGHT, _pool_size);
@@ -221,7 +232,7 @@ void NovaCore::createComputeDescriptorSetLayout()
         std::vector<VkDescriptorSetLayoutBinding> _layout_binding;
 
         for (size_t i = 0; i < 3; i++)
-            { _layout_binding[i] = constructComputeDescriptorSetLayoutBinding(i); }
+            { _layout_binding.push_back(constructComputeDescriptorSetLayoutBinding(i)); }
 
         VkDescriptorSetLayoutCreateInfo _layout_info = _getLayoutInfo(_layout_binding);
 

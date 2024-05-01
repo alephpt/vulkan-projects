@@ -24,6 +24,12 @@ VkImageViewCreateInfo NovaCore::createImageViewInfo(VkImage img, VkFormat fmt, V
             .image = img,
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = fmt,
+            .components = {
+                .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .g = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .b = VK_COMPONENT_SWIZZLE_IDENTITY,
+                .a = VK_COMPONENT_SWIZZLE_IDENTITY
+            },
             .subresourceRange = {
                 .aspectMask = aspect,
                 .baseMipLevel = 0,
