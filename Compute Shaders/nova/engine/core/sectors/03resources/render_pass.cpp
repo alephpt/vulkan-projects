@@ -210,7 +210,7 @@ void NovaCore::createRenderPass()
 
 VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
     {
-        report(LOGGER::VLINE, "\t\t .. Getting Render Pass Begin Info ..");
+        //report(LOGGER::VLINE, "\t\t .. Getting Render Pass Begin Info ..");
         
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,

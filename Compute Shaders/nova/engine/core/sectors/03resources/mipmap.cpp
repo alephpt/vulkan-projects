@@ -89,7 +89,7 @@ void NovaCore::generateMipmaps(VkImage& image, VkFormat format, int32_t tex_widt
                 vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
                 VkImageBlit _blit = _getBlit(i, _mip_width, _mip_height);
                 vkCmdBlitImage(_ephemeral_command, image, _IMAGE_LAYOUT_SRC, image, _IMAGE_LAYOUT_DST, 1, &_blit, VK_FILTER_LINEAR);
-                _setReadBarrier(_barrier, i);
+                _setReadBarrier(_barrier, i - 1);
                 vkCmdPipelineBarrier(_ephemeral_command, _PIPELINE_TRANSFER_BIT, _PIPELINE_FRAGMENT_BIT, 0, 0, nullptr, 0, nullptr, 1, &_barrier);
 
                 if (_mip_width > 1) _mip_width /= 2;

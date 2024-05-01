@@ -88,6 +88,19 @@ inline void NovaCore::copyBufferToImage(VkBuffer& buffer, VkImage& image, uint32
         return;
     }
 
+static inline void destroyImage(VkDevice& device, const VkImage& image, const VkDeviceMemory& memory) 
+    {
+        if (image != VK_NULL_HANDLE) {
+            vkDestroyImage(device, image, nullptr);
+            report(LOGGER::VLINE, "\t .. Destroying Image ..");
+        }
+
+        if (memory != VK_NULL_HANDLE) {
+            vkFreeMemory(device, memory, nullptr);
+            report(LOGGER::VLINE, "\t .. Freeing Memory ..");
+        }
+    }
+
 void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountFlagBits samples, 
                         VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags props,
                         VkImage& image, VkDeviceMemory& memory)
@@ -104,11 +117,7 @@ void NovaCore::createImage(uint32_t w, uint32_t h, uint32_t mips, VkSampleCountF
         VK_TRY(vkAllocateMemory(logical_device, &_alloc_info, nullptr, &memory));
         VK_TRY(vkBindImageMemory(logical_device, image, memory, 0));
 
-        queues.deletion.push_fn([=]() { 
-                vkDestroyImage(logical_device, image, nullptr); 
-                vkFreeMemory(logical_device, memory, nullptr);
-                report(LOGGER::VLINE, "\t .. Image Destroyed ..");
-            });
+        queues.deletion.push_fn([=]() { destroyImage(logical_device, image, memory); });
 
         return;
     }
@@ -146,8 +155,7 @@ void NovaCore::createTextureImage()
         copyBufferToImage(_staging.buffer, texture.image, static_cast<uint32_t>(_tex_width), static_cast<uint32_t>(_tex_height), queues.graphics, queues.command_pool);
 
         // We need to trigger the texture image to be deleted before the pipeline goes out of scope
-        queues.deletion.push_fn([=]() { vkDestroyImage(logical_device, texture.image, nullptr); });
-        queues.deletion.push_fn([=]() { vkFreeMemory(logical_device, texture.memory, nullptr); });
+        queues.deletion.push_fn([=]() { destroyImage(logical_device, texture.image, texture.memory); } );
 
         // Clean up the staging buffer
         destroyBuffer(&_staging);
@@ -186,6 +194,7 @@ void NovaCore::createTextureImageView()
 
         VkImageViewCreateInfo _view_info = _getImageViewInfo(texture.image, _SRGB_FORMAT_888);
         VK_TRY(vkCreateImageView(logical_device, &_view_info, nullptr, &texture.view));
+        queues.deletion.push_fn([=]() { vkDestroyImageView(logical_device, texture.view, nullptr); });
     }
 
 
@@ -225,8 +234,12 @@ void NovaCore::constructTextureSampler() {
 
     VK_TRY(vkCreateSampler(logical_device, &_sampler_info, nullptr, &texture.sampler));
 
-    queues.deletion.push_fn([=]() { vkDestroySampler(logical_device, texture.sampler, nullptr); });
-    queues.deletion.push_fn([=]() { vkDestroyImageView(logical_device, texture.view, nullptr); });
+    queues.deletion.push_fn([=]() { 
+        report(LOGGER::VLINE, "\t .. Destroying Texture Sampler ..");
+        vkDestroySampler(logical_device, texture.sampler, nullptr); });
+    queues.deletion.push_fn([=]() { 
+        report(LOGGER::VLINE, "\t .. Destroying Texture Image View ..");
+        vkDestroyImageView(logical_device, texture.view, nullptr); });
 }
 
 
