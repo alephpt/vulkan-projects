@@ -97,15 +97,17 @@ void NovaCore::destroyPipeline(Pipeline* pipeline)
 
 void NovaCore::destroyBuffer(BufferContext* buffer) 
     {
-        report(LOGGER::VLINE, "\t .. Destroying Buffer ..");
+        if (buffer->buffer != VK_NULL_HANDLE) 
+            { 
+                report(LOGGER::VERBOSE, "Management - Destroying Buffer ..");
+                vkDestroyBuffer(logical_device, buffer->buffer, nullptr);
+            }
 
-        if (buffer->buffer == VK_NULL_HANDLE) { 
-            report(LOGGER::ERROR, "Destroying Buffer Failed. Buffer is already null.");    
-            return; 
-        }
-
-        vkDestroyBuffer(logical_device, buffer->buffer, nullptr);
-        vkFreeMemory(logical_device, buffer->memory, nullptr);
+        if (buffer->memory != VK_NULL_HANDLE) 
+            { 
+                report(LOGGER::VERBOSE, "Management - Freeing Buffer Memory ..");
+                vkFreeMemory(logical_device, buffer->memory, nullptr); 
+            }
 
         return;
     }

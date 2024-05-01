@@ -30,57 +30,30 @@ bool NovaCore::checkValidationLayerSupport()
 void NovaCore::setQueueFamilyProperties(unsigned int i) 
     {
         VkQueueFamilyProperties* queue_family = &queues.families[i];
-        //std::string queue_name = "";
 
         if (queue_family->queueFlags & VK_QUEUE_GRAPHICS_BIT) 
             { 
-                //queue_name += "{ Graphics } "; 
                 queues.indices.graphics_family = i;
                 queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
                 report(LOGGER::VLINE, "\t\tGraphics Family Set.");
-
-                if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
-                    { 
-                        queues.indices.transfer_family = i;
-                        queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 0.5f));
-                        report(LOGGER::VLINE, "\t\tTransfer Family Set.");
-                        // Need to set something up for transfer queues to determine state of engine and capabilities
-                    }
             }
 
-        if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT) 
+        if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT && queues.indices.transfer_family.value() == -1) 
             { 
-                //queue_name += "{ Compute } "; 
-
-                if (queues.indices.graphics_family.value() != i) 
-                    {
-                        queues.indices.compute_family = i;
-                        queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
-                        report(LOGGER::VLINE, "\t\tCompute Family Set.");
-                    }
-/*
-                if (queue_family->queueFlags & VK_QUEUE_TRANSFER_BIT) 
-                    { 
-                        queues.indices.transfer_family = i;
-                        queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
-                        report(LOGGER::VLINE, "\t\tTransfer Family Set.");
-                        // Need to set something up for transfer queues to determine state of engine and capabilities
-                            // because we can't have a transfer queue without a graphics queue
-                    }
-                    */
+                queues.indices.transfer_family = i;
+                queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                report(LOGGER::VLINE, "\t\tTransfer Family Set.");
+                // Need to set something up for transfer queues to determine state of engine and capabilities
+                //      i.e. if we have a compute queue, we can use it for transfer operations, but transfer queues
+                //           cannot be used for image operations if they don't have graphics capabilities
             }
 
-    /*
-        if (queue_family->queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) 
-            { queue_name += "{ Sparse Binding } "; }
-
-        if (queue_name.empty()) 
-            { queue_name = "~ Unknown ~"; }
-
-
-        report(LOGGER::VLINE, "\t\t\tQueue Count: %d", queue_family->queueCount);
-        report(LOGGER::VLINE, "\t\t\t %s", queue_name.c_str());
-        */
+        if (queue_family->queueFlags & VK_QUEUE_COMPUTE_BIT && queues.indices.graphics_family.value() != i) 
+            {
+                queues.indices.compute_family = i;
+                queues.priorities.push_back(std::vector<float>(queue_family->queueCount, 1.0f));
+                report(LOGGER::VLINE, "\t\tCompute Family Set.");
+            }
     }
 
 void NovaCore::getQueueFamilies(VkPhysicalDevice scanned_device) 
