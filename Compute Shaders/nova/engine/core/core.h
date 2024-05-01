@@ -1,6 +1,6 @@
 #pragma once
 #include "./sectors/00atomic/pipeline/pipeline.h"
-#include "./components/utility/lexicon.h"
+#include "./sectors/00atomic/lexicon.h"
 
 
 class NovaCore {
@@ -37,8 +37,11 @@ class NovaCore {
         void constructVertexBuffer();
         void constructIndexBuffer();
         void constructUniformBuffer();
+        void constructStorageBuffers();
         void constructDescriptorPool();
         void createDescriptorSets();
+        void createComputeDescriptorSets();
+        void createComputeDescriptorSetLayout();
         void createCommandBuffers();
         void createSyncObjects();
         void constructGraphicsPipeline();
@@ -52,22 +55,23 @@ class NovaCore {
         ComputeData compute[MAX_COMPUTE_QUEUES]; // TODO: Get Max Compute Queues from Device when we query the queue count
         VkRenderPass render_pass;
         QueuePresentContext present;
-        DescriptorContext descriptor;   // TODO: Create a createNewDescriptor function (and combine with uniform?)
-        Pipeline *graphics_pipeline;    // TODO: Dynamically allocate pipelines with a createNewPipeline function that takes a type and/or shader file
-        Pipeline *compute_pipeline;
-        BufferContext vertex;           // TODO: Combine vertex and index into a single Object Buffer
-        BufferContext index;            //       and create a createNewObject function
+        DescriptorContext descriptor;           // TODO: Create a createNewDescriptor function (and combine with uniform?)
+        GraphicsPipeline *graphics_pipeline;    // TODO: Dynamically allocate pipelines with a createNewPipeline function that takes a type and/or shader file
+        DescriptorContext compute_descriptor;   // TODO: Incorporate this as part of the Pipeline class
+        ComputePipeline *compute_pipeline;
+        BufferContext vertex;                   // TODO: Combine vertex and index into a single Object Buffer
+        BufferContext index;                    //       and create a createNewObject function
         ImageContext color;
         ImageContext depth;
-        ImageContext texture;         // TODO: Create a createNewTexture function
+        ImageContext texture;                   // TODO: Create a createNewTexture function
         std::vector<BufferContext> uniform;
         std::vector<void*> uniform_data;
-        const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
-        const std::array<VkClearValue, 2> CLEAR_VALUES = {
-            CLEAR_COLOR,
-            {1.0f, 0}
-        };
+        std::vector<BufferContext> storage;
+        const uint32_t MAX_PARTICLES = 8192;
+        const VkClearValue CLEAR_COLOR = {{{0.0f, 0.0f, 0.0f, 1.0f}}};  // Set this at the top level
+        const std::array<VkClearValue, 2> CLEAR_VALUES = { CLEAR_COLOR, {1.0f, 0} };
         FrameData& current_frame();
+        ComputeData& current_compute();
         int _frame_ct = 0;
         VkSampleCountFlagBits msaa_samples = VK_SAMPLE_COUNT_1_BIT;
         uint32_t mip_lvls = 1;
@@ -107,6 +111,7 @@ class NovaCore {
         void createBuffer(VkDeviceSize, VkBufferUsageFlags, VkMemoryPropertyFlags, BufferContext*);
         void copyBuffer(VkBuffer, VkBuffer, VkDeviceSize, VkQueue&, VkCommandPool&);
         void recordCommandBuffers(VkCommandBuffer&, uint32_t); 
+        void recordComputeCommandBuffer(VkCommandBuffer&, uint32_t);
         void resetCommandBuffers();
         void updateUniformBuffer(uint32_t);
 
@@ -122,7 +127,8 @@ class NovaCore {
         void destroyCommandContext();
         void destroyVertexContext();
         void destroyIndexContext();
-        void destroyPipeline(Pipeline*);
+        void destroyPipeline(GraphicsPipeline*);
+        void destroyPipeline(ComputePipeline*);
 };
 
 
@@ -133,6 +139,7 @@ const VkBufferUsageFlags _INDEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | 
 const VkBufferUsageFlags _VERTEX_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 const VkBufferUsageFlags _IMAGE_BUFFER_BIT = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 const VkBufferUsageFlags _IMAGE_TRANSFER_BIT = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+const VkBufferUsageFlags _STORAGE_BUFFER_BIT = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 const VkMemoryPropertyFlags _STAGING_PROPERTIES_BIT = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 const VkMemoryPropertyFlags _LOCAL_DEVICE_BIT = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 const VkImageLayout _IMAGE_LAYOUT_DST = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;

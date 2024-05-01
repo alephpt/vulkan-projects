@@ -8,7 +8,7 @@ void NovaCore::constructGraphicsPipeline()
     { 
         report(LOGGER::DEBUG, "Management - Constructing Graphics Pipeline .."); 
         
-        graphics_pipeline = new Pipeline();
+        graphics_pipeline = new GraphicsPipeline();
 
         graphics_pipeline->shaders(&logical_device)
                 .vertexInput()
@@ -28,6 +28,12 @@ void NovaCore::constructGraphicsPipeline()
 void NovaCore::constructComputePipeline()
     { 
         report(LOGGER::DEBUG, "Management - Constructing Compute Pipeline .."); 
+
+        compute_pipeline = new ComputePipeline();
+
+        compute_pipeline->shaders(&logical_device)
+                .createLayout(&logical_device, &compute_descriptor.layout)
+                .create(&logical_device);
         
         return; 
     }

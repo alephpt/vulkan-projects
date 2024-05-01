@@ -61,6 +61,33 @@ void NovaCore::drawFrame()
     {
         //report(LOGGER::VLINE, "\t .. Drawing Frame %d ..", _frame_ct);
 
+        ///////////////////
+        // Compute Queue //
+        ///////////////////
+
+        VK_TRY(vkWaitForFences(logical_device, 1, &current_compute().in_flight, VK_TRUE, UINT64_MAX));
+        current_compute().deletion_queue.flush();
+
+        // used to update the uniform buffer in the shader for model rotation
+        updateUniformBuffer(_frame_ct);
+
+        // reset the command buffer to begin recording the compute commands for the frame
+        VK_TRY(vkResetFences(logical_device, 1, &current_compute().in_flight));
+        VK_TRY(vkResetCommandBuffer(current_compute().command_buffer, 0));
+
+        // record the compute commands
+        recordComputeCommandBuffer(current_compute().command_buffer, _frame_ct);
+
+        // submit the command buffer to the compute queue
+        
+        present.submit_info = getSubmitInfo(&current_compute().command_buffer, &current_compute().compute_finished, nullptr, nullptr);
+        VK_TRY(vkQueueSubmit(queues.compute.queue, 1, &present.submit_info, current_compute().in_flight));
+
+
+        ////////////////////
+        // Graphics Queue //
+        ////////////////////
+
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
         current_frame().deletion_queue.flush();
 
@@ -88,8 +115,6 @@ void NovaCore::drawFrame()
 
         VkCommandBuffer _command_buffer = current_frame().command_buffer;
 
-        // used to update the uniform buffer in the shader for model rotation
-        updateUniformBuffer(_frame_ct);
 
         // reset the command buffer to begin recording the draw commands for the frame
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));
@@ -99,19 +124,21 @@ void NovaCore::drawFrame()
 
         // submit the command buffer to the graphics queue
         present.submit_info = {};
-        VkSemaphore _wait_semaphores[] = { current_frame().image_available };
+        VkSemaphore _wait_semaphores[] = { current_frame().image_available, current_compute().compute_finished };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
-        VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         present.submit_info = getSubmitInfo(&_command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
 
         VK_TRY(vkQueueSubmit(queues.graphics, 1, &present.submit_info, current_frame().in_flight));
 
+        // present the image to the screen
         VkSwapchainKHR _swapchains[] = { swapchain.instance };
         present.present_info = {};
         present.present_info = getPresentInfoKHR(_signal_semaphores, _swapchains, &_image_index);
 
         result = vkQueuePresentKHR(queues.present, &present.present_info);
 
+        // check if the window was resized and recreate the swap chain if it was
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebuffer_resized)
             {
                 recreateSwapChain();

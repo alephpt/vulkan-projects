@@ -189,9 +189,10 @@ void NovaEngine::_initPipeline(std::future<void>& startingPipeline, std::promise
 
         startingPipeline.wait();
         _architect->createRenderPass();
-        _architect->createDescriptorSetLayout();
+        _architect->createComputeDescriptorSetLayout();
+//        _architect->createDescriptorSetLayout();
         _architect->constructGraphicsPipeline();
-        //_architect->constructComputePipeline();
+        _architect->constructComputePipeline();
         waitForPipeline.set_value();
      
         return;
@@ -208,9 +209,11 @@ void NovaEngine::_initBuffers()
         _architect->constructVertexBuffer();
         _architect->constructIndexBuffer(); 
         // TODO: multithread UBO into the Presentation Phase
+        _architect->constructStorageBuffers();
         _architect->constructUniformBuffer(); 
         // TODO: multithread Command Buffer to init as part of the Management Phase
         _architect->constructDescriptorPool();
+        _architect->createComputeDescriptorSets();
         _architect->createDescriptorSets();
         _architect->createCommandBuffers();
      

@@ -86,7 +86,16 @@ void NovaCore::destroyCommandContext()
         vkDestroyCommandPool(logical_device, queues.compute.pool, nullptr);
     }
 
-void NovaCore::destroyPipeline(Pipeline* pipeline)
+void NovaCore::destroyPipeline(GraphicsPipeline* pipeline)
+    {
+        report(LOGGER::DEBUG, "Management - Destroying Pipeline.");
+        vkDestroyPipeline(logical_device, pipeline->instance, nullptr);
+        vkDestroyPipelineLayout(logical_device, pipeline->layout, nullptr);
+        delete pipeline;
+        return;
+    }
+
+void NovaCore::destroyPipeline(ComputePipeline* pipeline)
     {
         report(LOGGER::DEBUG, "Management - Destroying Pipeline.");
         vkDestroyPipeline(logical_device, pipeline->instance, nullptr);

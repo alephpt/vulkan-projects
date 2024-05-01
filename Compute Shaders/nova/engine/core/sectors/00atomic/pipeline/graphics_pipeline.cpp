@@ -1,12 +1,12 @@
-#include "./pipeline.h"
-#include "../../../components/utility/genesis.h"
+#include "graphics_pipeline.h"
+#include "../genesis.h"
 
 
     ////////////////////////
     // GATEWAY DEFINITION //
     ////////////////////////
 
-Pipeline::Pipeline()
+GraphicsPipeline::GraphicsPipeline()
     { 
         report(LOGGER::VLINE, "\t .. Initializing Pipeline ..");
         clear(); 
@@ -15,13 +15,13 @@ Pipeline::Pipeline()
         genesis::createObjects(&vertices, &indices); // TODO: these need to exist on a higher level, but where?
     }
 
-Pipeline::~Pipeline()
+GraphicsPipeline::~GraphicsPipeline()
     { 
         report(LOGGER::INFO, "Pipeline - Deconstructing Pipeline ..");
         clear();
     }
 
-void Pipeline::clear()
+void GraphicsPipeline::clear()
     {
         report(LOGGER::VLINE, "\t .. Clearing Pipeline ..");
         instance = VK_NULL_HANDLE;
@@ -49,22 +49,7 @@ void Pipeline::clear()
     // SHADERS //
     /////////////
 
-static inline void createShaderModule(VkDevice* logical_device, std::vector<char>& code, VkShaderModule* shader_module)
-    {
-        report(LOGGER::VLINE, "\t\t .. Creating Shader Module ..");
-
-        VkShaderModuleCreateInfo _create_info = {
-                .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
-                .codeSize = code.size(),
-                .pCode = reinterpret_cast<const uint32_t*>(code.data())
-            };
-
-        VK_TRY(vkCreateShaderModule(*logical_device, &_create_info, nullptr, shader_module));
-
-        return;
-    }
-
-void Pipeline::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
+void GraphicsPipeline::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBits stage)
     {
         std::string stage_name = stage == VK_SHADER_STAGE_VERTEX_BIT ? "Vertex" : "Fragment";
         report(LOGGER::VLINE, "\t\t .. Adding %s Shader Stage ..", stage_name.c_str());
@@ -82,18 +67,20 @@ void Pipeline::addShaderStage(VkShaderModule shader_module, VkShaderStageFlagBit
         return;
     }
 
-Pipeline& Pipeline::shaders(VkDevice* logical_device)
+// TODO: extrapolate the shaders to be passed in as a parameter, and
+//       create a function that will dynamically create/update new shader modules
+GraphicsPipeline& GraphicsPipeline::shaders(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Creating Shaders ..");
 
         std::vector<char> _vert_shader_code = genesis::loadFile(vert_shader);
         VkShaderModule _vert_shader_module;
-        createShaderModule(logical_device, _vert_shader_code, &_vert_shader_module);
+        genesis::createShaderModule(logical_device, _vert_shader_code, &_vert_shader_module);
         addShaderStage(_vert_shader_module, VK_SHADER_STAGE_VERTEX_BIT);
 
         std::vector<char> _frag_shader_code = genesis::loadFile(frag_shader);
         VkShaderModule _frag_shader_module;
-        createShaderModule(logical_device, _frag_shader_code, &_frag_shader_module);
+        genesis::createShaderModule(logical_device, _frag_shader_code, &_frag_shader_module);
         addShaderStage(_frag_shader_module, VK_SHADER_STAGE_FRAGMENT_BIT);
 
         return *this;
@@ -104,21 +91,15 @@ Pipeline& Pipeline::shaders(VkDevice* logical_device)
     // VERTEX INPUT //
     //////////////////
 
-Pipeline& Pipeline::vertexInput()
+GraphicsPipeline& GraphicsPipeline::vertexInput()
     {
         report(LOGGER::VLINE, "\t .. Creating Vertex Input State ..");
 
-        /*
-        report(LOGGER::INFO, "\t\t .. Vertices: %d", vertices.size());
-        
-        for (auto vertex : vertices) 
-            { 
-                report(LOGGER::INFO, "\t\t .. Vertex: %f, %f, %f", vertex.position.x, vertex.position.y, vertex.position.z); 
-                report(LOGGER::INFO, "\t\t .. Color: %f, %f, %f", vertex.color.x, vertex.color.y, vertex.color.z);
-            }
-*/
-        _binding_description = Vertex::getBindingDescription();
-        _attribute_descriptions = Vertex::getAttributeDescriptions();
+        // Determine how to do this dynamically :thinking:
+        // _binding_description = Vertex::getBindingDescription();
+        // _attribute_descriptions = Vertex::getAttributeDescriptions();
+        auto _binding_description = Particle::getBindingDescription();
+        auto _attribute_descriptions = Particle::getAttributeDescriptions();
 
         _vertex_input_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -136,7 +117,7 @@ Pipeline& Pipeline::vertexInput()
     // INPUT ASSEMBLY //
     ////////////////////
 
-Pipeline& Pipeline::inputAssembly()
+GraphicsPipeline& GraphicsPipeline::inputAssembly()
     {
         report(LOGGER::VLINE, "\t .. Creating Input Assembly ..");
 
@@ -154,7 +135,7 @@ Pipeline& Pipeline::inputAssembly()
     // VIEWPORT STATE //
     ////////////////////
 
-Pipeline& Pipeline::viewportState()
+GraphicsPipeline& GraphicsPipeline::viewportState()
     {
         report(LOGGER::VLINE, "\t .. Creating Viewport State ..");
 
@@ -172,7 +153,7 @@ Pipeline& Pipeline::viewportState()
     // RASTERIZER //
     ////////////////
 
-Pipeline& Pipeline::rasterizer()
+GraphicsPipeline& GraphicsPipeline::rasterizer()
     {
         report(LOGGER::VLINE, "\t .. Creating Rasterizer ..");
 
@@ -200,7 +181,7 @@ Pipeline& Pipeline::rasterizer()
     // MULTISAMPLING //
     ///////////////////
 
-Pipeline& Pipeline::multisampling(VkSampleCountFlagBits samples)
+GraphicsPipeline& GraphicsPipeline::multisampling(VkSampleCountFlagBits samples)
     {
         report(LOGGER::VLINE, "\t .. Creating Multisampling ..");
 
@@ -224,7 +205,7 @@ Pipeline& Pipeline::multisampling(VkSampleCountFlagBits samples)
     // DEPTH STENCIL //
     ///////////////////
 
-Pipeline& Pipeline::depthStencil()
+GraphicsPipeline& GraphicsPipeline::depthStencil()
     {
         report(LOGGER::VLINE, "\t .. Creating Depth Stencil ..");
 
@@ -263,7 +244,7 @@ static VkPipelineColorBlendAttachmentState colorBlendAttachment()
             };
     }
 
-Pipeline& Pipeline::colorBlending()
+GraphicsPipeline& GraphicsPipeline::colorBlending()
     {
         report(LOGGER::VLINE, "\t .. Creating Color Blend State ..");
 
@@ -298,7 +279,7 @@ Pipeline& Pipeline::colorBlending()
     // DYNAMIC STATE //
     ///////////////////
 
-Pipeline& Pipeline::dynamicState()
+GraphicsPipeline& GraphicsPipeline::dynamicState()
     {
         report(LOGGER::VLINE, "\t .. Creating Dynamic State ..");
 
@@ -316,7 +297,7 @@ Pipeline& Pipeline::dynamicState()
     // LAYOUT //
     ////////////
 
-Pipeline& Pipeline::createLayout(VkDevice* logical_device, VkDescriptorSetLayout* descriptor_set_layout)
+GraphicsPipeline& GraphicsPipeline::createLayout(VkDevice* logical_device, VkDescriptorSetLayout* descriptor_set_layout)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Layout ..");
 
@@ -333,7 +314,7 @@ Pipeline& Pipeline::createLayout(VkDevice* logical_device, VkDescriptorSetLayout
         return *this;
     }
 
-Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
+GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass* render_pass)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Create Info ..");
 
@@ -358,7 +339,7 @@ Pipeline& Pipeline::pipe(VkRenderPass* render_pass)
         return *this;
     }
 
-Pipeline& Pipeline::create(VkDevice* logical_device)
+GraphicsPipeline& GraphicsPipeline::create(VkDevice* logical_device)
     {
         report(LOGGER::VLINE, "\t .. Constructing Pipeline ..");
         VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &instance));

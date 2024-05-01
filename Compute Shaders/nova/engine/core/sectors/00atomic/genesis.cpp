@@ -1,6 +1,10 @@
 #include "genesis.h"
-#include "./lexicon.h"
+#include "lexicon.h"
 #include <fstream>
+
+#include <random>
+#include <ctime>
+#include <vulkan/vulkan.h>
 
 std::vector<char> genesis::loadFile(const std::string& filename) 
     {
@@ -19,15 +23,51 @@ std::vector<char> genesis::loadFile(const std::string& filename)
         return buffer;
     }
 
-static inline glm::vec3 lerp(glm::vec3 a, glm::vec3 b, float t)
+void genesis::createShaderModule(VkDevice* logical_device, std::vector<char>& code, VkShaderModule* shader_module)
     {
-        return a + t * (b - a);
+        report(LOGGER::VLINE, "\t\t .. Creating Shader Module ..");
+
+        VkShaderModuleCreateInfo _create_info = {
+                .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+                .codeSize = code.size(),
+                .pCode = reinterpret_cast<const uint32_t*>(code.data())
+            };
+
+        VK_TRY(vkCreateShaderModule(*logical_device, &_create_info, nullptr, shader_module));
+
+        return;
     }
 
+
+static inline glm::vec3 lerp(glm::vec3 a, glm::vec3 b, float t) { return a + t * (b - a); }
 static const glm::vec3 red = glm::vec3(1.0f, 0.0f, 0.0f);
 static const glm::vec3 green = glm::vec3(0.0f, 1.0f, 0.0f);
 static const glm::vec3 blue = glm::vec3(0.0f, 0.0f, 1.0f);
 static const glm::vec3 yellow = glm::vec3(1.0f, 1.0f, 0.0f);
+
+void genesis::createParticles(std::vector<Particle>* particles)   
+    {
+        std::default_random_engine random_engine((unsigned)time(nullptr));
+        std::uniform_real_distribution<float> random_dist(0.0f, 1.0f);
+
+        for (auto& particle : *particles) 
+            {
+                float r = 0.25f * sqrt(random_dist(random_engine));
+                float theta = 2.0f * 3.14159265359f * random_dist(random_engine);
+                float phi = acos(2.0f * random_dist(random_engine) - 1.0f);
+                float x = r * sin(phi) * cos(theta);
+                float y = r * sin(phi) * sin(theta);
+
+                particle.position = glm::vec2(x, y);
+                particle.velocity = glm::normalize(glm::vec2(-y, x) * 0.00025f);
+                glm::vec3 t_r = lerp(red, yellow, random_dist(random_engine));
+                glm::vec3 t_g = lerp(green, blue, random_dist(random_engine));
+                glm::vec3 t_b = lerp(blue, red, random_dist(random_engine));
+                particle.color = glm::vec4(lerp(t_r, lerp(t_g, t_b, random_dist(random_engine)), random_dist(random_engine)), random_dist(random_engine));
+            }
+    }
+
+
 
 static const glm::vec3 p1 = glm::vec3(-0.5f, 0.5f, 0.5f);   // top left front
 static const glm::vec3 p2 = glm::vec3(0.5f, 0.5f, 0.5f);    // top right front

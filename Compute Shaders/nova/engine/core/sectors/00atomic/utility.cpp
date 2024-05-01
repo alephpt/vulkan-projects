@@ -3,7 +3,7 @@
 
     // Get Current Frame
 FrameData& NovaCore::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
-
+ComputeData& NovaCore::current_compute() { { return compute[_frame_ct % MAX_COMPUTE_QUEUES]; } }
 
 
 

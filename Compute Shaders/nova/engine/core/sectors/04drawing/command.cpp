@@ -189,11 +189,12 @@ void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
 
         VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, _vertex_buffers, _offsets);
-        vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
-        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, &storage[i].buffer, _offsets);
+        //vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
+        //vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
 
-        vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(graphics_pipeline->indices.size()), 1, 0, 0, 0);
+        //vkCmdDrawIndexed(command_buffer, static_cast<uint32_t>(graphics_pipeline->indices.size()), 1, 0, 0, 0);
+        vkCmdDraw(command_buffer, MAX_PARTICLES, 1, 0, 0);
 
         vkCmdEndRenderPass(command_buffer);
 
@@ -201,6 +202,21 @@ void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
 
         return;
     }
+
+void NovaCore::recordComputeCommandBuffer(VkCommandBuffer& command_buffer, uint32_t i) 
+    {
+        //report(LOGGER::VLINE, "\t .. Recording Compute Command Buffer %d ..", i);
+
+        VkCommandBufferBeginInfo _begin_info = createBeginInfo();
+        VK_TRY(vkBeginCommandBuffer(command_buffer, &_begin_info));
+
+        vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline->instance);
+        vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline->layout, 0, 1, &compute_descriptor.sets[i], 0, nullptr);
+        vkCmdDispatch(command_buffer, MAX_PARTICLES / 256, 1, 1);
+
+        VK_TRY(vkEndCommandBuffer(command_buffer));
+    }
+
 
 void NovaCore::resetCommandBuffers() 
     {
