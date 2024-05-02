@@ -51,6 +51,7 @@ class NovaCore {
 
     private:
         VkPhysicalDevice physical_device;
+        VkPhysicalDeviceSubgroupProperties subgroup_properties;
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
         ComputeData computes[MAX_FRAMES_IN_FLIGHT]; // TODO: Get Max Compute Queues from Device when we query the queue count
         VkRenderPass render_pass;
@@ -135,6 +136,7 @@ class NovaCore {
         void destroyIndexContext();
         void destroyPipeline(GraphicsPipeline*);
         void destroyPipeline(ComputePipeline*);
+        void destroyComputeResources();
 };
 
 

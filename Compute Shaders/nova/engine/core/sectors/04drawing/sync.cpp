@@ -34,15 +34,18 @@ void NovaCore::createSyncObjects()
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
             {
-                VkSemaphoreCreateInfo semaphore_info = createSemaphoreInfo();
-                VkFenceCreateInfo fence_info = createFenceInfo();
+                VkSemaphoreCreateInfo frames_semaphore_info = createSemaphoreInfo();
+                VkFenceCreateInfo frames_fence_info = createFenceInfo();
 
-                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].image_available));
-                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].render_finished));
-                VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &frames[i].in_flight));
+                VK_TRY(vkCreateSemaphore(logical_device, &frames_semaphore_info, nullptr, &frames[i].image_available));
+                VK_TRY(vkCreateSemaphore(logical_device, &frames_semaphore_info, nullptr, &frames[i].render_finished));
+                VK_TRY(vkCreateFence(logical_device, &frames_fence_info, nullptr, &frames[i].in_flight));
                 
-                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &computes[i].finished));
-                VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &computes[i].in_flight));
+                VkSemaphoreCreateInfo computes_semaphore_info = createSemaphoreInfo();
+                VkFenceCreateInfo computes_fence_info = createFenceInfo();
+
+                VK_TRY(vkCreateSemaphore(logical_device, &computes_semaphore_info, nullptr, &computes[i].finished));
+                VK_TRY(vkCreateFence(logical_device, &computes_fence_info, nullptr, &computes[i].in_flight));
             }
 
         return;

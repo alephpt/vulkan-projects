@@ -43,7 +43,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSema
     {
         return {
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount = _wait_semaphore ? (uint32_t)1 : 0,
+            .waitSemaphoreCount = _wait_semaphore ? (uint32_t)2 : 0,
             .pWaitSemaphores = _wait_semaphore,
             .pWaitDstStageMask = _wait_stages,
             .commandBufferCount = 1,
@@ -68,7 +68,7 @@ void NovaCore::drawFrame()
         VK_TRY(vkWaitForFences(logical_device, 1, &current_compute().in_flight, VK_TRUE, UINT64_MAX));
         current_compute().deletion_queue.flush();
 
-        // used to update the uniform buffer in the shader for model rotation
+        // used to update the uniform buffer in the shader data update
         updateUniformBuffer(_frame_ct);
 
         // reset the command buffer to begin recording the compute commands for the frame
@@ -89,7 +89,7 @@ void NovaCore::drawFrame()
         ////////////////////
 
         VK_TRY(vkWaitForFences(logical_device, 1, &current_frame().in_flight, VK_TRUE, UINT64_MAX));
-        current_frame().deletion_queue.flush();
+        //current_frame().deletion_queue.flush();
 
         //log();
         uint32_t _image_index;
@@ -103,17 +103,9 @@ void NovaCore::drawFrame()
                         );
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
-            {
-                recreateSwapChain();
-                return;
-            }
+            { recreateSwapChain(); return; }
         else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-            {
-                report(LOGGER::ERROR, "Failed to acquire swap chain image!");
-                VK_TRY(result);
-            }
-
-        
+            { report(LOGGER::ERROR, "Failed to acquire swap chain image!"); VK_TRY(result); }
 
         // reset the command buffer to begin recording the draw commands for the frame
         VK_TRY(vkResetFences(logical_device, 1, &current_frame().in_flight));

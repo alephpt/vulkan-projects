@@ -157,6 +157,23 @@ static inline VkSampleCountFlagBits getMaxUsableSampleCount(VkPhysicalDevice* de
         return VK_SAMPLE_COUNT_1_BIT;
     }
 
+static inline VkPhysicalDeviceSubgroupProperties getSubgroupProperties(VkPhysicalDevice device) 
+    {
+        VkPhysicalDeviceSubgroupProperties subgroup_properties = {
+                sType: VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES,
+                pNext: NULL
+            };
+
+        VkPhysicalDeviceProperties2 device_properties = {
+                sType: VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+                pNext: &subgroup_properties
+            };
+
+        vkGetPhysicalDeviceProperties2(device, &device_properties);
+
+        return subgroup_properties;
+    }
+
 void NovaCore::createPhysicalDevice() 
     {
         report(LOGGER::VLINE, "\t .. Scanning for Physical Devices ..");
@@ -183,10 +200,16 @@ void NovaCore::createPhysicalDevice()
 
                 if (deviceProvisioned(device))
                     { 
-                        report(LOGGER::VLINE, "\tUsing Device: %s", device_properties.deviceName);
+                        report(LOGGER::DLINE, "\tUsing Device: %s", device_properties.deviceName);
 
                         physical_device = device;
-                        msaa_samples = getMaxUsableSampleCount(&physical_device);
+                        msaa_samples = getMaxUsableSampleCount(&physical_device); // Need to build a device struct to hold relevant information
+                        subgroup_properties = getSubgroupProperties(physical_device);
+
+                        report(LOGGER::DLINE, "\t\tMSAA Samples: %d", msaa_samples);
+                        report(LOGGER::DLINE, "\t\tSubgroup Size: %d", subgroup_properties.subgroupSize);
+                        report(LOGGER::DLINE, "\t\tSubgroup Supported Stages: %d", subgroup_properties.supportedStages);
+                        report(LOGGER::DLINE, "\t\tSubgroup Supported Operations: %d", subgroup_properties.supportedOperations);
                         break; 
                     }
             }

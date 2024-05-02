@@ -13,6 +13,7 @@ NovaCore::~NovaCore()
         destroyCommandContext();
         destroyPipeline(graphics_pipeline);
         destroyPipeline(compute_pipeline);
+        destroyComputeResources();
 
         report(LOGGER::VLINE, "\t .. Destroying Pipeline and Render Pass.");
         vkDestroyRenderPass(logical_device, render_pass, nullptr);
@@ -79,14 +80,10 @@ void NovaCore::destroyCommandContext()
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
                 vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
-
-                vkDestroySemaphore(logical_device, computes[i].finished, nullptr);
-                vkDestroyFence(logical_device, computes[i].in_flight, nullptr);
             }
 
         vkDestroyCommandPool(logical_device, queues.command_pool, nullptr);
         vkDestroyCommandPool(logical_device, queues.transfer.pool, nullptr);
-        vkDestroyCommandPool(logical_device, queues.compute.pool, nullptr);
     }
 
 void NovaCore::destroyPipeline(GraphicsPipeline* pipeline)
@@ -122,4 +119,27 @@ void NovaCore::destroyBuffer(BufferContext* buffer)
             }
 
         return;
+    }
+
+void NovaCore::destroyComputeResources()
+    {
+        report(LOGGER::VERBOSE, "Management - Destroying Compute Resources ..");
+
+        // destroy compute semaphores and fences
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) 
+            {
+                vkDestroySemaphore(logical_device, computes[i].finished, nullptr);
+                vkDestroyFence(logical_device, computes[i].in_flight, nullptr);
+            }
+
+        // destroy compute command pool
+        vkDestroyCommandPool(logical_device, queues.compute.pool, nullptr);
+
+        // destroy storage buffers
+        for (auto& _buffer : storage) 
+            { destroyBuffer(&_buffer); }
+
+        // destroy compute descriptor set layout
+        vkDestroyDescriptorSetLayout(logical_device, compute_descriptor.layout, nullptr);
+
     }
