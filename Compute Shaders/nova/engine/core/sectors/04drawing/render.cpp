@@ -123,7 +123,7 @@ void NovaCore::drawFrame()
 
         // submit the command buffer to the graphics queue
         present.submit_info = {};
-        VkSemaphore _wait_semaphores[] = { current_frame().image_available, current_compute().finished };
+        VkSemaphore _wait_semaphores[] = { current_compute().finished, current_frame().image_available };
         VkSemaphore _signal_semaphores[] = { current_frame().render_finished };
         VkPipelineStageFlags _wait_stages[] = { VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         present.submit_info = getSubmitInfo(&current_frame().command_buffer, _signal_semaphores, _wait_semaphores, _wait_stages);
