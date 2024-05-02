@@ -51,13 +51,15 @@ void genesis::createParticles(std::vector<Particle>* particles)
     {
         std::default_random_engine random_engine((unsigned)time(nullptr));
         std::uniform_real_distribution<float> random_dist(0.0f, 1.0f);
+        int particle_ct = particles->size();
+        report(LOGGER::VLINE, "\t\t .. Creating %d Particles ..", particle_ct);
 
-        for (size_t i = 0; i < particles->size(); i++)
+        for (size_t i = 0; i < particle_ct; i++)
             {
                 Particle _particle = {
-                    .position = {0.0f, 0.0f},
-                    .velocity = {0.0f, 0.0f},
-                    .color = glm::vec4(lerp(red, blue, random_dist(random_engine) * 0.5f + 0.5f) , 1.0f)
+                    .position = {random_dist(random_engine) * 2.0f - 1.0f, random_dist(random_engine) * 2.0f - 1.0f},
+                    .velocity = {random_dist(random_engine) * 2.0f - 1.0f, random_dist(random_engine) * 2.0f - 1.0f},
+                    .color = glm::vec4(lerp(blue, lerp(green, blue, random_dist(random_engine)), random_dist(random_engine)), 1.0f)
                 };
 
                 _particle.velocity = glm::normalize(_particle.velocity) * 0.1f;

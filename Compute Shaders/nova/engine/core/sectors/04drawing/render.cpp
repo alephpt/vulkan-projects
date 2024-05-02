@@ -43,7 +43,7 @@ static inline VkSubmitInfo getSubmitInfo(VkCommandBuffer* command_buffer, VkSema
     {
         return {
             .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-            .waitSemaphoreCount = _wait_semaphore ? (uint32_t)2 : 0,
+            .waitSemaphoreCount = _wait_semaphore ? (uint32_t)2 : 0, // TODO: Need to add a count here
             .pWaitSemaphores = _wait_semaphore,
             .pWaitDstStageMask = _wait_stages,
             .commandBufferCount = 1,

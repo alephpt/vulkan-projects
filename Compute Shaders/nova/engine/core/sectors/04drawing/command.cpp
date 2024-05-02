@@ -205,7 +205,8 @@ void NovaCore::recordComputeCommandBuffer(VkCommandBuffer& command_buffer, uint3
 
         vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline->instance);
         vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, compute_pipeline->layout, 0, 1, &compute_descriptor.sets[i], 0, nullptr);
-        vkCmdDispatch(command_buffer, MAX_PARTICLES / 256, 1, 1);
+        vkCmdDispatch(command_buffer, MAX_PARTICLES / 2560, 16, 1); 
+        // TODO: Come up with a way of calculating this ^^ dynamically based on a number of verts or points
 
         VK_TRY(vkEndCommandBuffer(command_buffer));
     }

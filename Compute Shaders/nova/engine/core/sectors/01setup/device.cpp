@@ -205,11 +205,15 @@ void NovaCore::createPhysicalDevice()
                         physical_device = device;
                         msaa_samples = getMaxUsableSampleCount(&physical_device); // Need to build a device struct to hold relevant information
                         subgroup_properties = getSubgroupProperties(physical_device);
+                        // get physical device limits
 
                         report(LOGGER::DLINE, "\t\tMSAA Samples: %d", msaa_samples);
                         report(LOGGER::DLINE, "\t\tSubgroup Size: %d", subgroup_properties.subgroupSize);
                         report(LOGGER::DLINE, "\t\tSubgroup Supported Stages: %d", subgroup_properties.supportedStages);
                         report(LOGGER::DLINE, "\t\tSubgroup Supported Operations: %d", subgroup_properties.supportedOperations);
+                        report(LOGGER::DLINE, "\t\tMax Compute Work Group Size: %u", device_properties.limits.maxComputeWorkGroupSize);
+                        report(LOGGER::DLINE, "\t\tMax Compute Work Group Invocations: %u", device_properties.limits.maxComputeWorkGroupInvocations);
+                        report(LOGGER::DLINE, "\t\tMax Compute Work Group Count: %u", device_properties.limits.maxComputeWorkGroupCount[0]);
                         break; 
                     }
             }

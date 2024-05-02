@@ -68,7 +68,7 @@ class NovaCore {
         std::vector<BufferContext> uniform;
         std::vector<void*> uniform_data;
         std::vector<BufferContext> storage;
-        const uint32_t MAX_PARTICLES = 4294;
+        const uint32_t MAX_PARTICLES = 40999294;
 
         double last_time = 0.0;
         float last_frame_time = 0.0f;
