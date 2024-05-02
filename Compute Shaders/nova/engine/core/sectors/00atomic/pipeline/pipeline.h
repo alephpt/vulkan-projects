@@ -4,4 +4,4 @@
 
 #include <variant>
 
-typedef std::variant<GraphicsPipeline, ComputePipeline> Pipeline; // Pipeline variant
+//typedef std::variant<GraphicsPipeline, ComputePipeline> Pipeline; // Pipeline variant

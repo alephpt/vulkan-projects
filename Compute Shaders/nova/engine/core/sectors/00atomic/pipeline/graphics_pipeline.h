@@ -31,7 +31,7 @@ class GraphicsPipeline {
         GraphicsPipeline& colorBlending();
         GraphicsPipeline& dynamicState();
         GraphicsPipeline& createLayout(VkDevice*, VkDescriptorSetLayout*);
-        GraphicsPipeline& pipe(VkRenderPass&);
+        GraphicsPipeline& pipe(VkRenderPass*);
         GraphicsPipeline& create(VkDevice*);
         void clear();
 

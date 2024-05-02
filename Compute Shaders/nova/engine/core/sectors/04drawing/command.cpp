@@ -79,7 +79,7 @@ void NovaCore::createCommandBuffers()
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[] = "Compute";
-            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name, MAX_FRAMES_IN_FLIGHT);
+            VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name, 1);
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &computes[i].command_buffer));
         }
 
@@ -182,7 +182,7 @@ void NovaCore::recordCommandBuffers(VkCommandBuffer& command_buffer, uint32_t i)
 
         //VkBuffer _vertex_buffers[] = {vertex.buffer};
         VkDeviceSize _offsets[] = {0};
-        vkCmdBindVertexBuffers(command_buffer, 0, 1, &storage[i].buffer, _offsets);
+        vkCmdBindVertexBuffers(command_buffer, 0, 1, &storage[_frame_ct].buffer, _offsets);
         //vkCmdBindIndexBuffer(command_buffer, index.buffer, 0, VK_INDEX_TYPE_UINT32);
         //vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->layout, 0, 1, &descriptor.sets[_frame_ct], 0, nullptr);
 

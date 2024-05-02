@@ -54,7 +54,7 @@ void NovaCore::updateUniformBuffer(uint32_t current_frame)
         // _mvp.proj[1][1] *= -1; // This flips the y-axis
 
         UBO_T ubo{};
-        ubo.deltaTime = last_frame_time * 2.0f;
+        ubo.deltaTime = last_frame_time / 3.0f;
 
         memcpy(uniform_data[current_frame], &ubo, sizeof(UBO_T));
     }

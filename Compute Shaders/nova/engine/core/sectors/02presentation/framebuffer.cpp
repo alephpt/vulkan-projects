@@ -12,18 +12,19 @@ void NovaCore::createFrameBuffers()
 
         for (size_t i = 0; i < swapchain.image_views.size(); i++) 
             {
-                std::array<VkImageView, 1> _attachments =
-                    { 
-                        //color.view,
-                        //depth.view,
-                        swapchain.image_views[i] 
-                    };
+                // std::array<VkImageView, 3> _attachments =
+                //     { 
+                //         color.view,
+                //         depth.view,
+                //         swapchain.image_views[i] 
+                //     };
+                VkImageView _attachments[] = { swapchain.image_views[i] };
 
                 VkFramebufferCreateInfo _create_info = {
                     .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
                     .renderPass = render_pass,
-                    .attachmentCount = static_cast<uint32_t>(_attachments.size()),
-                    .pAttachments = _attachments.data(),
+                    .attachmentCount = 1,
+                    .pAttachments = _attachments,
                     .width = swapchain.details.extent.width,
                     .height = swapchain.details.extent.height,
                     .layers = 1

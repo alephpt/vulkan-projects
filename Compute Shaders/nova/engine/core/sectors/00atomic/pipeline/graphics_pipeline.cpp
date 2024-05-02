@@ -11,7 +11,7 @@ GraphicsPipeline::GraphicsPipeline()
         report(LOGGER::VLINE, "\t .. Initializing Pipeline ..");
         clear(); 
 
-        report(LOGGER::VLINE, "\t .. Populating Vertices ..");
+        report(LOGGER::VLINE, "\t\t .. Populating Vertices ..");
         genesis::createObjects(&vertices, &indices); // TODO: these need to exist on a higher level, but where?
     }
 
@@ -23,7 +23,7 @@ GraphicsPipeline::~GraphicsPipeline()
 
 void GraphicsPipeline::clear()
     {
-        report(LOGGER::VLINE, "\t .. Clearing Pipeline ..");
+        report(LOGGER::VLINE, "\t\t .. Clearing Pipeline ..");
         instance = VK_NULL_HANDLE;
         _vertex_input_state = { .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
         _input_assembly = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -71,7 +71,7 @@ void GraphicsPipeline::addShaderStage(VkShaderModule shader_module, VkShaderStag
 //       create a function that will dynamically create/update new shader modules
 GraphicsPipeline& GraphicsPipeline::shaders(VkDevice* logical_device)
     {
-        report(LOGGER::VLINE, "\t .. Creating Shaders ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Shaders ..");
 
         std::vector<char> _vert_shader_code = genesis::loadFile(vert_shader);
         VkShaderModule _vert_shader_module;
@@ -93,7 +93,7 @@ GraphicsPipeline& GraphicsPipeline::shaders(VkDevice* logical_device)
 
 GraphicsPipeline& GraphicsPipeline::vertexInput()
     {
-        report(LOGGER::VLINE, "\t .. Creating Vertex Input State ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Vertex Input State ..");
 
         // Determine how to do this dynamically :thinking:
         // _binding_description = Vertex::getBindingDescription();
@@ -119,7 +119,7 @@ GraphicsPipeline& GraphicsPipeline::vertexInput()
 
 GraphicsPipeline& GraphicsPipeline::inputAssembly()
     {
-        report(LOGGER::VLINE, "\t .. Creating Input Assembly ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Input Assembly ..");
 
         _input_assembly = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
@@ -137,7 +137,7 @@ GraphicsPipeline& GraphicsPipeline::inputAssembly()
 
 GraphicsPipeline& GraphicsPipeline::viewportState()
     {
-        report(LOGGER::VLINE, "\t .. Creating Viewport State ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Viewport State ..");
 
         _viewport_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
@@ -155,7 +155,7 @@ GraphicsPipeline& GraphicsPipeline::viewportState()
 
 GraphicsPipeline& GraphicsPipeline::rasterizer()
     {
-        report(LOGGER::VLINE, "\t .. Creating Rasterizer ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Rasterizer ..");
 
         _rasterizer = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
@@ -183,12 +183,12 @@ GraphicsPipeline& GraphicsPipeline::rasterizer()
 
 GraphicsPipeline& GraphicsPipeline::multisampling(VkSampleCountFlagBits samples)
     {
-        report(LOGGER::VLINE, "\t .. Creating Multisampling ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Multisampling ..");
 
         _multisampling = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
                 .pNext = nullptr,
-                .flags = 0,
+                //.flags = 0,
                 .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT, //samples,
                 .sampleShadingEnable = VK_FALSE,
                 //.minSampleShading = 1.0f,
@@ -207,7 +207,7 @@ GraphicsPipeline& GraphicsPipeline::multisampling(VkSampleCountFlagBits samples)
 
 GraphicsPipeline& GraphicsPipeline::depthStencil()
     {
-        report(LOGGER::VLINE, "\t .. Creating Depth Stencil ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Depth Stencil ..");
 
         _depth_stencil = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
@@ -246,14 +246,14 @@ static VkPipelineColorBlendAttachmentState colorBlendAttachment()
 
 GraphicsPipeline& GraphicsPipeline::colorBlending()
     {
-        report(LOGGER::VLINE, "\t .. Creating Color Blend State ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Color Blend State ..");
 
         _color_blend_attachment = colorBlendAttachment();
 
         _color_blending = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
                 .pNext = nullptr,
-                .flags = 0,
+                //.flags = 0,
                 .logicOpEnable = VK_FALSE,
                 .logicOp = VK_LOGIC_OP_COPY,
                 .attachmentCount = 1,
@@ -271,7 +271,7 @@ GraphicsPipeline& GraphicsPipeline::colorBlending()
 
 GraphicsPipeline& GraphicsPipeline::dynamicState()
     {
-        report(LOGGER::VLINE, "\t .. Creating Dynamic State ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Dynamic State ..");
 
         _dynamic_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
@@ -289,7 +289,7 @@ GraphicsPipeline& GraphicsPipeline::dynamicState()
 
 GraphicsPipeline& GraphicsPipeline::createLayout(VkDevice* logical_device, VkDescriptorSetLayout* descriptor_set_layout)
     {
-        report(LOGGER::VLINE, "\t .. Creating Pipeline Layout ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Pipeline Layout ..");
 
         // From when we were using a vertex buffer and texture
         // _pipeline_layout_info = {
@@ -308,13 +308,13 @@ GraphicsPipeline& GraphicsPipeline::createLayout(VkDevice* logical_device, VkDes
             };
 
         VK_TRY(vkCreatePipelineLayout(*logical_device, &_pipeline_layout_info, nullptr, &layout));
-
+        report(LOGGER::VLINE, "\t\t .. Pipeline Layout Created ..");
         return *this;
     }
 
-GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass& render_pass)
+GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass* render_pass)
     {
-        report(LOGGER::VLINE, "\t .. Creating Pipeline Create Info ..");
+        report(LOGGER::VLINE, "\t\t .. Creating Pipeline Create Info ..");
 
         _pipeline_info = {
                 .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
@@ -329,7 +329,7 @@ GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass& render_pass)
                 .pColorBlendState = &_color_blending,
                 .pDynamicState = &_dynamic_state,
                 .layout = layout,
-                .renderPass = render_pass,
+                .renderPass = *render_pass,
                 .subpass = 0,
                 .basePipelineHandle = VK_NULL_HANDLE,
             };
@@ -339,10 +339,10 @@ GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass& render_pass)
 
 GraphicsPipeline& GraphicsPipeline::create(VkDevice* logical_device)
     {
-        report(LOGGER::VLINE, "\t .. Constructing Pipeline ..");
+        report(LOGGER::VLINE, "\t\t .. Constructing Pipeline ..");
         VK_TRY(vkCreateGraphicsPipelines(*logical_device, VK_NULL_HANDLE, 1, &_pipeline_info, nullptr, &instance));
 
-        report(LOGGER::VLINE, "\t .. Cleaning Up Shader Modules ..");
+        report(LOGGER::VLINE, "\t\t .. Cleaning Up Shader Modules ..");
         for (auto shader_module : _shader_modules) 
             { vkDestroyShaderModule(*logical_device, shader_module, nullptr); }
 

@@ -79,6 +79,7 @@ void NovaCore::drawFrame()
         recordComputeCommandBuffer(current_compute().command_buffer, _frame_ct);
 
         // submit the command buffer to the compute queue
+        present.submit_info = {};
         present.submit_info = getSubmitInfo(&current_compute().command_buffer, &current_compute().finished, nullptr, nullptr);
         VK_TRY(vkQueueSubmit(queues.compute.queue, 1, &present.submit_info, current_compute().in_flight));
 

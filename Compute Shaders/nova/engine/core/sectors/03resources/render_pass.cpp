@@ -229,7 +229,6 @@ VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
         
         return {
                 .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-                .pNext = nullptr,
                 .renderPass = render_pass,
                 .framebuffer = swapchain.framebuffers[i],
                 .renderArea = {
