@@ -12,10 +12,10 @@ void NovaCore::createFrameBuffers()
 
         for (size_t i = 0; i < swapchain.image_views.size(); i++) 
             {
-                std::array<VkImageView, 3> _attachments =
+                std::array<VkImageView, 1> _attachments =
                     { 
-                        color.view,
-                        depth.view,
+                        //color.view,
+                        //depth.view,
                         swapchain.image_views[i] 
                     };
 

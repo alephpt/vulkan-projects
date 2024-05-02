@@ -12,7 +12,7 @@ VkAttachmentDescription NovaCore::getColorAttachment()
         return {
             .flags = 0,
             .format = swapchain.details.surface.format,
-            .samples = msaa_samples,
+            .samples = VK_SAMPLE_COUNT_1_BIT, //msaa_samples,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
@@ -168,7 +168,7 @@ static inline VkSubpassDependency _getDependency()
             .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, // This is used for vertex & image | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
             .srcAccessMask = 0,
             .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, // This is used for mipmaping | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-            .dependencyFlags = 0
+            //.dependencyFlags = 0
         };
     }
 
@@ -198,20 +198,27 @@ void NovaCore::createRenderPass()
         //VkAttachmentReference _color_attachment_resolve_ref = _getColorAttachmentResolveRef();
         //VkSubpassDescription _subpass_description = _getSubpassDescription(&_color_attachment_ref, &_depth_attachment_ref, &_color_attachment_resolve_ref);
         VkSubpassDescription _subpass_description = {
-            .flags = 0,
             .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
             .colorAttachmentCount = 1,
             .pColorAttachments = &_color_attachment_ref,
-            .pDepthStencilAttachment = nullptr
         };
         VkSubpassDependency _dependency = _getDependency();
 
+        // This is useful when mipmapping
         //std::array<VkAttachmentDescription, 3> _attachments = {_color_attachment, _depth_attachment, _color_resolve};
-        std::vector<VkAttachmentDescription> _attachments = {_color_attachment};
-        VkRenderPassCreateInfo render_pass_info = _getRenderPassInfo(&_attachments, &_subpass_description, &_dependency);
+        //VkRenderPassCreateInfo render_pass_info = _getRenderPassInfo(&_attachments, &_subpass_description, &_dependency);
+
+        VkRenderPassCreateInfo render_pass_info = {
+            .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+            .attachmentCount = 1,
+            .pAttachments = &_color_attachment,
+            .subpassCount = 1,
+            .pSubpasses = &_subpass_description,
+            .dependencyCount = 1,
+            .pDependencies = &_dependency
+        };
         
         VK_TRY(vkCreateRenderPass(logical_device, &render_pass_info, nullptr, &render_pass));
-
         return;
     }
 
@@ -229,7 +236,7 @@ VkRenderPassBeginInfo NovaCore::getRenderPassInfo(size_t i)
                     .offset = {0, 0},
                     .extent = swapchain.details.extent
                 },
-                .clearValueCount = static_cast<uint32_t>(CLEAR_VALUES.size()),
-                .pClearValues = CLEAR_VALUES.data()
+                .clearValueCount = 1, // This is useful when depth buffering -> static_cast<uint32_t>(CLEAR_VALUES.size()),
+                .pClearValues = &CLEAR_COLOR // CLEAR_VALUES.data()
             };
     }

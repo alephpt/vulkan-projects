@@ -6,9 +6,9 @@ struct Particle {
     vec4 color;
 };
 
-layout(binding = 0) uniform UBO_T { float deltaTime; } ubo;
-layout(std140, binding = 1) buffer ParticlesIn { Particle particles_in[]; };
-layout(std140, binding = 2) buffer ParticlesOut { Particle particles_out[]; };
+layout (binding = 0) uniform UBO_T { float deltaTime; } ubo;
+layout (std140, binding = 1) readonly buffer ParticlesIn { Particle particles_in[]; };
+layout (std140, binding = 2) buffer ParticlesOut { Particle particles_out[]; };
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 

@@ -77,9 +77,7 @@ void NovaCore::createCommandBuffers()
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_gfx_cmd_buf_alloc_info, &frames[i].command_buffer));
         }
 
-
-        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
-        {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             char name[] = "Compute";
             VkCommandBufferAllocateInfo _cmp_cmd_buf_alloc_info = createCommandBuffersInfo(queues.compute.pool, name, MAX_FRAMES_IN_FLIGHT);
             VK_TRY(vkAllocateCommandBuffers(logical_device, &_cmp_cmd_buf_alloc_info, &computes[i].command_buffer));
@@ -221,7 +219,7 @@ void NovaCore::resetCommandBuffers()
             VK_TRY(vkResetCommandBuffer(frames[i].command_buffer, 0));
         }
 
-        for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++)
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
         {
             VK_TRY(vkResetCommandBuffer(computes[i].command_buffer, 0));
         }

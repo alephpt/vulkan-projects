@@ -31,7 +31,7 @@ class GraphicsPipeline {
         GraphicsPipeline& colorBlending();
         GraphicsPipeline& dynamicState();
         GraphicsPipeline& createLayout(VkDevice*, VkDescriptorSetLayout*);
-        GraphicsPipeline& pipe(VkRenderPass*);
+        GraphicsPipeline& pipe(VkRenderPass&);
         GraphicsPipeline& create(VkDevice*);
         void clear();
 
@@ -53,5 +53,8 @@ class GraphicsPipeline {
         VkPipelineColorBlendStateCreateInfo _color_blending;
         std::vector<VkDynamicState> _dynamic_states = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
        
+        VkVertexInputBindingDescription _binding_description;
+        std::array<VkVertexInputAttributeDescription, 2U> _attribute_descriptions;
+
         void addShaderStage(VkShaderModule, VkShaderStageFlagBits);
 };

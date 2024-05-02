@@ -3,7 +3,7 @@
 
     // Get Current Frame
 FrameData& NovaCore::current_frame() { { return frames[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
-ComputeData& NovaCore::current_compute() { { return computes[_frame_ct % MAX_COMPUTE_QUEUES]; } }
+ComputeData& NovaCore::current_compute() { { return computes[_frame_ct % MAX_FRAMES_IN_FLIGHT]; } }
 
 
 
@@ -93,7 +93,7 @@ void NovaCore::logComputeData()
         for (size_t i = 0; i < MAX_COMPUTE_QUEUES; i++) 
             {
                 report(LOGGER::DLINE, "\t\tCompute %d", i);
-                report(LOGGER::DLINE, "\t\t\tCompute Finished: %p", computes[i].compute_finished);
+                report(LOGGER::DLINE, "\t\t\tCompute Finished: %p", computes[i].finished);
                 report(LOGGER::DLINE, "\t\t\tIn Flight: %p", computes[i].in_flight);
             }
     }

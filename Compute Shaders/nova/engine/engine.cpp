@@ -173,8 +173,8 @@ void NovaEngine::_initSwapChain(std::promise<void>& startPipeline, std::future<v
         startPipeline.set_value();
         waitingForPipeline.wait();
         _architect->createCommandPool(); 
-        _architect->createColorResources();
-        _architect->createDepthResources();
+        //_architect->createColorResources();
+        //_architect->createDepthResources();
         _architect->createFrameBuffers();
         waitForFrameBuffer.set_value();
      
@@ -202,19 +202,19 @@ void NovaEngine::_initBuffers()
     {
         report(LOGGER::INFO, "NovaEngine - Initializing Command Operator ..");
 
-        _architect->createTextureImage();
-        _architect->createTextureImageView();
-        _architect->constructTextureSampler();
+        //_architect->createTextureImage();
+        //_architect->createTextureImageView();
+        //_architect->constructTextureSampler();
         // TODO: Combine Object Phases
-        _architect->constructVertexBuffer();
-        _architect->constructIndexBuffer(); 
+        //_architect->constructVertexBuffer();
+        //_architect->constructIndexBuffer(); 
         // TODO: multithread UBO into the Presentation Phase
         _architect->constructStorageBuffers();
         _architect->constructUniformBuffer(); 
         // TODO: multithread Command Buffer to init as part of the Management Phase
         _architect->constructDescriptorPool();
         _architect->createComputeDescriptorSets();
-        _architect->createDescriptorSets();
+        //_architect->createDescriptorSets();
         _architect->createCommandBuffers();
      
         return;

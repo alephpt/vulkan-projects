@@ -19,7 +19,7 @@ void NovaCore::constructGraphicsPipeline()
                 .colorBlending()
                 .dynamicState()
                 .createLayout(&logical_device, &descriptor.layout)
-                .pipe(&render_pass)
+                .pipe(render_pass)
                 .create(&logical_device);
 
         return; 

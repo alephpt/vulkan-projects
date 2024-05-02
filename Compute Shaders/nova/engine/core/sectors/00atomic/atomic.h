@@ -47,7 +47,7 @@ struct FrameData
 
 struct ComputeData
     {
-        VkSemaphore compute_finished;
+        VkSemaphore finished;
         VkFence in_flight;
         DeletionQueue deletion_queue;
         VkCommandBuffer command_buffer;

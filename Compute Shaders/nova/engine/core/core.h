@@ -52,7 +52,7 @@ class NovaCore {
     private:
         VkPhysicalDevice physical_device;
         FrameData frames[MAX_FRAMES_IN_FLIGHT];
-        ComputeData computes[MAX_COMPUTE_QUEUES]; // TODO: Get Max Compute Queues from Device when we query the queue count
+        ComputeData computes[MAX_FRAMES_IN_FLIGHT]; // TODO: Get Max Compute Queues from Device when we query the queue count
         VkRenderPass render_pass;
         QueuePresentContext present;
         DescriptorContext descriptor;           // TODO: Create a createNewDescriptor function (and combine with uniform?)

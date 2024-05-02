@@ -98,8 +98,8 @@ GraphicsPipeline& GraphicsPipeline::vertexInput()
         // Determine how to do this dynamically :thinking:
         // _binding_description = Vertex::getBindingDescription();
         // _attribute_descriptions = Vertex::getAttributeDescriptions();
-        auto _binding_description = Particle::getBindingDescription();
-        auto _attribute_descriptions = Particle::getAttributeDescriptions();
+        _binding_description = Particle::getBindingDescription();
+        _attribute_descriptions = Particle::getAttributeDescriptions();
 
         _vertex_input_state = {
                 .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
@@ -191,10 +191,10 @@ GraphicsPipeline& GraphicsPipeline::multisampling(VkSampleCountFlagBits samples)
                 .flags = 0,
                 .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT, //samples,
                 .sampleShadingEnable = VK_FALSE,
-                .minSampleShading = 1.0f,
-                .pSampleMask = nullptr,
-                .alphaToCoverageEnable = VK_FALSE,
-                .alphaToOneEnable = VK_FALSE
+                //.minSampleShading = 1.0f,
+                //.pSampleMask = nullptr,
+                //.alphaToCoverageEnable = VK_FALSE,
+                //.alphaToOneEnable = VK_FALSE
             };
 
         return *this;
@@ -312,24 +312,24 @@ GraphicsPipeline& GraphicsPipeline::createLayout(VkDevice* logical_device, VkDes
         return *this;
     }
 
-GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass* render_pass)
+GraphicsPipeline& GraphicsPipeline::pipe(VkRenderPass& render_pass)
     {
         report(LOGGER::VLINE, "\t .. Creating Pipeline Create Info ..");
 
         _pipeline_info = {
                 .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-                .stageCount = static_cast<uint32_t>(_shader_stages.size()),
+                .stageCount = 2,
                 .pStages = _shader_stages.data(),
                 .pVertexInputState = &_vertex_input_state,
                 .pInputAssemblyState = &_input_assembly,
                 .pViewportState = &_viewport_state,
                 .pRasterizationState = &_rasterizer,
                 .pMultisampleState = &_multisampling,
-                .pDepthStencilState = &_depth_stencil,
+                //.pDepthStencilState = &_depth_stencil,
                 .pColorBlendState = &_color_blending,
                 .pDynamicState = &_dynamic_state,
                 .layout = layout,
-                .renderPass = *render_pass,
+                .renderPass = render_pass,
                 .subpass = 0,
                 .basePipelineHandle = VK_NULL_HANDLE,
             };

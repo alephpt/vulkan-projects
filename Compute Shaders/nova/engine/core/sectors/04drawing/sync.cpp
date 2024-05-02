@@ -40,6 +40,9 @@ void NovaCore::createSyncObjects()
                 VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].image_available));
                 VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &frames[i].render_finished));
                 VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &frames[i].in_flight));
+                
+                VK_TRY(vkCreateSemaphore(logical_device, &semaphore_info, nullptr, &computes[i].finished));
+                VK_TRY(vkCreateFence(logical_device, &fence_info, nullptr, &computes[i].in_flight));
             }
 
         return;

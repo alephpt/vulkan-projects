@@ -105,7 +105,7 @@ void NovaCore::constructDescriptorPool()
         std::array<VkDescriptorPoolSize, 2> _pool_size = {
             _getUniformPoolSize(MAX_FRAMES_IN_FLIGHT),
             //_getSamplerPoolSize(MAX_FRAMES_IN_FLIGHT)
-            _getStorageBufferPoolSize(MAX_FRAMES_IN_FLIGHT)
+            _getStorageBufferPoolSize(MAX_FRAMES_IN_FLIGHT * 2)
         };
 
         VkDescriptorPoolCreateInfo _pool_info = _getPoolInfo(MAX_FRAMES_IN_FLIGHT, _pool_size);
@@ -213,11 +213,11 @@ void NovaCore::createDescriptorSets()
 
 static inline VkDescriptorSetLayoutBinding constructComputeDescriptorSetLayoutBinding(uint32_t i)
     {
-        report(LOGGER::VLINE, "\t\t .. Constructing Compute Descriptor Set Layout Binding ..");
+        report(LOGGER::DLINE, "\t\t .. Constructing Compute Descriptor Set Layout Binding %u ..", i);
 
         return {
             .binding = i,
-            .descriptorType = (i == 0) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+            .descriptorType = (i == 0) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .descriptorCount = 1,
             .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
             .pImmutableSamplers = nullptr
@@ -227,7 +227,7 @@ static inline VkDescriptorSetLayoutBinding constructComputeDescriptorSetLayoutBi
 // TODO: Create a more dynamic way to create variable descriptor set layouts
 void NovaCore::createComputeDescriptorSetLayout()
     {
-        report(LOGGER::VLINE, "\t .. Creating Compute Descriptor Set Layout ..");
+        report(LOGGER::DLINE, "\t .. Creating Compute Descriptor Set Layout ..");
 
         std::vector<VkDescriptorSetLayoutBinding> _layout_binding;
 
@@ -258,15 +258,18 @@ static inline VkWriteDescriptorSet _getStorageDescriptorWrite(VkDescriptorSet* s
 
 void NovaCore::createComputeDescriptorSets()
     {
+        report(LOGGER::DLINE, "\t .. Creating Compute Descriptor Sets ..");
+
         std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, compute_descriptor.layout);
-        VkDescriptorSetAllocateInfo _alloc_info = _getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_COMPUTE_QUEUES), &descriptor.pool, layouts);
+        VkDescriptorSetAllocateInfo _alloc_info = _getDescriptorSetAllocateInfo(static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT), &descriptor.pool, layouts);
 
         compute_descriptor.sets.resize(MAX_FRAMES_IN_FLIGHT);
         VK_TRY(vkAllocateDescriptorSets(logical_device, &_alloc_info, compute_descriptor.sets.data()));
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                VkDescriptorBufferInfo _buffer_info = _getDescriptorBufferInfo(&uniform[i].buffer, sizeof(MVP));
+                report(LOGGER::DLINE, "\t\t .. Updating Descriptor Set %u ..", i);
+                VkDescriptorBufferInfo _buffer_info = _getDescriptorBufferInfo(&uniform[i].buffer, sizeof(UBO_T));
 
                 std::array<VkWriteDescriptorSet, 3> _write_descriptor{};
                 _write_descriptor[0] = _getUniformDescriptorWrite(&compute_descriptor.sets[i], &_buffer_info);

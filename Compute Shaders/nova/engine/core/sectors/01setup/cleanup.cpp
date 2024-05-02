@@ -36,13 +36,13 @@ void NovaCore::destroySwapChain()
         for (const auto& _frame_buffers : swapchain.framebuffers) 
             { vkDestroyFramebuffer(logical_device, _frame_buffers, nullptr); }
         
-        swapchain.framebuffers.clear();
+        //swapchain.framebuffers.clear();
 
         
         for (const auto& _image_view : swapchain.image_views) 
             { vkDestroyImageView(logical_device, _image_view, nullptr); }
 
-        swapchain.image_views.clear();
+        //swapchain.image_views.clear();
 
         vkDestroySwapchainKHR(logical_device, swapchain.instance, nullptr);
 
@@ -79,6 +79,9 @@ void NovaCore::destroyCommandContext()
                 vkDestroySemaphore(logical_device, frames[i].image_available, nullptr);
                 vkDestroySemaphore(logical_device, frames[i].render_finished, nullptr);
                 vkDestroyFence(logical_device, frames[i].in_flight, nullptr);
+
+                vkDestroySemaphore(logical_device, computes[i].finished, nullptr);
+                vkDestroyFence(logical_device, computes[i].in_flight, nullptr);
             }
 
         vkDestroyCommandPool(logical_device, queues.command_pool, nullptr);
