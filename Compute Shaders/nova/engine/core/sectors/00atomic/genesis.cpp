@@ -52,31 +52,17 @@ void genesis::createParticles(std::vector<Particle>* particles)
         std::default_random_engine random_engine((unsigned)time(nullptr));
         std::uniform_real_distribution<float> random_dist(0.0f, 1.0f);
 
-        // this creates a circle of particles that are randomly colored
-        // for (auto& particle : *particles) 
-        //     {
-        //         float r = 0.25f * sqrt(random_dist(random_engine));
-        //         float theta = 2.0f * 3.14159265359f * random_dist(random_engine);
-        //         float phi = acos(2.0f * random_dist(random_engine) - 1.0f);
-        //         float x = r * sin(phi) * cos(theta);
-        //         float y = r * sin(phi) * sin(theta);
-
-        //         particle.position = glm::vec2(x, y);
-        //         particle.velocity = glm::normalize(glm::vec2(-y, x) * 0.00025f);
-        //         glm::vec3 t_r = lerp(red, yellow, random_dist(random_engine));
-        //         glm::vec3 t_g = lerp(green, blue, random_dist(random_engine));
-        //         glm::vec3 t_b = lerp(blue, red, random_dist(random_engine));
-        //         particle.color = glm::vec4(lerp(t_r, lerp(t_g, t_b, random_dist(random_engine)), random_dist(random_engine)), random_dist(random_engine));
-        //     }
-
-        // this creates a grouping of particles that are all near the top like rain
-        for (auto& particle : *particles) 
+        for (size_t i = 0; i < particles->size(); i++)
             {
-                float x = random_dist(random_engine) * 2.0f - 1.0f;
-                float y = screen_height + random_dist(random_engine) * 100.0f;
-                particle.position = glm::vec2(x, y);
-                particle.velocity = glm::vec2(0.0f, -0.00025f);
-                particle.color = glm::vec4(lerp(blue, lerp(green, blue, random_dist(random_engine)), random_dist(random_engine)), random_dist(random_engine));
+                Particle _particle = {
+                    .position = {0.0f, 0.0f},
+                    .velocity = {0.0f, 0.0f},
+                    .color = glm::vec4(lerp(red, blue, random_dist(random_engine) * 0.5f + 0.5f) , 1.0f)
+                };
+
+                _particle.velocity = glm::normalize(_particle.velocity) * 0.1f;
+
+                particles->push_back(_particle);
             }
     }
 

@@ -6,11 +6,9 @@
 #include <glm/glm.hpp>
 
 struct Particle {
-    glm::vec3 position;
-    glm::vec3 velocity;
-    glm::vec3 acceleration;
+    glm::vec2 position;
+    glm::vec2 velocity;
     glm::vec4 color;
-    float lifespan;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription = {};
