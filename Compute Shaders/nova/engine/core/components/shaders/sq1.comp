@@ -1,5 +1,8 @@
 #version 450
 
+const float disk_speed = 0.3;
+const vec3 background_color = vec3(0.1, 0.2, 0.3);
+
 struct Particle {
     vec2 position;
     vec2 velocity;
@@ -10,13 +13,14 @@ layout (binding = 0) uniform UBO_T { float deltaTime; } ubo;
 layout (std140, binding = 1) readonly buffer ParticlesIn { Particle particles_in[]; };
 layout (std140, binding = 2) buffer ParticlesOut { Particle particles_out[]; };
 
-layout (local_size_x = 256, local_size_y = 4, local_size_z = 1) in;
+layout (local_size_x = 64, local_size_y = 16, local_size_z = 1) in;
 
-vec4 applyMotionBlur(vec3 background, vec2 disk_position, vec2 pixel_location, vec2 disk_velocity, vec3 disk_color){
-    vec2 distance_from_center = pixel_location - disk_position;
+vec4 applyMotionBlur(vec3 background, inout vec2 pixel_location, vec2 disk_velocity, vec4 disk_color){
+    vec2 center = vec2(0.0);
+    vec2 distance_from_center = pixel_location - center;
     float a = dot(disk_velocity, disk_velocity);
     float b = dot(disk_velocity, distance_from_center);
-    float c = dot(distance_from_center, distance_from_center) - dot(disk_position, disk_position);
+    float c = dot(distance_from_center, distance_from_center) - dot(disk_velocity, disk_velocity) * dot(pixel_location, pixel_location);
     float d = b * b - a * c;
 
     if (d < 0.0) {
@@ -28,69 +32,34 @@ vec4 applyMotionBlur(vec3 background, vec2 disk_position, vec2 pixel_location, v
     float t2 = min((-b + d) / a, 1.0); // let's try delta time here next time
 
     if (t1 < t2) {
-        vec2 intersection = disk_position + disk_velocity * t1;
+        vec2 intersection = pixel_location + disk_velocity * t1;
         float distance = length(intersection - pixel_location);
-        float alpha = 1.0 - smoothstep(0.0, 1.0, distance / disk_position.x);
-        return vec4(mix(background, disk_color, alpha), alpha);
+        float alpha = 1.0 - smoothstep(0.0, 1.0, distance / pixel_location.x);
+        return vec4(mix(background, disk_color.rgb, alpha), alpha);
     }
 
     return vec4(background, 1.0);
 }
 
-vec3 randomVec3(float seed) {
-    return vec3(
-        fract(sin(seed) * 43758.5453),
-        fract(cos(seed) * 43758.5453),
-        fract(tan(seed) * 43758.5453)
-    );
+vec2 calculateOrbitVelocity(vec2 velocity, vec2 position) {
+    vec2 center = vec2(0.0);
+    vec2 distance_from_center = position - center;
+    vec2 tangent = normalize(vec2(-distance_from_center.y, distance_from_center.x));
+    return tangent * disk_speed;
 }
 
-vec4 randomVec4(float seed) {
-    return vec4(
-        fract(sin(seed) * 43758.5453),
-        fract(cos(seed) * 43758.5453),
-        fract(tan(seed) * 43758.5453),
-        1.0
-    );
-}
-
-const float disk_speed = 0.3;
-
-vec2 diskPosition(float delta_time, vec4 id) {
-    float time_factor = delta_time * disk_speed;
-    float angle = id.x * 6.28318530718 + time_factor; // Add time-dependent factor to angle
-    float radius = 0.5 + 0.5 * sin((id.y + time_factor) * 6.28318530718); // Add time-dependent factor to radius
-    return vec2(cos(angle), sin(angle)) * radius;
-}
-
-vec2 diskVelocity(float delta_time, vec4 id) {
-    float angle = id.x * 6.28318530718;
-    return vec2(-sin(angle), cos(angle)) * disk_speed; // Use perpendicular direction for velocity
-}
-
-void applyDiskMotionBlur(out vec4 color, out vec2 pixel_location, out vec2 velocity, vec4 id) {
-    vec2 disk_position = diskPosition(ubo.deltaTime, id);
-    vec2 disk_velocity = diskVelocity(ubo.deltaTime, id);
-    vec3 disk_color = randomVec3(id.x);
-    vec3 background_color = vec3(0.0, 0.0, 0.0);
-    color = applyMotionBlur(background_color, disk_position, pixel_location, disk_velocity, disk_color);
-    pixel_location = disk_position;
-    velocity = disk_velocity;
+void applyDiskMotionBlur(out vec4 color, inout vec2 pixel_location, vec2 velocity) {
+    vec4 transition_color = applyMotionBlur(background_color, pixel_location, velocity, color);
+    color = transition_color * ubo.deltaTime;
+    pixel_location += velocity * ubo.deltaTime;
 }
 
 void main() {
     uint index = gl_GlobalInvocationID.y * gl_WorkGroupSize.x + gl_GlobalInvocationID.x;
     Particle p = particles_in[index];
 
-    vec4 color;
-    vec2 position;
-    vec2 velocity;
-    vec4 id = randomVec4(float(index));
-    applyDiskMotionBlur(color, position, velocity, id);
+    vec2 velocity = calculateOrbitVelocity(p.velocity, p.position);
+    applyDiskMotionBlur(p.color, p.position, velocity);
 
-    p.color = color;
-    p.position = position + velocity * ubo.deltaTime;
-    p.velocity = velocity + p.velocity * ubo.deltaTime * 2.0;
     particles_out[index] = p;
 }
-        
