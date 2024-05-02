@@ -1,29 +1,36 @@
 #version 450
 
 struct Particle {
-    vec2 position;
-    vec2 velocity;
+    vec3 position;
+    vec3 velocity;
+    vec3 acceleration;
     vec4 color;
+    float lifespan;
 };
 
-layout (binding = 0) uniform UBO_T { float deltaTime; } ubo;
+layout (binding = 0) uniform UBO_T { float deltaTime; vec2 gravity; } ubo;
 layout (std140, binding = 1) readonly buffer ParticlesIn { Particle particles_in[]; };
 layout (std140, binding = 2) buffer ParticlesOut { Particle particles_out[]; };
 
 layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
+
+float rand(vec2 co){
+    return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 void main() {
     uint index = gl_GlobalInvocationID.x;
     Particle p = particles_in[index];
-    particles_out[index].position = p.position + p.velocity * ubo.deltaTime;
-    particles_out[index].velocity = p.velocity;
 
-    if (particles_out[index].position.x < -1.0 || particles_out[index].position.x > 1.0) {
-        particles_out[index].velocity.x *= -1.0;
-    }
+    particles_out[index].position += p.velocity * ubo.deltaTime;
+    particles_out[index].velocity += ubo.gravity * rand(p.velocity) * ubo.deltaTime * 2.0;
+    particles_out[index].lifespan = p.lifespan - ubo.deltaTime;
 
-    if (particles_out[index].position.y < -1.0 || particles_out[index].position.y > 1.0) {
-        particles_out[index].velocity.y *= -1.0;
+    if (particles_out[index].lifespan <= 0.0) {
+        particles_out[index].position = vec2(rand(vec2(index, 0.0)) * 2.0 - 1.0, -1.0);
+        particles_out[index].velocity = vec2(0.0, 0.8);
+        particles_out[index].lifespan = 1.0;
     }
 }
         

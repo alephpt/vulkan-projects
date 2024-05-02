@@ -147,6 +147,7 @@ struct MVP
 struct UBO_T
     {
         float deltaTime = 1.0f;
+        glm::vec2 gravity = glm::vec2(0.8f, 0.0f);
     };
 
 
